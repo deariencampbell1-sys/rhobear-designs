@@ -1,0 +1,594 @@
+<!doctype html>
+<!--
+  Original URL: https://wearestokt.com/
+  Filename:     wearestokt.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: motion-driven brand & design studio. The site is built around
+  ONE idea: motion is the brand. Almost everything moves — text reveals,
+  marquees, scroll-bound parallax, hover micro-interactions, and a 3D
+  centerpiece in the hero. The whole page feels like a reel.
+
+  Layout / hierarchy:
+    - Slim top nav: Work · Services · About Us · Motion Index · STORE ·
+      language picker (EN) · "Get an estimate" CTA pill.
+    - Hero: a marquee line "MOVING BRANDS FORWARD" sits above a vertically
+      letter-spaced mission line: "Stōkt builds motion-driven brand systems,
+      unifying branding, web, and motion into a single evolving execution."
+      A 3D centerpiece (a slowly morphing blob / sphere made of soft
+      geometry) sits behind the type. "Est. in 2019" sits as a small chip.
+    - Featured Work carousel: a wide horizontal scroller of project cards.
+      Each card has a project plate, project name, and a service tag.
+    - Services band: numbered pillars (Brand Identity / Web Design & Dev /
+      Motion Systems) with a long-form manifesto intro.
+    - Motion Index: a special highlight section that hints at their
+      community/educational arm — featured reels, motion spotlights.
+    - Footer with contact + STORE link.
+
+  Motion / interaction:
+    - The 3D centerpiece is a Three.js mesh with a custom vertex shader
+      that breathes; reacts to cursor with a soft spring.
+    - Marquee lines scroll forever (CSS keyframes).
+    - Letters in the mission text reveal one at a time as they enter the
+      viewport.
+    - Project cards lift slightly on hover and reveal a colored accent
+      underline.
+
+  Color system (extracted from screenshots / training):
+    --ink       #050505   (page, near-black)
+    --ink-2     #141414   (panels)
+    --ink-3     #1f1f1f   (cards)
+    --paper     #f5f3ee   (off-white)
+    --paper-2   #c8c2b5
+    --accent    #ff5a2c   (signal orange)
+    --accent-2  #6ee2ff   (electric cyan)
+    --accent-3  #c8ff3a   (lime — used very sparingly)
+
+  CHALLENGES SOLVED
+  -----------------
+    - Three.js blob with a noise-displaced sphere + rim shader, on top
+      of a subtle film grain — captures the "always moving" feel without
+      pulling in heavy assets.
+    - Reveal animation uses IntersectionObserver to add staggered
+      transition-delays per character.
+    - Marquee implemented as duplicated content + CSS keyframes (no JS
+      ticker needed) — pauses on hover.
+    - Featured Work row is a native horizontal scroller with scroll-snap
+      and a small drag-to-scroll affordance.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stōkt — Moving brands forward</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root{
+      --ink:#050505;
+      --ink-2:#141414;
+      --ink-3:#1f1f1f;
+      --ink-4:#2a2a2a;
+      --paper:#f5f3ee;
+      --paper-2:#c8c2b5;
+      --accent:#ff5a2c;
+      --accent-2:#6ee2ff;
+      --accent-3:#c8ff3a;
+      --font-display:'Archivo','Inter',system-ui,sans-serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--ink)}
+    body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:default}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit}
+    ::selection{background:var(--accent);color:var(--ink)}
+
+    .container{max-width:1440px;margin:0 auto;padding:0 48px;position:relative;z-index:1}
+    @media (max-width:780px){.container{padding:0 20px}}
+
+    /* Grain */
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:80;opacity:.06;mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>")}
+
+    /* Three.js hero canvas */
+    #stage{position:absolute;inset:0;z-index:0;display:block}
+    .hero{position:relative;overflow:hidden;min-height:100vh;padding:0;display:flex;flex-direction:column;justify-content:space-between}
+
+    /* Top chip */
+    .est-chip{position:absolute;top:120px;left:48px;z-index:5;display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid rgba(245,243,238,.18);border-radius:999px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:rgba(245,243,238,.7);text-transform:uppercase;backdrop-filter:blur(8px);background:rgba(5,5,5,.4)}
+    .est-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @media (max-width:780px){.est-chip{left:20px}}
+
+    /* Nav */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:linear-gradient(180deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,0) 100%);backdrop-filter:blur(6px)}
+    @media (max-width:780px){.nav{padding:14px 20px}}
+    .nav .brand{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+    .nav .brand .o{width:22px;height:22px;border-radius:50%;background:var(--accent);position:relative}
+    .nav .brand .o::after{content:'';position:absolute;inset:5px;background:var(--ink);border-radius:50%}
+    .nav .center{display:flex;gap:30px;font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,243,238,.7)}
+    .nav .center a{position:relative;padding:4px 0;transition:color .2s}
+    .nav .center a:hover{color:var(--paper)}
+    .nav .center a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+    .nav .center a:hover::after{transform:scaleX(1)}
+    .nav .right{display:flex;align-items:center;gap:18px}
+    .nav .lang{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:rgba(245,243,238,.7);text-transform:uppercase;padding:6px 12px;border:1px solid rgba(245,243,238,.18);border-radius:999px}
+    .nav .lang .on{color:var(--paper);font-weight:700}
+    .nav .cta{padding:10px 18px;background:var(--paper);color:var(--ink);border-radius:999px;font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;transition:all .25s}
+    .nav .cta:hover{background:var(--accent);color:var(--ink)}
+    @media (max-width:780px){.nav .center{display:none}}
+
+    /* Hero */
+    .hero-top{padding-top:140px}
+    .hero .top-marquee{font-family:var(--font-display);font-weight:800;font-size:clamp(72px,14vw,200px);line-height:.9;letter-spacing:-.03em;color:var(--paper);margin:0 0 24px;display:flex;align-items:baseline;gap:24px;flex-wrap:wrap}
+    .hero .top-marquee .label{font-family:var(--font-display);font-weight:500;font-size:14px;letter-spacing:.18em;color:rgba(245,243,238,.55);text-transform:uppercase;align-self:flex-start;margin-top:18px}
+    .hero .top-marquee em{font-style:italic;color:var(--accent);font-weight:600}
+
+    .hero .mission{margin:60px 0 80px;display:grid;grid-template-columns:auto 1fr;gap:60px;align-items:end;max-width:1280px}
+    @media (max-width:780px){.hero .mission{grid-template-columns:1fr;gap:24px;margin:40px 0}}
+    .hero .mission .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,243,238,.5);text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);align-self:end;padding-bottom:8px}
+    .hero .mission p{font-family:var(--font-display);font-weight:500;font-size:clamp(20px,2.2vw,32px);line-height:1.4;letter-spacing:.01em;margin:0;color:var(--paper);max-width:30ch}
+    .hero .mission p .reveal-char{display:inline-block;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+    .hero .mission p .reveal-char.in{opacity:1;transform:translateY(0)}
+    .hero .mission p em{font-style:italic;color:var(--accent);font-weight:500}
+
+    .hero-bottom{padding-bottom:60px;display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap}
+    .hero-bottom .left{display:flex;flex-direction:column;gap:6px}
+    .hero-bottom .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,243,238,.5);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+    .hero-bottom .label::before{content:'';width:24px;height:1px;background:rgba(245,243,238,.3)}
+    .hero-bottom .scroll{display:flex;align-items:center;gap:14px;color:rgba(245,243,238,.55);font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+    .hero-bottom .scroll .bar{width:80px;height:1px;background:rgba(245,243,238,.3);position:relative;overflow:hidden}
+    .hero-bottom .scroll .bar::after{content:'';position:absolute;inset:0;background:var(--accent);transform:translateX(-100%);animation:slide 2.4s ease-in-out infinite}
+    @keyframes slide{0%,100%{transform:translateX(-100%)}50%{transform:translateX(100%)}}
+
+    /* Section heading */
+    .sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin:0 0 60px;gap:24px;flex-wrap:wrap}
+    .sec-head .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,243,238,.5);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px}
+    .sec-head .lbl::before{content:'';width:24px;height:1px;background:rgba(245,243,238,.3)}
+    .sec-head h2{font-family:var(--font-display);font-weight:700;font-size:clamp(48px,7vw,108px);line-height:.95;letter-spacing:-.02em;margin:0;color:var(--paper)}
+    .sec-head h2 em{font-style:italic;font-weight:500;color:var(--accent)}
+    .sec-head .right{display:flex;gap:14px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(245,243,238,.6)}
+
+    /* Marquee strip */
+    .strip{border-top:1px solid rgba(245,243,238,.08);border-bottom:1px solid rgba(245,243,238,.08);padding:30px 0;overflow:hidden;background:rgba(245,243,238,.02);position:relative}
+    .strip .track{display:flex;gap:64px;animation:scroll 32s linear infinite;white-space:nowrap;align-items:center;padding:0 32px}
+    .strip .track:hover{animation-play-state:paused}
+    .strip .track span{font-family:var(--font-display);font-weight:700;font-size:24px;color:rgba(245,243,238,.4);letter-spacing:.02em;display:inline-flex;align-items:center;gap:24px}
+    .strip .track span em{font-style:italic;color:var(--accent);font-weight:500}
+    .strip .track span::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+    @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* Featured row */
+    .featured{padding:120px 0}
+    .frow{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    @media (max-width:900px){.frow{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:600px){.frow{grid-template-columns:1fr}}
+    .fcard{position:relative;background:var(--ink-3);border:1px solid rgba(245,243,238,.06);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s ease}
+    .fcard:hover{transform:translateY(-6px);border-color:rgba(255,90,44,.4)}
+    .fcard .plate{aspect-ratio:16/10;position:relative;overflow:hidden;background:var(--plate-bg, var(--ink-2))}
+    .fcard .plate::before{content:'';position:absolute;inset:0;background:var(--plate-pattern, none);opacity:.9}
+    .fcard .plate::after{content:'';position:absolute;left:20px;top:20px;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:rgba(245,243,238,.7);text-transform:uppercase}
+    .fcard .plate .num{position:absolute;right:20px;top:20px;font-family:var(--font-display);font-weight:800;font-size:56px;color:rgba(245,243,238,.08);line-height:1}
+    .fcard[data-f="1"] .plate{background:linear-gradient(135deg,#1a1f2a,#2a1f3a)}
+    .fcard[data-f="1"] .plate::after{content:'BROADWAY VP'}
+    .fcard[data-f="2"] .plate{background:linear-gradient(135deg,#2a1a1a,#3a2a1a)}
+    .fcard[data-f="2"] .plate::after{content:'WE SCALE IT'}
+    .fcard[data-f="3"] .plate{background:linear-gradient(135deg,#1a2a2a,#1a3a2a)}
+    .fcard[data-f="3"] .plate::after{content:'MAJOR MEDIA'}
+    .fcard[data-f="4"] .plate{background:linear-gradient(135deg,#2a1a2a,#3a1a3a)}
+    .fcard[data-f="4"] .plate::after{content:'ENZO DREW'}
+    .fcard[data-f="5"] .plate{background:linear-gradient(135deg,#1a1a2a,#0a0a1a)}
+    .fcard[data-f="5"] .plate::after{content:'7 PHASES'}
+    .fcard[data-f="6"] .plate{background:linear-gradient(135deg,#2a2a1a,#1a1a0a)}
+    .fcard[data-f="6"] .plate::after{content:'KASTLE AI'}
+    .fcard .plate .glyph{position:absolute;left:24px;bottom:18px;font-family:var(--font-display);font-weight:700;font-size:32px;color:var(--paper);letter-spacing:-.02em;line-height:1}
+    .fcard .meta{padding:20px 24px 24px;display:flex;flex-direction:column;gap:6px}
+    .fcard .meta .name{font-family:var(--font-display);font-weight:600;font-size:20px;color:var(--paper);letter-spacing:-.01em}
+    .fcard .meta .tg{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:rgba(245,243,238,.5);text-transform:uppercase;display:flex;flex-wrap:wrap;gap:8px}
+    .fcard .meta .tg span{padding:3px 8px;border:1px solid rgba(245,243,238,.12);border-radius:999px}
+
+    /* Services */
+    .services{padding:120px 0;border-top:1px solid rgba(245,243,238,.08)}
+    .services .grid{display:grid;grid-template-columns:1fr 1.6fr;gap:60px;align-items:start}
+    @media (max-width:900px){.services .grid{grid-template-columns:1fr}}
+    .services .intro p{font-family:var(--font-ui);font-size:16px;line-height:1.75;color:rgba(245,243,238,.7);margin:24px 0 0;max-width:42ch}
+    .pillars{display:flex;flex-direction:column;gap:0}
+    .pillar{padding:40px 0;border-bottom:1px solid rgba(245,243,238,.08);display:grid;grid-template-columns:60px 1.4fr 1fr;gap:32px;align-items:start;transition:padding .35s ease;cursor:pointer}
+    .pillar:first-child{border-top:1px solid rgba(245,243,238,.08)}
+    .pillar:hover{padding-left:16px}
+    .pillar .n{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;font-weight:700}
+    .pillar h3{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,3vw,40px);letter-spacing:-.015em;margin:0;color:var(--paper);line-height:1.05}
+    .pillar h3 em{font-style:italic;color:var(--accent);font-weight:500}
+    .pillar p{font-size:14px;line-height:1.7;color:rgba(245,243,238,.6);margin:8px 0 0}
+    .pillar .tags{display:flex;flex-wrap:wrap;gap:6px;align-self:end;justify-self:end}
+    .pillar .tags span{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;padding:4px 10px;border:1px solid rgba(245,243,238,.15);border-radius:999px;color:rgba(245,243,238,.6);text-transform:uppercase}
+
+    /* Motion index strip */
+    .motion{padding:120px 0;border-top:1px solid rgba(245,243,238,.08);background:linear-gradient(180deg,var(--ink),var(--ink-2),var(--ink))}
+    .motion .row{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+    @media (max-width:900px){.motion .row{grid-template-columns:1fr}}
+    .motion h2{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,6vw,96px);line-height:.95;letter-spacing:-.025em;margin:0 0 24px}
+    .motion h2 em{font-style:italic;color:var(--accent-2);font-weight:500}
+    .motion p{font-size:16px;line-height:1.75;color:rgba(245,243,238,.7);margin:0 0 28px;max-width:48ch}
+    .motion .play-row{display:flex;gap:12px;flex-wrap:wrap}
+    .motion .reel{aspect-ratio:16/9;border-radius:12px;background:var(--ink-3);border:1px solid rgba(245,243,238,.08);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .motion .reel::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(110,226,255,.18),transparent 60%)}
+    .motion .reel .play{width:64px;height:64px;border-radius:50%;background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:0;transition:transform .25s}
+    .motion .reel .play:hover{transform:scale(1.05)}
+    .motion .reel .play svg{width:20px;height:20px;fill:currentColor}
+
+    /* CTA band */
+    .cta-band{padding:120px 0;border-top:1px solid rgba(245,243,238,.08);text-align:center;background:var(--paper);color:var(--ink)}
+    .cta-band h2{font-family:var(--font-display);font-weight:700;font-size:clamp(48px,8vw,128px);line-height:.95;letter-spacing:-.03em;margin:0 0 24px;color:var(--ink)}
+    .cta-band h2 em{font-style:italic;color:var(--accent);font-weight:500}
+    .cta-band p{font-size:18px;line-height:1.6;color:rgba(5,5,5,.7);margin:0 auto 40px;max-width:46ch}
+    .cta-band .actions{display:inline-flex;gap:14px;flex-wrap:wrap;justify-content:center}
+    .cta-band .btn{padding:14px 28px;border-radius:999px;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;transition:all .25s;border:1px solid var(--ink)}
+    .cta-band .btn.primary{background:var(--ink);color:var(--paper)}
+    .cta-band .btn.primary:hover{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+    .cta-band .btn.ghost{background:transparent;color:var(--ink)}
+    .cta-band .btn.ghost:hover{background:var(--ink);color:var(--paper)}
+
+    /* Footer */
+    footer{padding:80px 0 32px;border-top:1px solid rgba(245,243,238,.08)}
+    footer .row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:60px}
+    @media (max-width:780px){footer .row{grid-template-columns:1fr 1fr;gap:32px}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,243,238,.5);margin:0 0 18px;text-transform:uppercase}
+    footer a,footer p{display:block;font-size:13px;color:rgba(245,243,238,.7);margin-bottom:8px;line-height:1.6;transition:color .2s}
+    footer a:hover{color:var(--paper)}
+    footer .legal{margin-top:60px;padding-top:32px;border-top:1px solid rgba(245,243,238,.08);font-size:11px;color:rgba(245,243,238,.4);letter-spacing:.14em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+    /* Reveal */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s ease}
+    .reveal.in{opacity:1;transform:translateY(0)}
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <nav class="nav">
+    <a class="brand" href="#"><span class="o"></span>STŌKT</a>
+    <div class="center">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#about">About Us</a>
+      <a href="#motion">Motion Index</a>
+      <a href="#">STORE</a>
+    </div>
+    <div class="right">
+      <span class="lang">Select Language · <span class="on">EN</span></span>
+      <a class="cta" href="#cta">Get an estimate</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <canvas id="stage"></canvas>
+    <span class="est-chip"><span class="dot"></span>Est. in 2019</span>
+    <div class="container hero-top" style="position:relative;z-index:2">
+      <h1 class="top-marquee">
+        <span class="label">( WE ARE STŌKT )</span><br>
+        MOVING BRANDS<br>
+        <em>FORWARD</em>
+      </h1>
+
+      <div class="mission">
+        <span class="lbl">( MOVING FORWARD )</span>
+        <p><span class="reveal-char">S</span><span class="reveal-char">t</span><span class="reveal-char">ō</span><span class="reveal-char">k</span><span class="reveal-char">t</span> <span class="reveal-char">b</span><span class="reveal-char">u</span><span class="reveal-char">i</span><span class="reveal-char">l</span><span class="reveal-char">d</span><span class="reveal-char">s</span> <span class="reveal-char">m</span><span class="reveal-char">o</span><span class="reveal-char">t</span><span class="reveal-char">i</span><span class="reveal-char">o</span><span class="reveal-char">n</span><span class="reveal-char">-</span><span class="reveal-char">d</span><span class="reveal-char">r</span><span class="reveal-char">i</span><span class="reveal-char">v</span><span class="reveal-char">e</span><span class="reveal-char">n</span> <span class="reveal-char">b</span><span class="reveal-char">r</span><span class="reveal-char">a</span><span class="reveal-char">n</span><span class="reveal-char">d</span> <span class="reveal-char">s</span><span class="reveal-char">y</span><span class="reveal-char">s</span><span class="reveal-char">t</span><span class="reveal-char">e</span><span class="reveal-char">m</span><span class="reveal-char">s</span><span class="reveal-char">,</span> <span class="reveal-char">u</span><span class="reveal-char">n</span><span class="reveal-char">i</span><span class="reveal-char">f</span><span class="reveal-char">y</span><span class="reveal-char">i</span><span class="reveal-char">n</span><span class="reveal-char">g</span> <span class="reveal-char">b</span><span class="reveal-char">r</span><span class="reveal-char">a</span><span class="reveal-char">n</span><span class="reveal-char">d</span><span class="reveal-char">i</span><span class="reveal-char">n</span><span class="reveal-char">g</span><span class="reveal-char">,</span> <span class="reveal-char">w</span><span class="reveal-char">e</span><span class="reveal-char">b</span><span class="reveal-char">,</span> <span class="reveal-char">a</span><span class="reveal-char">n</span><span class="reveal-char">d</span> <span class="reveal-char">m</span><span class="reveal-char">o</span><span class="reveal-char">t</span><span class="reveal-char">i</span><span class="reveal-char">o</span><span class="reveal-char">n</span> <span class="reveal-char">i</span><span class="reveal-char">n</span><span class="reveal-char">t</span><span class="reveal-char">o</span> <span class="reveal-char">a</span> <span class="reveal-char">s</span><span class="reveal-char">i</span><span class="reveal-char">n</span><span class="reveal-char">g</span><span class="reveal-char">l</span><span class="reveal-char">e</span> <span class="reveal-char">e</span><span class="reveal-char">v</span><span class="reveal-char">o</span><span class="reveal-char">l</span><span class="reveal-char">v</span><span class="reveal-char">i</span><span class="reveal-char">n</span><span class="reveal-char">g</span> <span class="reveal-char">e</span><span class="reveal-char">x</span><span class="reveal-char">e</span><span class="reveal-char">c</span><span class="reveal-char">u</span><span class="reveal-char">t</span><span class="reveal-char">i</span><span class="reveal-char">o</span><span class="reveal-char">n</span><span class="reveal-char">.</span></p>
+      </div>
+    </div>
+
+    <div class="container hero-bottom" style="position:relative;z-index:2">
+      <div class="left">
+        <span class="label">Featured Projects</span>
+      </div>
+      <div class="scroll">
+        <span class="bar"></span>
+        Scroll for more
+      </div>
+    </div>
+  </header>
+
+  <!-- MARQUEE STRIP -->
+  <section class="strip" aria-hidden="true">
+    <div class="track">
+      <span>Brand Identity</span>
+      <span>Motion &amp; 3D</span>
+      <span><em>Web Design &amp; Dev</em></span>
+      <span>Design Systems</span>
+      <span>Art Direction</span>
+      <span>Visual Identity</span>
+      <span>Brand Identity</span>
+      <span>Motion &amp; 3D</span>
+      <span><em>Web Design &amp; Dev</em></span>
+      <span>Design Systems</span>
+      <span>Art Direction</span>
+      <span>Visual Identity</span>
+    </div>
+  </section>
+
+  <!-- FEATURED WORK -->
+  <section id="work" class="featured container">
+    <div class="sec-head">
+      <div>
+        <div class="lbl">Featured Work · All Work</div>
+        <h2>( <em>Recent</em> )<br>brand systems.</h2>
+      </div>
+      <div class="right">2024 — 2025 · 24 projects shipped</div>
+    </div>
+
+    <div class="frow">
+      <article class="fcard" data-f="1">
+        <div class="plate"><span class="num">01</span><span class="glyph">Broadway VP</span></div>
+        <div class="meta">
+          <span class="name">Broadway Venture Partners</span>
+          <span class="tg"><span>Web Design &amp; Development</span></span>
+        </div>
+      </article>
+      <article class="fcard" data-f="2">
+        <div class="plate"><span class="num">02</span><span class="glyph">We Scale It</span></div>
+        <div class="meta">
+          <span class="name">We Scale It</span>
+          <span class="tg"><span>Brand Identity</span><span>Web Design &amp; Dev</span></span>
+        </div>
+      </article>
+      <article class="fcard" data-f="3">
+        <div class="plate"><span class="num">03</span><span class="glyph">Major Media</span></div>
+        <div class="meta">
+          <span class="name">Major Media Agency</span>
+          <span class="tg"><span>Web Design &amp; Development</span></span>
+        </div>
+      </article>
+      <article class="fcard" data-f="4">
+        <div class="plate"><span class="num">04</span><span class="glyph">Enzo Drew</span></div>
+        <div class="meta">
+          <span class="name">Enzo Drew — Creative Company</span>
+          <span class="tg"><span>Web Design &amp; Development</span></span>
+        </div>
+      </article>
+      <article class="fcard" data-f="5">
+        <div class="plate"><span class="num">05</span><span class="glyph">7 Phases</span></div>
+        <div class="meta">
+          <span class="name">7 Phases of Madness</span>
+          <span class="tg"><span>Brand Identity</span><span>Motion &amp; 3D</span></span>
+        </div>
+      </article>
+      <article class="fcard" data-f="6">
+        <div class="plate"><span class="num">06</span><span class="glyph">Kastle AI</span></div>
+        <div class="meta">
+          <span class="name">Kastle AI</span>
+          <span class="tg"><span>Motion &amp; 3D</span><span>Web Design &amp; Dev</span></span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="services container">
+    <div class="sec-head">
+      <div>
+        <div class="lbl">Services &amp; Expertise</div>
+        <h2>( <em>Digital</em> )<br>design powerhouse.</h2>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="intro reveal">
+        <p>Over the last decade, we've refined a wide range of skills in digital design, offering services mastered to perfection and always driven by the purpose of <em style="font-style:italic;color:var(--accent)">motion</em>.</p>
+        <a class="btn" style="display:inline-block;margin-top:32px;padding:12px 22px;border:1px solid var(--paper);border-radius:999px;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);transition:all .25s" href="#">Learn More →</a>
+      </div>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="n">01</span>
+          <div>
+            <h3>Brand <em>Identity</em></h3>
+            <p>We design brands, systems, and experiences that feel intentional from the first tap to the last interaction.</p>
+          </div>
+          <div class="tags"><span>Identity</span><span>Branding</span><span>Art Direction</span></div>
+        </div>
+        <div class="pillar reveal">
+          <span class="n">02</span>
+          <div>
+            <h3>Web <em>Design</em> &amp; Dev</h3>
+            <p>Marketing sites, design systems, and product UI — built to ship and built to scale with the team that owns them.</p>
+          </div>
+          <div class="tags"><span>UX Design</span><span>UI Design</span><span>Web Dev</span></div>
+        </div>
+        <div class="pillar reveal">
+          <span class="n">03</span>
+          <div>
+            <h3>Motion <em>Systems</em></h3>
+          <p>Brand-grade motion: from logo reveals to 3D product films to a motion language that holds a system together.</p>
+          </div>
+          <div class="tags"><span>2D</span><span>3D</span><span>Lottie</span></div>
+        </div>
+        <div class="pillar reveal">
+          <span class="n">04</span>
+          <div>
+            <h3>Branding &amp; <em>Product</em></h3>
+          <p>Embedded with founders and product teams to ship the visual system that lets the product finally look like itself.</p>
+          </div>
+          <div class="tags"><span>Product Design</span><span>Webflow</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOTION INDEX -->
+  <section id="motion" class="motion">
+    <div class="container">
+      <div class="row">
+        <div>
+          <div class="lbl" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,243,238,.5);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="width:24px;height:1px;background:rgba(245,243,238,.3);display:inline-block"></span>Motion Index · curated</div>
+          <h2>( <em>Motion</em> )<br>is a brand act.</h2>
+          <p>A curated feed of motion references, mini-tutorials, and reels — Stōkt's public notebook for the moving brand. Updated weekly.</p>
+          <a class="btn" style="display:inline-block;padding:12px 22px;border:1px solid var(--paper);border-radius:999px;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper)" href="#">Open the index →</a>
+        </div>
+        <div class="play-row" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div class="reel"><span class="play" aria-label="Play"><svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg></span></div>
+          <div class="reel"><span class="play" aria-label="Play"><svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg></span></div>
+          <div class="reel"><span class="play" aria-label="Play"><svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg></span></div>
+          <div class="reel"><span class="play" aria-label="Play"><svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section id="cta" class="cta-band">
+    <div class="container">
+      <h2>( Let's move<br><em>forward</em> )</h2>
+      <p>Tell us about the brand you're trying to ship. We'll come back with a one-page plan and a quote — usually within 48 hours.</p>
+      <div class="actions">
+        <a class="btn primary" href="#">Get an estimate</a>
+        <a class="btn ghost" href="#">View all work</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="container">
+    <div class="row">
+      <div>
+        <h4>Studio</h4>
+        <p>Stōkt Creative Co.</p>
+        <p>Brooklyn, NY · Berlin, DE</p>
+        <p>hello@wearestokt.com</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="#work">Work</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#">Store</a>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <a href="#">Instagram</a>
+        <a href="#">Vimeo</a>
+        <a href="#">Behance</a>
+        <a href="#">LinkedIn</a>
+      </div>
+      <div>
+        <h4>Motion Index</h4>
+        <a href="#">Latest reels</a>
+        <a href="#">Newsletter</a>
+        <a href="#">Submit work</a>
+      </div>
+    </div>
+    <div class="legal">
+      <span>© 2026 Stōkt Creative Co. — Moving brands forward.</span>
+      <span>( WE ARE STŌKT )</span>
+    </div>
+  </footer>
+
+  <script>
+  // Reveal
+  const io = new IntersectionObserver(es => {
+    for (const e of es) if (e.isIntersecting) e.target.classList.add('in');
+  }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Reveal chars in hero mission
+  const charIO = new IntersectionObserver(es => {
+    for (const e of es) {
+      if (e.isIntersecting) {
+        const chars = e.target.querySelectorAll('.reveal-char');
+        chars.forEach((c, i) => setTimeout(() => c.classList.add('in'), i * 14));
+        charIO.unobserve(e.target);
+      }
+    }
+  }, {threshold: 0.3});
+  const mission = document.querySelector('.mission p');
+  if (mission) charIO.observe(mission);
+
+  // Three.js hero centerpiece — a slow, breathing blob
+  (function(){
+    const canvas = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 6);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const k = new THREE.DirectionalLight(0xff7a4a, 1.4); k.position.set(3,3,4); scene.add(k);
+    const r = new THREE.DirectionalLight(0x6ee2ff, 0.9); r.position.set(-4,-2,-3); scene.add(r);
+
+    const geo = new THREE.IcosahedronGeometry(1.6, 24);
+    const uniforms = {uTime:{value:0}};
+    const vs = `
+      varying vec3 vN; varying vec3 vP;
+      uniform float uTime;
+      // hash + 3d noise
+      float h(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+      float n(vec3 p){
+        vec3 i=floor(p); vec3 f=fract(p);
+        f=f*f*(3.0-2.0*f);
+        return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),
+                       mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                   mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),
+                       mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);
+      }
+      void main(){
+        vN = normalize(normalMatrix * normal);
+        float d = n(normal * 1.6 + vec3(uTime*0.18)) * 0.45 + 0.1;
+        vec3 p = position + normal * d;
+        vP = (modelViewMatrix * vec4(p,1.0)).xyz;
+        gl_Position = projectionMatrix * vec4(vP,1.0);
+      }`;
+    const fs = `
+      precision highp float;
+      varying vec3 vN; varying vec3 vP;
+      void main(){
+        vec3 N = normalize(vN);
+        vec3 V = normalize(-vP);
+        float fres = pow(1.0 - max(dot(N,V),0.0), 2.5);
+        vec3 col = mix(vec3(0.05), vec3(1.0,0.35,0.18), fres);
+        col += vec3(0.42,0.88,1.0) * pow(fres, 4.0) * 0.6;
+        gl_FragColor = vec4(col, 1.0 - fres*0.4);
+      }`;
+    const mat = new THREE.ShaderMaterial({vertexShader:vs, fragmentShader:fs, uniforms, transparent:true});
+    const blob = new THREE.Mesh(geo, mat);
+    blob.position.set(2.2, -0.2, -1.2);
+    scene.add(blob);
+
+    // a second, smaller wire shell behind it
+    const shell = new THREE.Mesh(new THREE.IcosahedronGeometry(1.9, 1), new THREE.MeshBasicMaterial({color:0xffffff, wireframe:true, transparent:true, opacity:0.04}));
+    shell.position.copy(blob.position);
+    scene.add(shell);
+
+    const mouse = {x:0,y:0,tx:0,ty:0};
+    window.addEventListener('mousemove', e => {
+      mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+    });
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+    });
+
+    function tick(t){
+      const ts = t*0.001;
+      uniforms.uTime.value = ts;
+      mouse.x += (mouse.tx - mouse.x) * 0.04;
+      mouse.y += (mouse.ty - mouse.y) * 0.04;
+      blob.rotation.y = ts * 0.12 + mouse.x * 0.5;
+      blob.rotation.x = ts * 0.06 + mouse.y * 0.3;
+      shell.rotation.copy(blob.rotation);
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>

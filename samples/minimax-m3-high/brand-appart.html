@@ -1,0 +1,527 @@
+<!doctype html>
+<!--
+  Original URL: https://www.brandappart.com/
+  Filename:     brand-appart.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: Paris-based design studio for "bold startups." Cream-paper
+  canvas, confident editorial type, big project tiles in a 3-column grid,
+  warm brand accents that shift per case study, and a "Trusted by +40
+  founders" client wall. The vibe is founder-friendly: conversion-driven,
+  ROI-aware, but still expensive-looking.
+
+  Layout / hierarchy:
+    - Slim top nav: logo (left), Works · About · Contact (center),
+      "Book a call now" pill + FR/EN language toggle (right).
+    - Hero: "The design partner for top-tier companies." + subline +
+      CTA. A small Paris, France location badge.
+    - "Featured work" — 3-column responsive grid of project tiles.
+      Each tile shows category tag, project name, year, and a small
+      "Discover case →" link. The tiles use distinct bold accents
+      (lime, peach, lilac, etc.) per project.
+    - Testimonial carousel with multi-paragraph quotes and the
+      founder's signature.
+    - "What we ship." — services band with four numbered pillars.
+    - Trusted by client wall (logo strip).
+    - Footer with contact CTA and a small studio signature.
+
+  Motion / interaction:
+    - Tiles rise and fade in as they enter the viewport.
+    - Hover on a tile scales the artwork slightly and reveals a colored
+      underline on the project name.
+    - Testimonials are scrollable horizontally with snap.
+    - A subtle paper-grain overlay sits across the whole page.
+
+  Color system (from screenshots / source CSS):
+    --paper     #f4ede3   (warm cream — the page)
+    --paper-2   #ebe1d2   (slightly darker cream, section breaks)
+    --ink       #111111   (primary type)
+    --ink-2     #2a2a2a   (body)
+    --ink-3     #6b6b6b   (muted)
+    --accent-1  #c8ff4d   (electric lime)
+    --accent-2  #ff7a5a   (coral)
+    --accent-3  #b9a3ff   (lilac)
+    --accent-4  #ffd75e   (sun)
+    --accent-5  #6ed7c5   (mint)
+
+  CHALLENGES SOLVED
+  -----------------
+    - Replaced client logos with tasteful wordmark placeholders that
+      look intentional rather than missing.
+    - Built per-tile accent CSS variables so each project tile can
+      rotate palette without bespoke styles.
+    - Horizontal testimonial scroller using scroll-snap and a
+      subtle "drag" cursor.
+    - Cream paper background + SVG grain overlay to feel printed,
+      not "default white."
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brand Appart — Design partner for top-tier companies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --paper:#f4ede3;
+      --paper-2:#ebe1d2;
+      --paper-3:#e0d4bf;
+      --ink:#111111;
+      --ink-2:#2a2a2a;
+      --ink-3:#6b6b6b;
+      --ink-4:#9a9a9a;
+      --accent-1:#c8ff4d;
+      --accent-2:#ff7a5a;
+      --accent-3:#b9a3ff;
+      --accent-4:#ffd75e;
+      --accent-5:#6ed7c5;
+      --font-display:'Instrument Serif','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--paper)}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:default}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer}
+    ::selection{background:var(--ink);color:var(--paper)}
+
+    .container{max-width:1280px;margin:0 auto;padding:0 32px}
+    @media (max-width:780px){.container{padding:0 20px}}
+
+    /* Paper grain */
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:80;opacity:.18;mix-blend-mode:multiply;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>")}
+
+    /* Nav */
+    .nav{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid rgba(17,17,17,.06)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;max-width:1280px;margin:0 auto}
+    .nav .brand{font-family:var(--font-display);font-size:24px;font-weight:400;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .nav .brand::before{content:'';width:10px;height:10px;background:var(--ink);border-radius:2px;display:inline-block}
+    .nav .center{display:flex;gap:36px;font-size:14px;color:var(--ink-2)}
+    .nav .center a{position:relative;padding:4px 0;transition:color .2s ease}
+    .nav .center a:hover{color:var(--ink)}
+    .nav .right{display:flex;align-items:center;gap:14px}
+    .nav .lang{display:flex;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;border:1px solid rgba(17,17,17,.15);border-radius:999px;padding:3px 8px}
+    .nav .lang a{padding:2px 6px;border-radius:999px;color:var(--ink-3)}
+    .nav .lang a.on{background:var(--ink);color:var(--paper)}
+    .nav .cta{background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500;transition:all .25s ease}
+    .nav .cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(17,17,17,.18)}
+    @media (max-width:780px){.nav .center{display:none}.nav-inner{padding:14px 20px}}
+
+    /* Hero */
+    .hero{padding:80px 0 60px;position:relative}
+    .hero .loc{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:48px}
+    .hero .loc::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-2)}
+    .hero h1{font-family:var(--font-display);font-weight:400;font-size:clamp(56px,9vw,140px);line-height:.96;letter-spacing:-.025em;margin:0;max-width:14ch}
+    .hero h1 em{font-style:italic;color:var(--accent-2)}
+    .hero .row{display:grid;grid-template-columns:1.2fr 1fr;gap:60px;margin-top:60px;align-items:end}
+    @media (max-width:900px){.hero .row{grid-template-columns:1fr;gap:32px}}
+    .hero .lede{font-size:18px;line-height:1.55;color:var(--ink-2);max-width:46ch;margin:0}
+    .hero .actions{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+    .hero .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;background:var(--ink);color:var(--paper);border-radius:999px;font-size:14px;font-weight:500;transition:all .25s ease}
+    .hero .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(17,17,17,.18)}
+    .hero .btn-primary .arr{width:18px;height:18px;border-radius:50%;background:var(--accent-1);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+    .hero .btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:14px 0;color:var(--ink);font-size:13px;letter-spacing:.04em;border-bottom:1px solid var(--ink)}
+    .hero .btn-secondary:hover{border-color:var(--accent-2);color:var(--accent-2)}
+
+    /* Section heading */
+    .sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin:80px 0 32px;gap:40px;flex-wrap:wrap}
+    .sec-head .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+    .sec-head .eyebrow::before{content:'';width:24px;height:1px;background:var(--ink-3)}
+    .sec-head h2{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,6vw,88px);line-height:1;letter-spacing:-.02em;margin:0;max-width:18ch}
+    .sec-head h2 em{font-style:italic;color:var(--accent-2)}
+    .sec-head p{color:var(--ink-3);font-size:14px;max-width:32ch;line-height:1.6;margin:0}
+
+    /* Featured grid */
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    @media (max-width:1000px){.grid-3{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid-3{grid-template-columns:1fr}}
+    .tile{position:relative;background:var(--paper-2);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:20px;min-height:380px;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease;cursor:pointer;border:1px solid rgba(17,17,17,.06)}
+    .tile:hover{transform:translateY(-6px);box-shadow:0 20px 40px -16px rgba(17,17,17,.18)}
+    .tile .art{position:relative;flex:1;border-radius:12px;overflow:hidden;background:var(--tile-bg, var(--accent-1));transition:transform .5s ease}
+    .tile:hover .art{transform:scale(1.03)}
+    .tile .art::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.18),transparent 60%)}
+    .tile .art .glyph{position:absolute;left:24px;bottom:20px;font-family:var(--font-display);font-size:64px;font-style:italic;line-height:.9;color:var(--ink);opacity:.95}
+    .tile .art .glyph small{display:block;font-family:var(--font-mono);font-style:normal;font-size:9px;letter-spacing:.2em;color:rgba(17,17,17,.55);margin-top:8px}
+    .tile .meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+    .tile .meta .left{display:flex;flex-direction:column;gap:2px}
+    .tile .meta .cat{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
+    .tile .meta .name{font-family:var(--font-display);font-size:24px;line-height:1.05;color:var(--ink)}
+    .tile .meta .year{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);letter-spacing:.08em}
+    .tile .disc{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);letter-spacing:.04em;display:inline-flex;align-items:center;gap:6px;position:relative}
+    .tile .disc::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:1px;background:var(--ink);transform:scaleX(.4);transform-origin:left;transition:transform .3s ease}
+    .tile:hover .disc::after{transform:scaleX(1)}
+
+    /* Per-tile palettes */
+    .tile[data-a="1"]{--tile-bg:var(--accent-1)}
+    .tile[data-a="2"]{--tile-bg:var(--accent-2);color:#fff}
+    .tile[data-a="2"] .meta .name,.tile[data-a="2"] .meta .cat,..tile[data-a="2"] .disc{color:#fff}
+    .tile[data-a="2"] .disc::after{background:#fff}
+    .tile[data-a="3"]{--tile-bg:var(--accent-3)}
+    .tile[data-a="4"]{--tile-bg:var(--accent-4)}
+    .tile[data-a="5"]{--tile-bg:var(--accent-5)}
+    .tile[data-a="6"]{--tile-bg:var(--paper-3)}
+    .tile[data-a="7"]{--tile-bg:var(--ink);color:var(--paper)}
+    .tile[data-a="7"] .meta .name,.tile[data-a="7"] .meta .cat,.tile[data-a="7"] .disc{color:var(--paper)}
+    .tile[data-a="7"] .disc::after{background:var(--paper)}
+
+    /* Testimonials */
+    .testimonials{padding:80px 0;background:var(--paper-2);border-top:1px solid rgba(17,17,17,.06);border-bottom:1px solid rgba(17,17,17,.06);position:relative}
+    .testimonials .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:8px}
+    .testimonials .label::before{content:'';width:24px;height:1px;background:var(--ink-3)}
+    .t-row{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;padding:20px 0 30px;cursor:grab}
+    .t-row.dragging{cursor:grabbing;scroll-behavior:auto}
+    .t-row::-webkit-scrollbar{height:6px}
+    .t-row::-webkit-scrollbar-track{background:transparent}
+    .t-row::-webkit-scrollbar-thumb{background:rgba(17,17,17,.18);border-radius:3px}
+    .t-card{flex:0 0 540px;background:var(--paper);border-radius:18px;padding:36px;display:flex;flex-direction:column;gap:18px;scroll-snap-align:start;border:1px solid rgba(17,17,17,.06);position:relative}
+    @media (max-width:640px){.t-card{flex:0 0 86vw}}
+    .t-card .q{font-family:var(--font-display);font-size:22px;line-height:1.45;color:var(--ink-2);margin:0}
+    .t-card .q::before{content:'\201C';font-size:60px;color:var(--accent-2);line-height:0;display:block;margin-bottom:8px;font-family:var(--font-display)}
+    .t-card .who{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:18px;border-top:1px solid rgba(17,17,17,.08)}
+    .t-card .who .ava{width:42px;height:42px;border-radius:50%;background:var(--accent-1);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:18px;color:var(--ink)}
+    .t-card .who .who-meta{font-size:12px;color:var(--ink-3);line-height:1.5}
+    .t-card .who .who-meta strong{display:block;color:var(--ink);font-weight:600;font-size:13px;margin-bottom:2px}
+    .t-card.alt .ava{background:var(--accent-3)}
+    .t-card.alt2 .ava{background:var(--accent-4)}
+    .t-card.alt3 .ava{background:var(--accent-5)}
+
+    /* Services */
+    .services{padding:100px 0}
+    .services .head h2{font-family:var(--font-display);font-size:clamp(40px,6vw,80px);font-weight:400;margin:0;letter-spacing:-.02em;line-height:1.02;max-width:14ch}
+    .services .head p{color:var(--ink-3);margin:14px 0 60px;max-width:46ch}
+    .pillar{display:grid;grid-template-columns:80px 1fr 1.4fr;gap:32px;padding:36px 0;border-top:1px solid rgba(17,17,17,.1);align-items:start}
+    @media (max-width:780px){.pillar{grid-template-columns:1fr;gap:16px}}
+    .pillar:last-child{border-bottom:1px solid rgba(17,17,17,.1)}
+    .pillar .n{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);letter-spacing:.18em}
+    .pillar h3{font-family:var(--font-display);font-size:28px;font-weight:400;line-height:1.15;margin:0;max-width:24ch}
+    .pillar h3 em{font-style:italic;color:var(--accent-2)}
+    .pillar p{color:var(--ink-2);font-size:15px;line-height:1.65;margin:0}
+
+    /* Trust */
+    .trust{padding:80px 0;text-align:center;background:var(--ink);color:var(--paper);border-radius:32px;margin:40px 32px}
+    @media (max-width:780px){.trust{margin:40px 20px;border-radius:24px;padding:60px 20px}}
+    .trust .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:rgba(245,237,227,.5);text-transform:uppercase;margin-bottom:18px}
+    .trust h2{font-family:var(--font-display);font-size:clamp(48px,8vw,108px);font-weight:400;margin:0 0 40px;line-height:1;letter-spacing:-.02em}
+    .trust h2 em{font-style:italic;color:var(--accent-1)}
+    .trust .logos{display:grid;grid-template-columns:repeat(6,1fr);gap:24px;align-items:center;padding:24px 32px;max-width:1000px;margin:0 auto}
+    @media (max-width:900px){.trust .logos{grid-template-columns:repeat(3,1fr)}}
+    .trust .logos span{font-family:var(--font-display);font-size:24px;color:rgba(245,237,227,.5);font-style:italic;text-align:center;letter-spacing:.04em}
+    .trust .logos span:nth-child(3n){color:rgba(245,237,227,.85)}
+    .trust .cta{margin-top:48px;display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:var(--paper);color:var(--ink);border-radius:999px;font-weight:500;font-size:14px;transition:all .25s ease}
+    .trust .cta:hover{transform:translateY(-1px);background:var(--accent-1)}
+
+    /* Footer */
+    footer{padding:80px 0 40px;border-top:1px solid rgba(17,17,17,.1);margin-top:40px;background:var(--paper)}
+    footer .row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:60px}
+    @media (max-width:780px){footer .row{grid-template-columns:1fr 1fr;gap:32px}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-3);margin:0 0 20px;text-transform:uppercase}
+    footer a,footer p{display:block;font-size:13px;color:var(--ink-2);margin-bottom:10px;line-height:1.6;transition:color .2s}
+    footer a:hover{color:var(--ink)}
+    footer .big{font-family:var(--font-display);font-size:clamp(48px,8vw,120px);font-weight:400;line-height:1;letter-spacing:-.02em;margin:60px 0 30px;max-width:14ch}
+    footer .big em{font-style:italic;color:var(--accent-2)}
+    footer .legal{font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:flex;justify-content:space-between;padding-top:32px;border-top:1px solid rgba(17,17,17,.1);margin-top:60px}
+    @media (max-width:780px){footer .legal{flex-direction:column;gap:8px}}
+
+    /* Reveal */
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+    .reveal.in{opacity:1;transform:translateY(0)}
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#">Brand Appart</a>
+      <div class="center">
+        <a href="#work">Works</a>
+        <a href="#about">About us</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="right">
+        <span class="lang"><a href="#" class="on">FR</a><a href="#">EN</a></span>
+        <a class="cta" href="#contact">Book a call now →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero container">
+    <div class="loc">Paris, France</div>
+    <h1>The design <em>partner</em><br>for top-tier<br>companies.</h1>
+    <div class="row">
+      <p class="lede">We help funded startups ship iconic brands, conversion-ready sites, and investor-proof decks.</p>
+      <div class="actions">
+        <a class="btn-primary" href="#contact">Book an intro call <span class="arr">→</span></a>
+        <a class="btn-secondary" href="#work">See our work</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURED WORK -->
+  <section id="work" class="container">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow">Featured work</div>
+        <h2 style="margin-top:14px">We build brands that <em>fundraise,</em> convert, and <em>last.</em></h2>
+      </div>
+      <p>We create innovative and purposeful designs that not only capture attention but also drive meaningful results.</p>
+    </div>
+
+    <div class="grid-3">
+      <article class="tile" data-a="1">
+        <div class="art">
+          <span class="glyph">Incard<small>Fintech · 2024</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">Fintech</span>
+            <span class="name">Incard</span>
+          </div>
+          <span class="year">2024</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="2">
+        <div class="art">
+          <span class="glyph">Sowbeez<small>B2C App · 2023</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">B2C App</span>
+            <span class="name">Sowbeez</span>
+          </div>
+          <span class="year">2023</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="3">
+        <div class="art">
+          <span class="glyph">Forbes<small>Web 3.0 · 2023</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">Editorial</span>
+            <span class="name">Forbes Web 3.0</span>
+          </div>
+          <span class="year">2023</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="4">
+        <div class="art">
+          <span class="glyph">Sobry<small>Electrical · 2026</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">Electrical</span>
+            <span class="name">Sobry</span>
+          </div>
+          <span class="year">2026</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="5">
+        <div class="art">
+          <span class="glyph">We are<small>B2B SaaS · 2024</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">B2B SaaS</span>
+            <span class="name">We are</span>
+          </div>
+          <span class="year">2024</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="6">
+        <div class="art">
+          <span class="glyph">Stables<small>Web 3.0 · 2022</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">Web 3.0</span>
+            <span class="name">Stables</span>
+          </div>
+          <span class="year">2022</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+
+      <article class="tile" data-a="7">
+        <div class="art">
+          <span class="glyph">Jaws<small>Agency · 2026</small></span>
+        </div>
+        <div class="meta">
+          <div class="left">
+            <span class="cat">Agency</span>
+            <span class="name">Jaws Group</span>
+          </div>
+          <span class="year">2026</span>
+        </div>
+        <span class="disc">Discover case →</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="container">
+      <div class="label">Founder words</div>
+    </div>
+    <div class="t-row" id="trow">
+      <article class="t-card">
+        <p class="q">We'd seen other agencies lock everything down — two rounds of feedback, then pay more. With Brand Appart, the flexibility was real. That's why we chose them. The quality of the work speaks for itself. The rebranding landed exactly where we wanted it to, and the feedback we've gotten externally has been overwhelmingly positive. We're a demanding team, with moving targets and tight timelines. It still went well. That says a lot.</p>
+        <div class="who">
+          <span class="ava">S</span>
+          <div class="who-meta"><strong>Sébastien Tomi</strong>Co-Founder &amp; CEO @ Mysunbed</div>
+        </div>
+      </article>
+      <article class="t-card alt">
+        <p class="q">Working with Brand Appart has been an absolute pleasure. Beyond their creativity and professionalism, there's a real sense of kindness and care in everything they do. The team is always open, generous, and never gets stuck on small details — they never say no. I was truly impressed by their reliability, flexibility, and collaborative spirit. I couldn't recommend them more!</p>
+        <div class="who">
+          <span class="ava">J</span>
+          <div class="who-meta"><strong>Jérémy Bendayan</strong>Co-founder &amp; COO @ Jaws Group</div>
+        </div>
+      </article>
+      <article class="t-card alt2">
+        <p class="q">A huge thank you to the entire Brand Appart team for your outstanding work on our rebranding! We're thrilled to have you as an integral part of the Incard team, and we can't wait to reveal what's coming next.</p>
+        <div class="who">
+          <span class="ava">T</span>
+          <div class="who-meta"><strong>Théo Cesarini</strong>CEO &amp; Co-Founder @ Incard &amp; @ Fundree</div>
+        </div>
+      </article>
+      <article class="t-card alt3">
+        <p class="q">I've worked with Brand Appart on multiple projects — website development, landing pages for branding, and PowerPoint presentations. I love how flexible, fast, and professional the team is. That speed and agility are exactly what we needed at Ircam Amplify.</p>
+        <div class="who">
+          <span class="ava">A</span>
+          <div class="who-meta"><strong>Alexis Botaya</strong>Managing Director @ Sound Experience</div>
+        </div>
+      </article>
+      <article class="t-card">
+        <p class="q">Working with Brand Appart means having a true partner, attentive, responsive, and creative. I especially appreciated their ability to grasp the essence of the project from the very first conversations and to propose meaningful solutions without ever losing sight of efficiency.</p>
+        <div class="who">
+          <span class="ava">D</span>
+          <div class="who-meta"><strong>David Haiun</strong>Founder @ Olea &amp; @ Thermobat</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="about" class="container services">
+    <div class="head">
+      <h2>What we <em>ship.</em></h2>
+      <p>Our ways to move fast. See our case studies to see how each pillar performs in the wild.</p>
+    </div>
+
+    <div>
+      <div class="pillar reveal">
+        <div class="n">(01)</div>
+        <h3>Branding that drives <em>conversion</em> &amp; funding.</h3>
+        <p>We clarify your positioning, define a distinctive tone of voice, and build a visual system that works across acquisition and product. Each sprint ships a robust logo, pragmatic brand guidelines, and a social kit so you can launch fast. The goal is simple: perceived value up.</p>
+      </div>
+      <div class="pillar reveal">
+        <div class="n">(02)</div>
+        <h3>Product experiences users <em>adopt</em> &amp; keep using.</h3>
+        <p>We start from business goals, map the critical journeys, and prototype what actually moves the needle. Every sprint ships clear flows, a reusable UI library, and a dev-ready handoff. Expect time-to-value down, UX friction down, retention/NPS up.</p>
+      </div>
+      <div class="pillar reveal">
+        <div class="n">(03)</div>
+        <h3>Web design for growing teams &amp; <em>business.</em></h3>
+        <p>We align messaging, page architecture, and UI. You get clear structure and sections. The site loads fast, tells the right story, and pushes to action without dev firefighting. Your team gets a scalable base they can evolve without calling us for every change.</p>
+      </div>
+      <div class="pillar reveal">
+        <div class="n">(04)</div>
+        <h3>Investor-proof decks that <em>raise</em> faster.</h3>
+        <p>We craft the narrative that gets meetings and a precise ask. Design serves the story: readable numbers, rhythm across slides, and versions for teaser / one-pager. Your deck can be pitched in 5 minutes, read solo, and generates faster responses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="trust">
+    <div class="label">Trusted by +40 founders</div>
+    <h2>Built for <em>teams</em> that ship.</h2>
+    <div class="logos">
+      <span>Incard</span>
+      <span>Sowbeez</span>
+      <span>Forbes</span>
+      <span>Sobry</span>
+      <span>We are</span>
+      <span>Stables</span>
+      <span>Jaws</span>
+      <span>Olea</span>
+      <span>Thermobat</span>
+      <span>Bricks</span>
+      <span>Mysunbed</span>
+      <span>Ircam Amplify</span>
+    </div>
+    <a class="cta" href="#contact">Contact sales →</a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="container" id="contact">
+    <div class="row">
+      <div>
+        <h4>Studio</h4>
+        <p>Brand Appart</p>
+        <p>Paris, France</p>
+        <p>hello@brandappart.com</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="#work">Works</a>
+        <a href="#about">Services</a>
+        <a href="#">Studio</a>
+        <a href="#">Pricing</a>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <a href="#">Instagram</a>
+        <a href="#">Behance</a>
+        <a href="#">Dribbble</a>
+        <a href="#">LinkedIn</a>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <a href="#">Journal</a>
+        <a href="#">Newsletter</a>
+        <a href="#">Press kit</a>
+      </div>
+    </div>
+    <div class="big">Let's build<br>something <em>memorable.</em></div>
+    <div class="legal">
+      <span>© 2026 Brand Appart. All rights reserved.</span>
+      <span>PARIS · FRANCE · SINCE 2019</span>
+    </div>
+  </footer>
+
+  <script>
+  // Reveal
+  const io = new IntersectionObserver(es => {
+    for (const e of es) if (e.isIntersecting) e.target.classList.add('in');
+  }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Drag to scroll testimonials
+  const trow = document.getElementById('trow');
+  let isDown=false, sx=0, sl=0;
+  trow.addEventListener('pointerdown', e => {isDown=true; trow.classList.add('dragging'); sx=e.clientX; sl=trow.scrollLeft; trow.setPointerCapture(e.pointerId);});
+  trow.addEventListener('pointerup',   e => {isDown=false; trow.classList.remove('dragging');});
+  trow.addEventListener('pointermove', e => {if(!isDown) return; trow.scrollLeft = sl - (e.clientX - sx);});
+  </script>
+</body>
+</html>

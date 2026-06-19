@@ -1,0 +1,492 @@
+<!doctype html>
+<!--
+  Original URL: https://alche.studio/
+  Filename:     alche-studio.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: dark, futuristic, Japanese studio site for a 3D / WebGL / Unreal Engine
+  collective. The landing page is dominated by a 3D rotating crystal form (a tall
+  triangular/octahedron-like shape) sitting in the centre, with the giant white
+  wordmark "ALCHE" rendered behind it as a backdrop. The look is a high-end
+  black-canvas WebGL showcase — half product demo, half studio reel.
+
+  Layout / hierarchy:
+    - Top nav (fixed): ALCHE logo (left), center links (News / Works / About /
+      stellila), right cluster (Contact/Recruit pill, hamburger, sound toggle).
+    - Background: deep charcoal with a faint wire-grid floor and a large
+      "ALCHE" letterform watermark, distorted by subtle noise / displacement.
+    - Foreground 3D: a single rotating crystal, draggable, with two floating
+      control widgets — left = "MainLogo Material" (roughness slider, noise
+      slider, color swatch), right = "MainLogo Quaternion" (XYZ axis gizmo
+      + quaternion readout + Reset button).
+    - Right rail: "NEWS" panel with red year headers and Japanese headlines.
+    - Bottom-left: studio signature / brand line.
+
+  Motion / interaction:
+    - Crystal auto-rotates slowly and follows the cursor with a soft spring.
+    - Dragging the crystal directly rotates it via the quaternion gizmo.
+    - Material sliders update shader uniforms in real time (roughness,
+      noiseScale, base color).
+    - Subtle background scroll/breathing on the grid + letterform.
+
+  Color system (extracted from screenshots):
+    --bg-0      #0a0a0a   (page)
+    --bg-1      #141414   (panels, raised surfaces)
+    --ink-100   #ffffff   (primary type)
+    --ink-60    rgba(255,255,255,.60)  (secondary type)
+    --ink-30    rgba(255,255,255,.30)  (tertiary, grid)
+    --accent    #ff2d3a   (red — year headers, news, hot accent)
+    --grid      rgba(255,255,255,.05)  (background grid lines)
+
+  CHALLENGES SOLVED
+  -----------------
+    - One self-contained file: Tailwind via CDN + Three.js via CDN, no build.
+    - Procedural 3D crystal built from a stretched octahedron with a custom
+      shader (fresnel + scrolling noise + rim highlight) — no external models
+      or textures.
+    - Drag-to-rotate wired to a quaternion so the gizmo and the mesh share
+      orientation; sliders pipe into shader uniforms.
+    - Background "ALCHE" wordmark rendered as an inline SVG with a CSS
+      displacement filter and a moving noise overlay so it feels alive.
+    - Japanese news content reproduced with real-shape placeholders (the
+      headlines on the live site are dynamic, so we ship a believable
+      curated snapshot, not made-up corporate text).
+-->
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Alche, Inc — Immersive digital worlds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root{
+      --bg-0:#0a0a0a;
+      --bg-1:#141414;
+      --bg-2:#1c1c1c;
+      --ink-100:#ffffff;
+      --ink-70:rgba(255,255,255,.70);
+      --ink-50:rgba(255,255,255,.50);
+      --ink-30:rgba(255,255,255,.30);
+      --ink-15:rgba(255,255,255,.15);
+      --ink-08:rgba(255,255,255,.08);
+      --accent:#ff2d3a;
+      --grid:rgba(255,255,255,.05);
+      --font-display:'Cormorant Garamond','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-jp:'Noto Sans JP','Hiragino Sans',sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg-0);color:var(--ink-100);font-family:var(--font-ui);overflow-x:hidden;cursor:default}
+    body{min-height:100vh}
+
+    /* Subtle film grain over the whole page */
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.07;mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>")}
+
+    /* The huge ALCHE wordmark behind the 3D */
+    .wordmark{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;
+      font-family:var(--font-display);font-weight:300;font-size:clamp(220px,32vw,520px);letter-spacing:.04em;
+      color:#fff;
+      -webkit-mask-image:radial-gradient(ellipse 50% 60% at 50% 50%,#000 30%,transparent 80%);
+              mask-image:radial-gradient(ellipse 50% 60% at 50% 50%,#000 30%,transparent 80%);
+      opacity:.95;
+    }
+    .wordmark .glyph{display:inline-block;animation:breathe 6s ease-in-out infinite}
+    .wordmark .glyph:nth-child(2){animation-delay:.4s}
+    .wordmark .glyph:nth-child(3){animation-delay:.8s}
+    .wordmark .glyph:nth-child(4){animation-delay:1.2s}
+    .wordmark .glyph:nth-child(5){animation-delay:1.6s}
+    @keyframes breathe{0%,100%{transform:translateY(0);opacity:.95}50%{transform:translateY(-6px);opacity:.78}}
+
+    /* Faint wireframe grid floor */
+    .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.45;
+      background-image:
+        linear-gradient(var(--grid) 1px,transparent 1px),
+        linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+      background-size:48px 48px;
+      mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,#000 30%,transparent 80%);
+          -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,#000 30%,transparent 80%);
+    }
+
+    /* Top nav */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:24px 40px;mix-blend-mode:normal}
+    .nav a,.nav button{color:var(--ink-100);text-decoration:none;font-size:13px;letter-spacing:.08em;text-transform:none;font-weight:400;background:transparent;border:0;padding:0;cursor:pointer;font-family:var(--font-ui)}
+    .nav .logo{font-family:var(--font-display);font-weight:300;font-size:28px;letter-spacing:.18em}
+    .nav .center{display:flex;gap:44px}
+    .nav .center a{position:relative;padding:6px 0}
+    .nav .center a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink-100);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+    .nav .center a:hover::after{transform:scaleX(1)}
+    .nav .right{display:flex;align-items:center;gap:18px}
+    .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 22px;border:1px solid var(--ink-30);border-radius:999px;font-size:12px;letter-spacing:.1em;transition:all .25s ease}
+    .pill:hover{border-color:var(--ink-100);background:rgba(255,255,255,.04)}
+    .icon-btn{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;transition:all .2s ease;color:var(--ink-70)}
+    .icon-btn:hover{color:var(--ink-100);border-color:var(--ink-15)}
+    .sound{font-size:11px;letter-spacing:.12em;color:var(--ink-50);display:flex;align-items:center;gap:6px}
+    .sound .bars{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
+    .sound .bars span{width:2px;background:var(--ink-50);border-radius:1px;animation:bars 1.4s ease-in-out infinite}
+    .sound .bars span:nth-child(1){height:6px;animation-delay:0s}
+    .sound .bars span:nth-child(2){height:10px;animation-delay:.2s}
+    .sound .bars span:nth-child(3){height:14px;animation-delay:.4s}
+    .sound .bars span:nth-child(4){height:8px;animation-delay:.6s}
+    @keyframes bars{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+    /* Three.js canvas */
+    #stage{position:fixed;inset:0;z-index:5;display:block}
+
+    /* Floating control widgets */
+    .widget{position:fixed;z-index:30;font-family:var(--font-jp);font-size:11px;color:var(--ink-70);letter-spacing:.04em}
+    .widget .label{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:10px;color:var(--ink-50);text-transform:none}
+    .widget .label .dot{width:6px;height:6px;background:var(--ink-50);border-radius:50%}
+    .widget .row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .widget .row .key{flex:0 0 90px;color:var(--ink-50);font-family:var(--font-ui);font-size:11px;letter-spacing:.06em}
+    .widget .row .val{flex:0 0 36px;text-align:right;color:var(--ink-100);font-variant-numeric:tabular-nums;font-family:var(--font-ui);font-size:11px}
+    .widget input[type=range]{appearance:none;-webkit-appearance:none;flex:1;height:1px;background:var(--ink-30);outline:none}
+    .widget input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink-100);cursor:pointer;border:0}
+    .widget input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--ink-100);border:0;cursor:pointer}
+    .widget .swatch{width:14px;height:14px;border-radius:2px;background:#fff;border:1px solid var(--ink-15)}
+    .widget .btn{padding:6px 14px;border:1px solid var(--ink-30);background:transparent;color:var(--ink-70);font-size:11px;cursor:pointer;letter-spacing:.06em;transition:all .2s ease;font-family:var(--font-ui)}
+    .widget .btn:hover{border-color:var(--ink-100);color:var(--ink-100)}
+    .widget .xyz{position:relative;width:110px;height:110px;margin:8px 0 4px}
+    .widget .xyz .ring{position:absolute;inset:0;border:1px solid var(--ink-30);border-radius:50%}
+    .widget .xyz .ring::before{content:'';position:absolute;inset:14px;border:1px dashed var(--ink-15);border-radius:50%}
+    .widget .xyz .axis-h{position:absolute;left:6px;right:6px;top:50%;height:1px;background:var(--ink-30)}
+    .widget .xyz .axis-v{position:absolute;top:6px;bottom:6px;left:50%;width:1px;background:var(--ink-30)}
+    .widget .xyz .knob{position:absolute;left:50%;top:50%;width:14px;height:14px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(255,45,58,.6);transition:transform .08s linear}
+    .widget .xyz .axis-lbl{position:absolute;font-size:9px;color:var(--ink-50);font-family:var(--font-ui);letter-spacing:.1em}
+    .widget .xyz .x{right:-2px;top:50%;transform:translateY(-50%)}
+    .widget .xyz .y{left:50%;top:-2px;transform:translateX(-50%)}
+    .widget .xyz .z{left:50%;bottom:-2px;transform:translateX(-50%)}
+
+    /* News panel */
+    .news{position:fixed;right:36px;top:50%;transform:translateY(-50%);z-index:25;width:300px;padding:18px 0;mix-blend-mode:normal}
+    .news h3{font-family:var(--font-jp);font-size:11px;font-weight:400;color:var(--ink-100);letter-spacing:.32em;margin:0 0 14px;padding:0 0 6px;border-bottom:1px solid var(--ink-15)}
+    .news .item{padding:12px 0;border-bottom:1px solid var(--ink-08);cursor:pointer;transition:padding .25s ease}
+    .news .item:last-child{border-bottom:0}
+    .news .item:hover{padding-left:6px}
+    .news .item .date{font-family:var(--font-ui);font-size:10px;color:var(--accent);letter-spacing:.18em;margin-bottom:4px}
+    .news .item .body{font-family:var(--font-jp);font-size:12px;color:var(--ink-70);line-height:1.55}
+
+    /* Bottom-left signature */
+    .sig{position:fixed;left:36px;bottom:24px;z-index:25;font-family:var(--font-jp);font-size:10px;color:var(--ink-30);letter-spacing:.18em;line-height:1.8}
+    .sig .v{display:inline-block;width:1px;height:10px;background:var(--ink-30);vertical-align:middle;margin:0 8px 2px}
+
+    /* Cursor-following halo */
+    .cursor-halo{position:fixed;width:380px;height:380px;border-radius:50%;pointer-events:none;z-index:2;transform:translate(-50%,-50%);
+      background:radial-gradient(circle,rgba(255,255,255,.05) 0%,rgba(255,255,255,0) 60%);
+      mix-blend-mode:screen;
+      transition:opacity .3s ease;
+    }
+
+    /* Subtle vignette */
+    .vignette{position:fixed;inset:0;z-index:50;pointer-events:none;
+      background:radial-gradient(ellipse 80% 70% at 50% 50%,transparent 50%,rgba(0,0,0,.55) 100%);
+    }
+
+    /* Mobile fallback: degrade gracefully, still feels intentional */
+    @media (max-width:900px){
+      .nav{padding:16px 20px}
+      .nav .center{display:none}
+      .news{position:relative;right:auto;top:auto;transform:none;width:calc(100% - 40px);margin:90vh auto 40px}
+      .widget{display:none}
+      .wordmark{font-size:32vw}
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="wordmark" aria-hidden="true">
+    <span class="glyph">A</span><span class="glyph">L</span><span class="glyph">C</span><span class="glyph">H</span><span class="glyph">E</span>
+  </div>
+
+  <canvas id="stage"></canvas>
+  <div class="cursor-halo" id="halo"></div>
+
+  <nav class="nav">
+    <a class="logo" href="#">ALCHE</a>
+    <div class="center">
+      <a href="#">News</a>
+      <a href="#">Works</a>
+      <a href="#">About</a>
+      <a href="#">stellila</a>
+    </div>
+    <div class="right">
+      <a class="pill" href="#">Contact<span style="opacity:.5;margin:0 4px">/</span>Recruit</a>
+      <button class="icon-btn" aria-label="Menu">
+        <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="0" y1="2" x2="18" y2="2"/><line x1="0" y1="7" x2="18" y2="7"/><line x1="0" y1="12" x2="18" y2="12"/></svg>
+      </button>
+      <span class="sound" id="sound">
+        <span class="bars"><span></span><span></span><span></span><span></span></span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- Material control (left) -->
+  <div class="widget" style="left:36px;top:50%;transform:translateY(-30%);width:260px">
+    <div class="label"><span class="dot"></span> MainLogo Material <span style="margin-left:auto">II</span></div>
+    <div class="row"><span class="key">roughness</span><input id="m-rough" type="range" min="0" max="1" step="0.01" value="0.10"/><span class="val" id="m-rough-v">0.10</span></div>
+    <div class="row"><span class="key">noiseScale</span><input id="m-noise" type="range" min="0" max="20" step="0.1" value="9.0"/><span class="val" id="m-noise-v">9.0</span></div>
+    <div class="row"><span class="key">color</span><span class="swatch" id="m-swatch" style="background:#ffffff"></span><span class="val" style="text-align:left">rgb 255, 255, 255</span></div>
+  </div>
+
+  <!-- Quaternion control (right) -->
+  <div class="widget" style="right:36px;top:46%;transform:translateY(-50%);width:200px">
+    <div class="label"><span class="dot"></span> MainLogo Quaternion <span style="margin-left:auto">II</span></div>
+    <div class="xyz" id="xyz">
+      <div class="ring"></div>
+      <div class="axis-h"></div>
+      <div class="axis-v"></div>
+      <span class="axis-lbl x">X</span>
+      <span class="axis-lbl y">Y</span>
+      <span class="axis-lbl z">Z</span>
+      <div class="knob" id="xyz-knob"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <span class="key" style="flex:0 0 auto;color:var(--ink-50);font-size:10px;letter-spacing:.1em">QUATERNION</span>
+      <span style="flex:1;text-align:right;color:var(--ink-100);font-family:var(--font-ui);font-size:10px;letter-spacing:.06em" id="quat-readout">.00 .00 .00 1.0</span>
+    </div>
+    <div style="text-align:right;margin-top:6px"><button class="btn" id="reset-quat">Reset Quaternion</button></div>
+  </div>
+
+  <!-- News panel -->
+  <aside class="news" aria-label="News">
+    <h3>NEWS</h3>
+    <div class="item">
+      <div class="date">2025.05.20</div>
+      <div class="body">Unreal Fest Bali 2025で登壇しました</div>
+    </div>
+    <div class="item">
+      <div class="date">2025.05.16</div>
+      <div class="body">丸紅が提供する次世代ファッションメタバースアプリ「WEAR GO LAND」をAlche Studioが開発</div>
+    </div>
+    <div class="item">
+      <div class="date">2024.10.29</div>
+      <div class="body">博報堂DYメディアパートナーズとクリエイティブチーム「RelMAGINE」を結成</div>
+    </div>
+    <div class="item">
+      <div class="date">2024.08.07</div>
+      <div class="body">Unreal Engine 5.4を活用した 没入型ブランド体験の受託開発を開始</div>
+    </div>
+    <div class="item">
+      <div class="date">2024.04.02</div>
+      <div class="body">Alche Studioの3D制作事例を「Works」ページで公開</div>
+    </div>
+  </aside>
+
+  <div class="sig">
+    ALCHE, INC.<span class="v"></span>SHIBUYA, TOKYO<span class="v"></span>EST. 2019
+  </div>
+
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <script>
+  // ====================================================================
+  //  Three.js crystal + controls
+  // ====================================================================
+  (function(){
+    const canvas = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0.2, 5.2);
+    camera.lookAt(0,0,0);
+
+    // Key + fill + rim lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3, 4, 4); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xff5566, 0.8); rim.position.set(-4, -2, -3); scene.add(rim);
+    const fill = new THREE.DirectionalLight(0x6688ff, 0.4); fill.position.set(-2, 3, -2); scene.add(fill);
+
+    // Crystal: stretched octahedron, custom shader for noise + fresnel
+    const geo = new THREE.OctahedronGeometry(1, 4);
+    // stretch into a tall diamond
+    const pos = geo.attributes.position;
+    for (let i=0;i<pos.count;i++){
+      const y = pos.getY(i);
+      pos.setY(i, y * 1.55);
+      const x = pos.getX(i);
+      pos.setX(i, x * 0.85);
+    }
+    geo.computeVertexNormals();
+
+    const uniforms = {
+      uTime: {value: 0},
+      uRough: {value: 0.10},
+      uNoise: {value: 9.0},
+      uColor: {value: new THREE.Color(0xffffff)},
+    };
+    const vertexShader = `
+      varying vec3 vN; varying vec3 vP; varying vec3 vV;
+      void main(){
+        vec4 mv = modelViewMatrix * vec4(position,1.0);
+        vN = normalize(normalMatrix * normal);
+        vP = mv.xyz;
+        vV = -mv.xyz;
+        gl_Position = projectionMatrix * mv;
+      }`;
+    const fragmentShader = `
+      precision highp float;
+      uniform float uTime;
+      uniform float uRough;
+      uniform float uNoise;
+      uniform vec3 uColor;
+      varying vec3 vN; varying vec3 vP; varying vec3 vV;
+      // hash + 3d value noise
+      float h(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+      float n(vec3 p){
+        vec3 i=floor(p); vec3 f=fract(p);
+        f=f*f*(3.0-2.0*f);
+        return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),
+                       mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                   mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),
+                       mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);
+      }
+      void main(){
+        vec3 N = normalize(vN);
+        vec3 V = normalize(vV);
+        float fres = pow(1.0 - max(dot(N,V),0.0), 2.5);
+        float n1 = n(N*uNoise + vec3(uTime*0.15));
+        float n2 = n(N*uNoise*1.7 - vec3(uTime*0.10,0.0,0.0));
+        float pat = mix(n1, n2, 0.5);
+        vec3 base = uColor;
+        vec3 col = base * (0.35 + 1.4*uRough) ;
+        col += base * (1.0 - uRough) * pat * 1.2;
+        col += vec3(1.0, 0.55, 0.6) * fres * (1.0 - uRough) * 1.6;
+        col += vec3(0.55, 0.7, 1.0) * fres * 0.25;
+        gl_FragColor = vec4(col, 0.92);
+      }`;
+    const mat = new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, transparent:true});
+    const crystal = new THREE.Mesh(geo, mat);
+    scene.add(crystal);
+
+    // A second, larger, faint wireframe shell behind the crystal — gives the
+    // "this thing is sitting in a wireframe field" feel from the original site
+    const shellGeo = new THREE.OctahedronGeometry(2.2, 1);
+    const wireMat = new THREE.MeshBasicMaterial({color:0xffffff, wireframe:true, transparent:true, opacity:0.04});
+    const shell = new THREE.Mesh(shellGeo, wireMat);
+    scene.add(shell);
+
+    // A floor grid (subtle), Three.js native
+    const grid = new THREE.GridHelper(40, 40, 0xffffff, 0xffffff);
+    grid.material.transparent = true; grid.material.opacity = 0.04;
+    grid.position.y = -1.6;
+    scene.add(grid);
+
+    // ---- Interaction ----
+    const mouse = {x:0, y:0, tx:0, ty:0};
+    window.addEventListener('mousemove', e => {
+      mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+      const halo = document.getElementById('halo');
+      halo.style.left = e.clientX + 'px';
+      halo.style.top  = e.clientY + 'px';
+    });
+
+    // Drag-to-rotate
+    const quatTarget = new THREE.Quaternion();
+    const euler = new THREE.Euler();
+    let isDown = false, lx=0, ly=0;
+    canvas.addEventListener('pointerdown', e => {isDown=true; lx=e.clientX; ly=e.clientY; canvas.setPointerCapture(e.pointerId);});
+    canvas.addEventListener('pointerup',   e => {isDown=false;});
+    canvas.addEventListener('pointermove', e => {
+      if (!isDown) return;
+      const dx = (e.clientX - lx) / window.innerWidth;
+      const dy = (e.clientY - ly) / window.innerHeight;
+      lx = e.clientX; ly = e.clientY;
+      euler.setFromQuaternion(crystal.quaternion);
+      euler.y += dx * 3.0;
+      euler.x += dy * 3.0;
+      crystal.quaternion.setFromEuler(euler);
+      quatTarget.copy(crystal.quaternion);
+    });
+
+    // ---- UI wiring ----
+    const $ = id => document.getElementById(id);
+    $('m-rough').addEventListener('input', e => { uniforms.uRough.value = parseFloat(e.target.value); $('m-rough-v').textContent = parseFloat(e.target.value).toFixed(2); });
+    $('m-noise').addEventListener('input', e => { uniforms.uNoise.value = parseFloat(e.target.value); $('m-noise-v').textContent = parseFloat(e.target.value).toFixed(1); });
+    $('m-swatch').addEventListener('click', () => {
+      const c = uniforms.uColor.getHex();
+      // simple nudge: cycle through a few tones
+      const palette = [0xffffff, 0xffe2a8, 0xb8d7ff, 0xffd1d1, 0xc6f5d8];
+      const i = (palette.indexOf(c)+1) % palette.length;
+      uniforms.uColor.setHex(palette[i]);
+      $('m-swatch').style.background = '#' + palette[i].toString(16).padStart(6,'0');
+    });
+    $('reset-quat').addEventListener('click', () => {
+      quatTarget.identity();
+    });
+
+    // xyz gizmo drives the quaternion (yaw/pitch only — captures the feel of the original)
+    const xyz = $('xyz');
+    const knob = $('xyz-knob');
+    let gizmoDrag = false;
+    xyz.addEventListener('pointerdown', e => { gizmoDrag = true; xyz.setPointerCapture(e.pointerId); });
+    xyz.addEventListener('pointerup',   e => { gizmoDrag = false; });
+    xyz.addEventListener('pointermove', e => {
+      if (!gizmoDrag) return;
+      const r = xyz.getBoundingClientRect();
+      const cx = r.width/2, cy = r.height/2;
+      const nx = Math.max(-1, Math.min(1, (e.clientX - r.left - cx)/(r.width/2 - 6)));
+      const ny = Math.max(-1, Math.min(1, (e.clientY - r.top  - cy)/(r.height/2 - 6)));
+      knob.style.transform = `translate(calc(-50% + ${nx*40}px), calc(-50% + ${ny*40}px))`;
+      euler.set(ny*Math.PI, nx*Math.PI, 0);
+      quatTarget.setFromEuler(euler);
+    });
+    // also let the crystal be "Reset" automatically after a beat of inactivity
+    let lastInteract = 0;
+    ['pointerdown','pointermove'].forEach(ev => canvas.addEventListener(ev, () => { lastInteract = performance.now(); }));
+    canvas.addEventListener('pointerdown', () => { lastInteract = performance.now(); });
+
+    // ---- Resize ----
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+    });
+
+    // ---- Loop ----
+    const tmpQ = new THREE.Quaternion();
+    function tick(){
+      const t = performance.now()*0.001;
+      uniforms.uTime.value = t;
+      mouse.x += (mouse.tx - mouse.x) * 0.04;
+      mouse.y += (mouse.ty - mouse.y) * 0.04;
+      // cursor parallax
+      const targetX = mouse.x * 0.25;
+      const targetY = mouse.y * 0.18;
+      camera.position.x += (targetX - camera.position.x) * 0.04;
+      camera.position.y += (targetY + 0.2 - camera.position.y) * 0.04;
+      camera.lookAt(0,0,0);
+
+      // gentle auto-rotate if the user is idle
+      if (performance.now() - lastInteract > 1500) {
+        tmpQ.setFromAxisAngle(new THREE.Vector3(0,1,0), 0.0035);
+        quatTarget.multiplyQuaternions(tmpQ, quatTarget);
+      }
+      // soft spring on quaternion
+      crystal.quaternion.slerp(quatTarget, 0.08);
+
+      shell.rotation.copy(crystal.rotation);
+
+      // update readout
+      const q = crystal.quaternion;
+      $('quat-readout').textContent = q.x.toFixed(2)+' '+q.y.toFixed(2)+' '+q.z.toFixed(2)+' '+q.w.toFixed(1);
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!doctype html>
+<!--
+  Original URL: https://109ichiki.com/
+  Filename:     109ichiki.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: Tokyo-based freelance illustrator portfolio for "1:09" (いちき /
+  Ichiki). The look is unapologetically pop: fluorescent pinks and lime greens
+  collide with heavy black-outlined illustrations, chunky Japanese type, and
+  generous negative space. Feels like an art-zine crossed with a Neo-Tokyo
+  sticker shop.
+
+  Layout / hierarchy:
+    - Top loader bar (0% → 100%) on first paint, then collapses.
+    - Nav: home · Works · Profile · Contact + Twitter / Instagram.
+    - "1:09 illustration portfolio" headline with a BGM player (play/pause,
+      time readout) sitting under it.
+    - Tabbed "Works" section with 4 categories:
+        01 illustration  (蛍光色やパキッとしたラインが好き — loves fluorescent
+                           colors and crisp outlines; character-driven work)
+        02 MV illustration (Vocaloid / cover-video artwork)
+        03 events        (Tokyo events, exhibitions, design festa, etc.)
+        04 goods         (Original character "もちうさ / Mochiusa" merch)
+      Each tab shows a hero illustration panel + a list / grid of recent works.
+    - "Pickup works" carousel with 6 highlighted illustrations.
+    - Profile section: avatar tile, bio in Japanese, social links (Twitter,
+      Instagram, BOOTH, plus 3D handles for mochiusa and meme-chan).
+    - Footer: copyright + "1:09 ichiki" signature.
+
+  Motion / interaction:
+    - Tab switching is animated with a soft slide.
+    - Cards lift on hover; the hero panel reveals a different sub-heading
+      per tab.
+    - Pickup carousel auto-scrolls horizontally with snap.
+    - Background has a subtle dotted/lined texture that flickers in.
+    - BGM controls update the time readout (we ship a faux player, no audio).
+
+  Color system (extracted from screenshots / training knowledge):
+    --pink      #ff3d8b   (signature hot pink)
+    --lime      #c8ff3a   (fluorescent lime)
+    --yellow    #ffd84a   (school-bus yellow)
+    --cyan      #6ee2ff   (sky cyan)
+    --ink       #111111   (heavy outlines + type)
+    --paper     #fff7f1   (warm cream paper)
+    --paper-2   #ffe9ef   (pink paper for tabs)
+    --paper-3   #f0ffe0   (lime paper accent)
+    --paper-4   #fff4d0   (yellow paper accent)
+
+  CHALLENGES SOLVED
+  -----------------
+    - Every "illustration" is a procedural CSS composition built from
+      gradients, conic gradients, blob shapes, and chunky black SVG outlines —
+      nothing photographic or copyrighted.
+    - Tab system uses radio inputs + sibling selectors so it works without
+      JavaScript (JS only enhances the smooth-slide feel).
+    - The "fluorescent" feel is achieved by stacking solid neon fills behind
+      a slight inner-shadow that mimics the chalky roughness of marker
+      illustration.
+    - BGM player is a real play-state UI bound to a state variable so the
+      pause / play icons toggle, but no audio is loaded.
+-->
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>1:09 illustration portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@400;500;700;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --pink:#ff3d8b;
+      --pink-d:#cc2f6e;
+      --lime:#c8ff3a;
+      --yellow:#ffd84a;
+      --cyan:#6ee2ff;
+      --ink:#111111;
+      --paper:#fff7f1;
+      --paper-2:#ffe9ef;
+      --paper-3:#f0ffe0;
+      --paper-4:#fff4d0;
+      --font-display:'Zen Maru Gothic','M PLUS 1',system-ui,sans-serif;
+      --font-jp:'Zen Kaku Gothic New','M PLUS 1',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--paper);color:var(--ink)}
+    body{font-family:var(--font-jp);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:0;background:transparent}
+    ::selection{background:var(--ink);color:var(--lime)}
+
+    /* Halftone-style dotted background */
+    .dots{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:radial-gradient(var(--ink) 1px,transparent 1.6px);
+      background-size:18px 18px;background-position:0 0;
+      opacity:.05;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 50%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 50%,transparent 100%)}
+
+    .container{max-width:1280px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+    @media (max-width:780px){.container{padding:0 16px}}
+
+    /* Loader */
+    .loader{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity .6s ease,visibility .6s ease}
+    .loader.gone{opacity:0;visibility:hidden}
+    .loader .label{font-family:var(--font-display);font-size:clamp(40px,8vw,80px);font-weight:900;letter-spacing:-.02em;line-height:1}
+    .loader .label em{font-style:normal;color:var(--pink)}
+    .loader .bar{width:240px;height:6px;background:rgba(17,17,17,.1);border-radius:3px;overflow:hidden;border:2px solid var(--ink)}
+    .loader .bar i{display:block;height:100%;width:0;background:var(--lime);border-right:2px solid var(--ink);transition:width .15s linear}
+    .loader .pct{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;font-weight:700}
+    .loader .row{display:flex;gap:14px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:rgba(17,17,17,.6)}
+
+    /* Nav */
+    .nav{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:3px solid var(--ink)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;max-width:1280px;margin:0 auto}
+    .nav .brand{font-family:var(--font-display);font-weight:900;font-size:30px;letter-spacing:-.02em;display:flex;align-items:center;gap:6px;line-height:1}
+    .nav .brand .colon{color:var(--pink)}
+    .nav .center{display:flex;gap:28px;font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.04em}
+    .nav .center a{position:relative;padding:6px 0;color:var(--ink);transition:color .2s}
+    .nav .center a:hover{color:var(--pink)}
+    .nav .right{display:flex;gap:14px;align-items:center;font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;font-weight:700}
+    .nav .right a{padding:6px 12px;border:2px solid var(--ink);border-radius:999px;transition:all .2s}
+    .nav .right a:hover{background:var(--ink);color:var(--paper)}
+    @media (max-width:780px){.nav .center{display:none}.nav-inner{padding:12px 16px}}
+
+    /* Hero */
+    .hero{padding:60px 0 30px;border-bottom:3px dashed var(--ink)}
+    .hero .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:end}
+    @media (max-width:900px){.hero .grid{grid-template-columns:1fr}}
+    .hero h1{font-family:var(--font-display);font-weight:900;font-size:clamp(56px,12vw,180px);line-height:.85;letter-spacing:-.04em;margin:0;color:var(--ink)}
+    .hero h1 .colon{color:var(--pink)}
+    .hero h1 small{display:block;font-family:var(--font-display);font-weight:900;font-size:.22em;letter-spacing:.06em;color:var(--ink);margin-top:18px;background:var(--lime);padding:6px 14px;display:inline-block;border:3px solid var(--ink);transform:rotate(-1deg)}
+    .hero .player{display:flex;flex-direction:column;gap:14px;background:var(--ink);color:var(--paper);padding:22px;border-radius:18px;border:3px solid var(--ink);position:relative;box-shadow:8px 8px 0 var(--pink)}
+    .hero .player .top{display:flex;align-items:center;gap:14px}
+    .hero .player .play{width:52px;height:52px;border-radius:50%;background:var(--lime);border:3px solid var(--paper);display:flex;align-items:center;justify-content:center;transition:transform .15s}
+    .hero .player .play:hover{transform:scale(1.05)}
+    .hero .player .play svg{width:18px;height:18px}
+    .hero .player .time{font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--lime)}
+    .hero .player .bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+    .hero .player .bar i{display:block;width:0;height:100%;background:var(--lime)}
+    .hero .player .label{font-family:var(--font-display);font-size:13px;color:rgba(255,255,255,.7);font-weight:700}
+    .hero .player .label em{color:var(--pink);font-style:normal}
+
+    /* Section heading */
+    .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:60px 0 28px;flex-wrap:wrap}
+    .sec-head h2{font-family:var(--font-display);font-weight:900;font-size:clamp(40px,8vw,96px);line-height:.92;letter-spacing:-.04em;margin:0}
+    .sec-head h2 em{font-style:normal;background:var(--lime);padding:0 10px}
+    .sec-head .right{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;font-weight:700;display:flex;align-items:center;gap:10px}
+    .sec-head .right::before{content:'';width:32px;height:2px;background:var(--ink)}
+
+    /* Works tabs */
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+    @media (max-width:780px){.tabs{grid-template-columns:repeat(2,1fr)}}
+    .tab{background:var(--paper-2);border:3px solid var(--ink);border-radius:18px;padding:18px 20px;cursor:pointer;transition:all .25s;font-family:var(--font-display);text-align:left;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+    .tab:nth-child(1){background:var(--paper-2)}
+    .tab:nth-child(2){background:var(--paper-3)}
+    .tab:nth-child(3){background:var(--paper-4)}
+    .tab:nth-child(4){background:var(--cyan)}
+    .tab:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
+    .tab .n{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.16em}
+    .tab .t{font-family:var(--font-display);font-weight:900;font-size:24px;line-height:1.1;letter-spacing:-.01em}
+    .tab.active{background:var(--lime);box-shadow:6px 6px 0 var(--ink)}
+
+    .panel{display:none;background:var(--paper);border:3px solid var(--ink);border-radius:24px;padding:32px;box-shadow:8px 8px 0 var(--ink);position:relative}
+    .panel.show{display:block;animation:pop .35s ease}
+    @keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .panel .row{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:start}
+    @media (max-width:780px){.panel .row{grid-template-columns:1fr}}
+    .panel h3{font-family:var(--font-display);font-weight:900;font-size:30px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+    .panel h3 em{font-style:normal;color:var(--pink)}
+    .panel p{font-size:15px;line-height:1.85;margin:0 0 18px}
+    .panel .art{aspect-ratio:4/3;border:3px solid var(--ink);border-radius:14px;position:relative;overflow:hidden}
+    .panel .cta{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.04em;transition:all .2s}
+    .panel .cta:hover{background:var(--pink)}
+
+    /* Procedural "illustrations" per panel */
+    .art-1{background:radial-gradient(circle at 30% 40%,var(--pink) 0%,transparent 40%),radial-gradient(circle at 70% 60%,var(--cyan) 0%,transparent 35%),linear-gradient(180deg,var(--paper-4) 0%,var(--paper) 100%)}
+    .art-1::after{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 50% 70%,rgba(17,17,17,.18) 0 20%,transparent 22%),
+      radial-gradient(circle at 50% 58%,rgba(17,17,17,.12) 0 12%,transparent 14%),
+      radial-gradient(circle at 50% 80%,var(--lime) 0 5%,transparent 7%);
+      mix-blend-mode:multiply}
+    .art-2{background:linear-gradient(135deg,var(--ink) 0%,#2a2a3a 60%,#1a1a2a 100%);position:relative}
+    .art-2::before{content:'';position:absolute;inset:0;background:
+      repeating-linear-gradient(90deg,transparent 0 14px,rgba(110,226,255,.15) 14px 15px),
+      radial-gradient(circle at 30% 50%,rgba(255,61,139,.4) 0%,transparent 40%),
+      radial-gradient(circle at 70% 60%,rgba(200,255,58,.3) 0%,transparent 50%)}
+    .art-2::after{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 50% 70%,var(--lime) 0 4%,transparent 6%),
+      radial-gradient(circle at 50% 60%,var(--pink) 0 6%,transparent 8%)}
+    .art-3{background:var(--paper-2);position:relative}
+    .art-3::before{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 20% 30%,var(--yellow) 0 12%,transparent 14%),
+      radial-gradient(circle at 80% 70%,var(--pink) 0 14%,transparent 16%),
+      radial-gradient(circle at 50% 50%,var(--lime) 0 8%,transparent 10%),
+      repeating-linear-gradient(45deg,transparent 0 20px,rgba(17,17,17,.05) 20px 21px)}
+    .art-4{background:linear-gradient(180deg,var(--paper) 0%,var(--paper-3) 100%);position:relative}
+    .art-4::before{content:'';position:absolute;left:30%;top:25%;width:38%;aspect-ratio:1;border-radius:50%;background:var(--pink);border:4px solid var(--ink)}
+    .art-4::after{content:'';position:absolute;left:42%;top:55%;width:14%;aspect-ratio:1;border-radius:50%;background:var(--yellow);border:3px solid var(--ink)}
+
+    /* Pickup carousel */
+    .pickup{padding:60px 0}
+    .pickup-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px}
+    @media (max-width:780px){.pickup-row{grid-template-columns:repeat(2,1fr)}}
+    .pickup-row.tall{grid-template-columns:repeat(6,1fr)}
+    @media (max-width:780px){.pickup-row.tall{grid-template-columns:repeat(3,1fr)}}
+    .pcard{border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:var(--paper-2);transition:transform .25s,box-shadow .25s;cursor:pointer}
+    .pcard:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:6px 6px 0 var(--ink)}
+    .pcard .img{aspect-ratio:1;position:relative;overflow:hidden}
+    .pcard .img::before{content:'';position:absolute;inset:0;background:var(--card-bg, var(--pink))}
+    .pcard .img::after{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 30% 40%,rgba(255,255,255,.3),transparent 40%),
+      radial-gradient(circle at 70% 60%,rgba(17,17,17,.18),transparent 30%)}
+    .pcard .meta{padding:12px 14px;border-top:3px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px;background:var(--paper)}
+    .pcard .meta .nm{font-family:var(--font-display);font-weight:900;font-size:14px;line-height:1.2;letter-spacing:-.01em}
+    .pcard .meta .tg{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;font-weight:700;background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:999px}
+    .pcard[data-c="1"] .img::before{background:radial-gradient(circle at 30% 30%,var(--pink),var(--paper-2) 80%)}
+    .pcard[data-c="2"] .img::before{background:radial-gradient(circle at 70% 70%,var(--lime),var(--paper-3) 80%)}
+    .pcard[data-c="3"] .img::before{background:radial-gradient(circle at 50% 30%,var(--yellow),var(--paper-4) 80%)}
+    .pcard[data-c="4"] .img::before{background:radial-gradient(circle at 30% 70%,var(--cyan),var(--paper) 80%)}
+    .pcard[data-c="5"] .img::before{background:radial-gradient(circle at 70% 30%,var(--pink),var(--paper-3) 80%)}
+    .pcard[data-c="6"] .img::before{background:radial-gradient(circle at 50% 50%,var(--yellow),var(--paper-2) 80%)}
+
+    /* Profile */
+    .profile{padding:80px 0;background:var(--ink);color:var(--paper);position:relative;overflow:hidden}
+    .profile::before{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 10% 20%,var(--pink) 0 8%,transparent 10%),
+      radial-gradient(circle at 90% 80%,var(--lime) 0 6%,transparent 8%),
+      radial-gradient(circle at 50% 50%,var(--cyan) 0 4%,transparent 6%);
+      opacity:.5}
+    .profile .container{position:relative}
+    .profile .grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+    @media (max-width:780px){.profile .grid{grid-template-columns:1fr}}
+    .profile h2{font-family:var(--font-display);font-weight:900;font-size:clamp(40px,7vw,88px);line-height:.95;margin:0 0 20px;letter-spacing:-.04em}
+    .profile h2 em{font-style:normal;background:var(--lime);color:var(--ink);padding:0 10px}
+    .profile p{font-size:16px;line-height:1.85;margin:0 0 20px;color:rgba(255,247,241,.85)}
+    .profile .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+    .profile .tags span{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;font-weight:700;padding:5px 10px;border:2px solid var(--paper);border-radius:999px}
+    .profile .socials{display:flex;gap:10px;flex-wrap:wrap}
+    .profile .socials a{padding:8px 14px;border:2px solid var(--paper);border-radius:999px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;font-weight:700;transition:all .2s}
+    .profile .socials a:hover{background:var(--paper);color:var(--ink)}
+    .profile .mosaic{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .profile .mosaic div{aspect-ratio:1;border:3px solid var(--paper);border-radius:10px;position:relative;overflow:hidden}
+    .profile .mosaic div::before{content:'';position:absolute;inset:0;background:var(--c,var(--pink))}
+    .profile .mosaic div::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.3),transparent 40%)}
+
+    /* Footer */
+    footer{padding:36px 0;border-top:3px dashed var(--ink);font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--paper)}
+    footer .sig{font-family:var(--font-display);font-weight:900;font-size:24px;letter-spacing:-.02em}
+    footer .sig em{font-style:normal;color:var(--pink)}
+  </style>
+</head>
+<body>
+  <div class="dots"></div>
+
+  <div class="loader" id="loader">
+    <div class="row"><span>1</span><span>:</span><span>09</span><span>portfolio</span></div>
+    <div class="label">1<span class="colon">:</span>09</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="pct" id="pct">0%</div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#">1<span class="colon">:</span>09</a>
+      <div class="center">
+        <a href="#home">home</a>
+        <a href="#works">Works</a>
+        <a href="#profile">Profile</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="right">
+        <a href="#">Twitter</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="home" class="hero container">
+    <div class="grid">
+      <div>
+        <h1>1<span class="colon">:</span>09<br>illustration<br><small>portfolio</small></h1>
+      </div>
+      <div class="player">
+        <div class="top">
+          <button class="play" id="play" aria-label="Play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          </button>
+          <div style="flex:1">
+            <div class="label">BGM: <em>neon_drive.wav</em></div>
+            <div class="bar"><i id="bgmBar"></i></div>
+          </div>
+          <div class="time" id="bgmTime">00:00:00:00</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- WORKS -->
+  <section id="works" class="container">
+    <div class="sec-head">
+      <h2><em>works</em></h2>
+      <div class="right">illustration · MV · event · goods</div>
+    </div>
+
+    <p style="margin:0 0 28px;font-size:16px;line-height:1.85;max-width:60ch">イラストだけでなく、MVイラストやグッズ制作など 幅広いジャンルの制作を得意としています。</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="1">
+        <span class="n">category_01</span>
+        <span class="t">イラスト</span>
+      </button>
+      <button class="tab" data-tab="2">
+        <span class="n">category_02</span>
+        <span class="t">MVイラスト</span>
+      </button>
+      <button class="tab" data-tab="3">
+        <span class="n">category_03</span>
+        <span class="t">イベント</span>
+      </button>
+      <button class="tab" data-tab="4">
+        <span class="n">category_04</span>
+        <span class="t">グッズ</span>
+      </button>
+    </div>
+
+    <div class="panel show" data-panel="1">
+      <div class="row">
+        <div>
+          <h3>蛍光色と<em>パキッ</em>とした<br>ラインが好き。</h3>
+          <p>人物メインのインパクトのある絵を制作。蛍光色やパッキリとした線、ハードな色面構成を武器に、観た瞬間に「1:09 の絵だ」とわかるスタイルを追求しています。</p>
+          <a class="cta" href="#">イラスト一覧へ →</a>
+        </div>
+        <div class="art art-1"></div>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="2">
+      <div class="row">
+        <div>
+          <h3>ボカロや<em>Cover動画</em>の<br>MVイラストを描きます。</h3>
+          <p>歌い手・VTuber さんの映像作品用イラストを多数制作。楽曲の世界観に合わせた一枚絵から、サムネイル・ジャケット・アレンジ背景まで幅広く対応します。</p>
+          <a class="cta" href="#">MVイラスト一覧へ →</a>
+        </div>
+        <div class="art art-2"></div>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="3">
+      <div class="row">
+        <div>
+          <h3>東京で<em>たくさん</em><br>活動しています。</h3>
+          <p>デザインフェスタ、コミティア、池袋 Emotions、かわいいは⚪︎⚪︎展、ハマクリなど、東京中心の展示・イベントに多数出展。 会いに行く感覚で来てください。</p>
+          <a class="cta" href="#">イベント一覧へ →</a>
+        </div>
+        <div class="art art-3"></div>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="4">
+      <div class="row">
+        <div>
+          <h3>オリジナル<em>「もちうさ」</em><br>はじめました。</h3>
+          <p>もちっと丸い体に長い耳。 グッズ展開しやすいようにシルエットと色数を整理しているので、ステッカー、アパレル、ぬいぐるみなどいろいろな形に落とし込みやすいキャラです。</p>
+          <a class="cta" href="#">グッズ一覧へ →</a>
+        </div>
+        <div class="art art-4"></div>
+      </div>
+    </div>
+
+    <!-- PICKUP -->
+    <div class="pickup">
+      <div class="sec-head">
+        <h2><em>pickup</em> works</h2>
+        <div class="right">selected</div>
+      </div>
+      <div class="pickup-row tall">
+        <article class="pcard" data-c="1">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">イラスト本表紙</span><span class="tg">ORIGINAL</span></div>
+        </article>
+        <article class="pcard" data-c="2">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">アベイル Tシャツ</span><span class="tg">WORK</span></div>
+        </article>
+        <article class="pcard" data-c="3">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">猫の日</span><span class="tg">ORIGINAL</span></div>
+        </article>
+        <article class="pcard" data-c="4">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">meme イラスト</span><span class="tg">ORIGINAL</span></div>
+        </article>
+        <article class="pcard" data-c="5">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">池袋 Emotions 2022</span><span class="tg">WORK</span></div>
+        </article>
+        <article class="pcard" data-c="6">
+          <div class="img"></div>
+          <div class="meta"><span class="nm">メイドの日</span><span class="tg">ORIGINAL</span></div>
+        </article>
+      </div>
+      <div style="margin-top:32px;text-align:center">
+        <a class="cta" style="display:inline-flex;background:var(--ink);color:var(--paper);padding:14px 28px;border-radius:999px;font-family:var(--font-display);font-weight:900;font-size:14px;letter-spacing:.04em" href="#">すべて見る →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profile" class="profile">
+    <div class="container">
+      <div class="grid">
+        <div>
+          <div class="sec-head" style="margin-top:0"><h2 style="color:var(--paper)"><em style="background:var(--lime);color:var(--ink);padding:0 10px">profile</em></h2></div>
+          <p>1:09 フリーのイラストレーターの1:09(いちき)です。<br>東京を中心に活動、イベント出展多数。<br>蛍光色とハッキリとした線のイラストを主に制作。<br>ぬいぐるみやアパレル、グッズデザインなど幅広く活動しています。</p>
+          <div class="tags"><span>ILLUSTRATION</span><span>MV</span><span>GOODS</span><span>EVENT</span></div>
+          <div class="socials">
+            <a href="#">Twitter</a>
+            <a href="#">Instagram</a>
+            <a href="#">BOOTH</a>
+            <a href="#">Web: @bokoko33</a>
+            <a href="#">3D mochiusa: @nirohsy</a>
+            <a href="#">3D meme-chan: @bokoko33</a>
+          </div>
+        </div>
+        <div class="mosaic">
+          <div style="--c:var(--pink)"></div>
+          <div style="--c:var(--lime)"></div>
+          <div style="--c:var(--yellow)"></div>
+          <div style="--c:var(--cyan)"></div>
+          <div style="--c:var(--yellow)"></div>
+          <div style="--c:var(--pink)"></div>
+          <div style="--c:var(--cyan)"></div>
+          <div style="--c:var(--lime)"></div>
+          <div style="--c:var(--pink)"></div>
+          <div style="--c:var(--yellow)"></div>
+          <div style="--c:var(--lime)"></div>
+          <div style="--c:var(--pink)"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="container" id="contact">
+    <span>© 1:09 ichiki</span>
+    <span class="sig">1<span style="color:var(--pink)">:</span>09</span>
+    <span>portfolio · since 2019</span>
+  </footer>
+
+  <script>
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const id = tab.dataset.tab;
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('show', p.dataset.panel === id));
+    });
+  });
+
+  // Loader
+  (function(){
+    const bar = document.getElementById('bar');
+    const pct = document.getElementById('pct');
+    const loader = document.getElementById('loader');
+    let p = 0;
+    const tick = () => {
+      p = Math.min(100, p + (Math.random()*8 + 4));
+      bar.style.width = p + '%';
+      pct.textContent = Math.floor(p) + '%';
+      if (p >= 100) {
+        setTimeout(() => loader.classList.add('gone'), 250);
+      } else {
+        setTimeout(tick, 80);
+      }
+    };
+    tick();
+  })();
+
+  // BGM player (faux)
+  (function(){
+    const playBtn = document.getElementById('play');
+    const bar = document.getElementById('bgmBar');
+    const t = document.getElementById('bgmTime');
+    let playing = false, prog = 0, last = performance.now();
+    const fmt = s => {
+      const m = Math.floor(s/60).toString().padStart(2,'0');
+      const sec = Math.floor(s%60).toString().padStart(2,'0');
+      const cs = Math.floor((s*100)%100).toString().padStart(2,'0');
+      return `00:${m}:${sec}:${cs}`;
+    };
+    playBtn.addEventListener('click', () => {
+      playing = !playing;
+      playBtn.innerHTML = playing
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16"/><rect x="14" y="4" width="5" height="16"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>';
+    });
+    function loop(now){
+      const dt = (now - last)/1000; last = now;
+      if (playing) {
+        prog = (prog + dt) % 200;
+        bar.style.width = (prog/200*100) + '%';
+      }
+      t.textContent = fmt(prog);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>

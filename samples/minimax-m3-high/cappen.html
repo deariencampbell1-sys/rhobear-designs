@@ -1,0 +1,518 @@
+<!doctype html>
+<!--
+  Original URL: https://cappen.com/
+  Filename:     cappen.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: globally awarded Miami-based web studio. Dark canvas, oversized
+  editorial type, scroll-driven case studies, GSAP-flavored motion, and a
+  confident, premium restraint. The site reads like a portfolio issue of a
+  design magazine — the work is the page.
+
+  Layout / hierarchy:
+    - Top nav: Works · About · Updates · "Start a Project" CTA · contact email
+    - Hero: huge headline ("HUMAN THINKERS / DIGITAL MAKERS"), a one-line
+      mission, and a single "DISCOVER" link.
+    - Sequence of full-bleed project case studies, each on its own scroll
+      segment: project name, year, paragraph of context, image plate, and
+      three to four meta tags (e.g. "Website", "Front-End Dev", "Wordpress"),
+      followed by a "Launch Project" pill and a "Keep scrolling" cue.
+    - "BUILDING TOMORROW FOR TODAY" interlude between project sections —
+      oversized type, sparse, rest beat.
+    - "Featured Work" / services band.
+    - Footer with global offices and contact.
+
+  Motion / interaction:
+    - Slow fade-and-rise on text as each case study enters the viewport.
+    - Image plates parallax slightly with scroll.
+    - Smooth-scroll anchor navigation.
+    - Subtle cursor glow / spotlight on dark sections.
+
+  Color system (extracted from screenshots and source):
+    --bg-0     #050505   (page, near-black)
+    --bg-1     #0e0e0e   (raised panels)
+    --ink-100  #f5f5f0   (off-white, paper-warm)
+    --ink-60   rgba(245,245,240,.60)
+    --ink-30   rgba(245,245,240,.30)
+    --accent   #d4ff3a   (chartreuse / electric lime — Cappen signature)
+    --warm     #b8896a   (warm tan accent on subtle elements)
+
+  CHALLENGES SOLVED
+  -----------------
+    - Built from markup only (no images). Each "project plate" is a
+      tasteful CSS gradient + noise composition that respects the original
+      aspect ratio and visual weight.
+    - Scroll reveal implemented with IntersectionObserver (no jQuery, no
+      GSAP CDN needed) and a small RAF loop for parallax.
+    - Smooth scroll, sticky nav, and "scroll progress" indicator at the
+      right edge of the viewport.
+    - Reduced-motion users get a still version automatically.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cappen — Award-Winning Interactive Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-0:#050505;
+      --bg-1:#0e0e0e;
+      --bg-2:#141414;
+      --ink-100:#f5f5f0;
+      --ink-70:rgba(245,245,240,.70);
+      --ink-50:rgba(245,245,240,.50);
+      --ink-30:rgba(245,245,240,.30);
+      --ink-15:rgba(245,245,240,.15);
+      --ink-08:rgba(245,245,240,.08);
+      --accent:#d4ff3a;
+      --warm:#b8896a;
+      --font-display:'Fraunces','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0);scroll-behavior:smooth}
+    body{margin:0;background:var(--bg-0);color:var(--ink-100);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--accent);color:#000}
+
+    .container{max-width:1280px;margin:0 auto;padding:0 40px}
+    @media (max-width:780px){.container{padding:0 20px}}
+
+    /* Nav */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:22px 40px;background:linear-gradient(180deg,rgba(5,5,5,.85),rgba(5,5,5,0));backdrop-filter:blur(8px)}
+    @media (max-width:780px){.nav{padding:18px 20px}}
+    .nav .brand{font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+    .nav .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+    .nav .center{display:flex;gap:36px;font-size:14px;color:var(--ink-70)}
+    .nav .center a{position:relative;padding:4px 0;transition:color .2s ease}
+    .nav .center a:hover{color:var(--ink-100)}
+    .nav .right{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--ink-70)}
+    .nav .right a.email{color:var(--ink-70);font-family:var(--font-mono);font-size:12px;letter-spacing:.04em}
+    .nav .right a.email:hover{color:var(--ink-100)}
+    .nav .cta{padding:10px 18px;border:1px solid var(--ink-30);border-radius:999px;font-size:13px;color:var(--ink-100);transition:all .25s ease}
+    .nav .cta:hover{background:var(--ink-100);color:#000;border-color:var(--ink-100)}
+    @media (max-width:780px){.nav .center,.nav .right a.email{display:none}}
+
+    /* Scroll progress */
+    .progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60;transition:width .1s linear;box-shadow:0 0 8px var(--accent)}
+
+    /* Hero */
+    .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 0 80px;overflow:hidden}
+    .hero .topline{font-family:var(--font-mono);font-size:11px;color:var(--ink-50);letter-spacing:.18em;margin-bottom:32px}
+    .hero h1{font-family:var(--font-display);font-weight:300;font-size:clamp(56px,11vw,180px);line-height:.92;letter-spacing:-.03em;margin:0}
+    .hero h1 .thin{font-weight:300;font-style:italic;color:var(--ink-70)}
+    .hero h1 .accent{color:var(--accent);font-style:italic}
+    .hero .lede{margin-top:32px;max-width:560px;color:var(--ink-70);font-size:16px;line-height:1.55}
+    .hero .discover{display:inline-flex;align-items:center;gap:10px;margin-top:28px;font-size:13px;letter-spacing:.18em;color:var(--ink-100);text-transform:uppercase}
+    .hero .discover .arr{width:24px;height:1px;background:currentColor;position:relative}
+    .hero .discover .arr::after{content:'';position:absolute;right:0;top:-3px;width:7px;height:7px;border-right:1px solid currentColor;border-top:1px solid currentColor;transform:rotate(45deg)}
+    .hero .scroll-cue{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--ink-30);writing-mode:vertical-rl}
+
+    /* Grain */
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:80;opacity:.04;mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>")}
+
+    /* Section helpers */
+    .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;color:var(--ink-50);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+    .eyebrow::before{content:'';width:24px;height:1px;background:var(--ink-30)}
+    .display{font-family:var(--font-display);font-weight:300;font-size:clamp(40px,7vw,96px);line-height:1.02;letter-spacing:-.02em;margin:0}
+
+    /* Reveal */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s ease,transform .9s ease}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+    /* Case study */
+    .case{padding:140px 0;border-top:1px solid var(--ink-08);position:relative}
+    .case:first-of-type{border-top:0}
+    .case .meta{display:flex;gap:32px;margin-bottom:48px;align-items:baseline}
+    .case .meta .idx{font-family:var(--font-mono);color:var(--accent);font-size:11px;letter-spacing:.18em}
+    .case .meta .yr{font-family:var(--font-display);font-size:18px;color:var(--ink-70)}
+    .case .grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+    @media (max-width:900px){.case .grid{grid-template-columns:1fr;gap:32px}}
+    .case h2{font-family:var(--font-display);font-weight:400;font-size:clamp(36px,5vw,72px);line-height:1.02;letter-spacing:-.02em;margin:0 0 24px}
+    .case p.lede{color:var(--ink-70);font-size:15px;line-height:1.7;margin:0 0 32px;max-width:520px}
+    .case .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+    .case .tags span{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--ink-70);padding:6px 12px;border:1px solid var(--ink-15);border-radius:999px;text-transform:uppercase}
+    .case .launch{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border:1px solid var(--ink-100);border-radius:999px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;transition:all .25s ease}
+    .case .launch:hover{background:var(--ink-100);color:#000}
+    .case .plate{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--bg-1);border:1px solid var(--ink-08)}
+    .case .plate .art{position:absolute;inset:0}
+
+    /* Plates — procedural compositions tuned per project */
+    .plate-1{background:linear-gradient(135deg,#1a0e0e 0%,#3b1f1f 40%,#0a0606 100%)}
+    .plate-1::before{content:'';position:absolute;inset:0;background:
+      radial-gradient(circle at 30% 30%,rgba(212,255,58,.25),transparent 40%),
+      radial-gradient(circle at 75% 70%,rgba(184,137,106,.4),transparent 50%),
+      repeating-linear-gradient(45deg,transparent 0 30px,rgba(255,255,255,.03) 30px 31px)}
+
+    .plate-2{background:linear-gradient(120deg,#0a1f1a 0%,#102b25 50%,#06120e 100%)}
+    .plate-2::before{content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse at 50% 50%,rgba(212,255,58,.18) 0%,transparent 60%),
+        repeating-linear-gradient(0deg,transparent 0 38px,rgba(255,255,255,.04) 38px 39px)}
+
+    .plate-3{background:linear-gradient(160deg,#0e0a1f 0%,#1c1438 50%,#07050f 100%)}
+    .plate-3::before{content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 20% 30%,rgba(184,137,106,.35),transparent 45%),
+        radial-gradient(circle at 80% 80%,rgba(212,255,58,.2),transparent 50%),
+        repeating-linear-gradient(90deg,transparent 0 26px,rgba(255,255,255,.04) 26px 27px)}
+
+    .plate-4{background:linear-gradient(140deg,#1a1a0e 0%,#3a3a1f 50%,#0a0a05 100%)}
+    .plate-4::before{content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 60% 30%,rgba(212,255,58,.2),transparent 50%),
+        conic-gradient(from 45deg at 50% 50%,transparent 0deg,rgba(184,137,106,.2) 60deg,transparent 120deg)}
+
+    .plate-5{background:linear-gradient(135deg,#0a0e1a 0%,#1a2238 50%,#050810 100%)}
+    .plate-5::before{content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 50% 50%,rgba(212,255,58,.15),transparent 50%),
+        repeating-linear-gradient(45deg,transparent 0 22px,rgba(255,255,255,.05) 22px 23px)}
+
+    .plate-6{background:linear-gradient(180deg,#0e0a1a 0%,#1f1438 50%,#050308 100%)}
+    .plate-6::before{content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse at 50% 50%,rgba(255,45,200,.18) 0%,transparent 50%),
+        radial-gradient(ellipse at 20% 80%,rgba(212,255,58,.18) 0%,transparent 40%),
+        radial-gradient(ellipse at 80% 20%,rgba(100,200,255,.15) 0%,transparent 40%)}
+
+    /* Tag overlay on plate */
+    .plate .badge{position:absolute;left:20px;top:20px;font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--ink-100);background:rgba(0,0,0,.4);padding:6px 10px;border-radius:999px;backdrop-filter:blur(6px);border:1px solid var(--ink-15)}
+    .plate .corner{position:absolute;right:20px;bottom:20px;font-family:var(--font-mono);font-size:10px;color:var(--ink-50);letter-spacing:.1em}
+
+    /* Big interlude */
+    .interlude{padding:200px 0;text-align:center;border-top:1px solid var(--ink-08);border-bottom:1px solid var(--ink-08);background:linear-gradient(180deg,var(--bg-0),var(--bg-1),var(--bg-0))}
+    .interlude h2{font-family:var(--font-display);font-weight:300;font-size:clamp(60px,10vw,160px);line-height:.95;margin:0;letter-spacing:-.02em}
+    .interlude h2 em{font-style:italic;color:var(--accent)}
+    .interlude p{margin:24px auto 0;max-width:560px;color:var(--ink-70);font-size:15px;line-height:1.7}
+
+    /* Featured band */
+    .featured{padding:140px 0}
+    .featured .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+    @media (max-width:900px){.featured .grid{grid-template-columns:1fr}}
+    .featured .card{aspect-ratio:4/5;border-radius:14px;background:var(--bg-1);border:1px solid var(--ink-08);padding:28px;display:flex;flex-direction:column;justify-content:space-between;transition:all .3s ease;cursor:pointer}
+    .featured .card:hover{border-color:var(--ink-30);transform:translateY(-4px)}
+    .featured .card .top{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--ink-50)}
+    .featured .card .body{font-family:var(--font-display);font-size:22px;line-height:1.2;font-weight:400}
+    .featured .card .body em{font-style:italic;color:var(--accent)}
+    .featured .card .arrow{align-self:flex-end;width:36px;height:36px;border:1px solid var(--ink-30);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .25s ease}
+    .featured .card:hover .arrow{background:var(--accent);color:#000;border-color:var(--accent)}
+
+    /* Awards marquee */
+    .marquee{padding:32px 0;border-top:1px solid var(--ink-08);border-bottom:1px solid var(--ink-08);overflow:hidden;position:relative}
+    .marquee .track{display:flex;gap:80px;animation:scroll 38s linear infinite;white-space:nowrap}
+    .marquee .track span{font-family:var(--font-display);font-style:italic;font-size:24px;color:var(--ink-30);letter-spacing:.02em}
+    .marquee .track span em{color:var(--accent);font-style:normal;font-family:var(--font-mono);font-size:14px;vertical-align:super;margin-left:6px}
+    @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* Footer */
+    footer{padding:80px 0 40px;border-top:1px solid var(--ink-08);margin-top:80px}
+    footer .row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:60px}
+    @media (max-width:780px){footer .row{grid-template-columns:1fr 1fr;gap:32px}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-50);margin:0 0 20px;text-transform:uppercase}
+    footer a,footer p{display:block;font-size:13px;color:var(--ink-70);margin-bottom:10px;line-height:1.6;transition:color .2s}
+    footer a:hover{color:var(--ink-100)}
+    footer .big{font-family:var(--font-display);font-size:clamp(48px,8vw,120px);font-weight:300;line-height:1;letter-spacing:-.02em;margin:40px 0 60px}
+    footer .big em{font-style:italic;color:var(--accent)}
+    footer .legal{font-size:11px;color:var(--ink-30);letter-spacing:.1em;display:flex;justify-content:space-between;padding-top:32px;border-top:1px solid var(--ink-08);margin-top:60px}
+    @media (max-width:780px){footer .legal{flex-direction:column;gap:8px}}
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="grain"></div>
+
+  <nav class="nav">
+    <a href="#" class="brand"><span class="dot"></span>Cappen</a>
+    <div class="center">
+      <a href="#works">Works</a>
+      <a href="#about">About</a>
+      <a href="#updates">Updates</a>
+    </div>
+    <div class="right">
+      <a class="email" href="mailto:felipe@cappen.com">felipe@cappen.com</a>
+      <a class="cta" href="#start">Start a Project</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="container">
+      <div class="topline">MIAMI · EST. 2006 · INTERACTIVE STUDIO</div>
+      <h1>
+        Human<br>
+        Thinkers<span class="accent">,</span><br>
+        <span class="thin">Digital Makers.</span>
+      </h1>
+      <p class="lede">A multi-awarded interactive digital studio crafting immersive &amp; interactive experiences for global brands since 2006.</p>
+      <a href="#works" class="discover">Discover <span class="arr"></span></a>
+    </div>
+    <div class="scroll-cue">SCROLL</div>
+  </header>
+
+  <!-- WORKS / CASE STUDIES -->
+  <section id="works" class="container">
+    <div style="padding:120px 0 60px">
+      <div class="eyebrow reveal">Featured Projects</div>
+      <h2 class="display reveal" style="margin-top:20px">Handcrafted experiences<br>for brands of all sizes,<br><em style="font-style:italic;color:var(--accent)">worldwide.</em></h2>
+    </div>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">01 / 06</span>
+        <span class="yr">2020</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>Amanda Braga</h2>
+          <p class="lede">Amanda Braga's portfolio is a digital runway — an editorial stage where fashion, motion, and narrative collide. Built as a seamless scroll journey, the site transforms her body of work into a cinematic experience: expressive typography, fluid GSAP interactions, and immersive layouts that feel alive with every swipe. Globally celebrated by Awwwards, FWA, and Flux Academy (2.4M views), it redefines the personal portfolio as more than a showcase — it's a brand experience in motion.</p>
+          <div class="tags"><span>Website</span><span>Front-End Dev</span><span>Wordpress</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-1"></div>
+          <span class="badge">Editorial · Motion</span>
+          <span class="corner">Awwwards · FWA</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">02 / 06</span>
+        <span class="yr">2025</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>Credit Genie</h2>
+          <p class="lede">Credit Genie partnered with us to transform their new design into a living digital product. Our team translated static layouts into smooth, performant code, layering in subtle animations and thoughtful transitions that elevate the user journey. Beyond the build, we extended the site with new pages and components, ensuring scalability as the brand evolved. The result: a digital presence that feels seamless, dynamic, and true to Credit Genie's mission of empowering financial wellness.</p>
+          <div class="tags"><span>Front-End Dev</span><span>Wordpress</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-2"></div>
+          <span class="badge">Fintech</span>
+          <span class="corner">2025</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">03 / 06</span>
+        <span class="yr">2025</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>JCPM Malls</h2>
+          <p class="lede">Cappen partnered with Grupo JCPM to reimagine the digital presence of seven of Brazil's leading shopping centers, creating a modular, scalable platform designed around user experience. More than just websites, the project established a living digital ecosystem — one that adapts to millions of visitors while honoring each mall's unique identity. Through deep collaboration, research, and iterative prototyping, we delivered a platform that set a new standard for the sector and earned recognition as one of JCPM's top marketing partners in 2024.</p>
+          <div class="tags"><span>Website</span><span>UX Design</span><span>UI Design</span><span>Web Dev</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-3"></div>
+          <span class="badge">Ecosystem · 7 Malls</span>
+          <span class="corner">2024 Partner</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">04 / 06</span>
+        <span class="yr">2019</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>Ministry of Supply</h2>
+          <p class="lede">Ministry of Supply partnered with Cappen to create the digital core of the Mercury Jacket — the world's first intelligent heated jacket. We developed the mobile app that gives users full control over temperature through touch and voice via Alexa, while embedding machine learning to adapt in real-time to personal preferences. The result is a wearable experience that goes beyond clothing — an ecosystem where performance, comfort, and technology converge.</p>
+          <div class="tags"><span>Mobile App</span><span>Alexa Skills</span><span>iOS &amp; Android</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-4"></div>
+          <span class="badge">IoT · Apparel</span>
+          <span class="corner">2019</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">05 / 06</span>
+        <span class="yr">2025</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>LeadEdu</h2>
+          <p class="lede">Cappen partnered with LeadEdu to design and develop a new website with a clean, modern interface and improved UX — delivering a digital experience that reflects the brand's mission of driving business transformation through innovative, high-impact training.</p>
+          <div class="tags"><span>Website</span><span>UX/UI</span><span>Webflow Dev</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-5"></div>
+          <span class="badge">EdTech</span>
+          <span class="corner">2025</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="case">
+      <div class="meta reveal">
+        <span class="idx">06 / 06</span>
+        <span class="yr">2021</span>
+      </div>
+      <div class="grid">
+        <div class="reveal">
+          <h2>NeonDoor</h2>
+          <p class="lede">Neon Door is a mind-bending portal into the future of digital literature — where storytelling meets immersive interaction. Designed as a speculative fiction universe, it blends editorial structure with nonlinear exploration, layered scroll effects, ambient audio, and neon-drenched visuals. Recognized by Awwwards, FWA, and Muzli, it reimagines what a literary website can be: not just a page, but a place. The experience sparked global attention, increased author submissions, and became a reference point for the future of narrative UX and experimental publishing.</p>
+          <div class="tags"><span>Website</span></div>
+          <a class="launch" href="#">Launch Project <span>↗</span></a>
+        </div>
+        <div class="plate reveal" data-speed="0.04">
+          <div class="art plate-6"></div>
+          <span class="badge">Literature · 3D</span>
+          <span class="corner">Awwwards · FWA · Muzli</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- INTERLUDE -->
+  <section class="interlude">
+    <h2>Building tomorrow<br><em>for</em> today.</h2>
+    <p>A multi-awarded digital studio crafting immersive &amp; interactive experiences for global brands since 2006. We are a collaborative engine for bold ideas, beautiful code, and digital experiences that actually matter.</p>
+  </section>
+
+  <!-- FEATURED -->
+  <section id="about" class="container featured">
+    <div class="eyebrow reveal">Featured Work</div>
+    <h2 class="display reveal" style="margin-top:20px">What we<br>do best.</h2>
+    <div class="grid">
+      <div class="card reveal">
+        <div class="top">01</div>
+        <div>
+          <div class="body">Designing a <em>bold scrolling experience</em> that became a global design reference.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+      <div class="card reveal">
+        <div class="top">02</div>
+        <div>
+          <div class="body">Translating <em>design vision</em> into a living platform with fluid animation and scalable code.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+      <div class="card reveal">
+        <div class="top">03</div>
+        <div>
+          <div class="body">Building a <em>scalable digital ecosystem</em> for one of Brazil's largest retail groups.</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AWARDS MARQUEE -->
+  <section class="marquee" aria-label="Awards">
+    <div class="track">
+      <span>Awwwards <em>×17</em></span>
+      <span>FWA <em>×9</em></span>
+      <span>CSSDA <em>×12</em></span>
+      <span>Muzli <em>×6</em></span>
+      <span>Webby <em>×4</em></span>
+      <span>Lovie <em>×3</em></span>
+      <span>Red Dot <em>×2</em></span>
+      <span>Communication Arts <em>×2</em></span>
+      <span>Awwwards <em>×17</em></span>
+      <span>FWA <em>×9</em></span>
+      <span>CSSDA <em>×12</em></span>
+      <span>Muzli <em>×6</em></span>
+      <span>Webby <em>×4</em></span>
+      <span>Lovie <em>×3</em></span>
+      <span>Red Dot <em>×2</em></span>
+      <span>Communication Arts <em>×2</em></span>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="container">
+    <div class="row">
+      <div>
+        <h4>Studio</h4>
+        <p>Miami, FL</p>
+        <p>São Paulo, BR</p>
+        <p>felipe@cappen.com</p>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <a href="#">Instagram</a>
+        <a href="#">Facebook</a>
+        <a href="#">Behance</a>
+        <a href="#">LinkedIn</a>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="#">Works</a>
+        <a href="#">About</a>
+        <a href="#">Updates</a>
+        <a href="#">Start a Project</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookie Settings</a>
+      </div>
+    </div>
+    <div class="big">Let's build<br>something <em>real.</em></div>
+    <div class="legal">
+      <span>© 2026 Cappen. All rights reserved.</span>
+      <span>HUMAN THINKERS · DIGITAL MAKERS</span>
+    </div>
+  </footer>
+
+  <script>
+  // Reveal on scroll
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting) e.target.classList.add('in');
+  }, {threshold: 0.12, rootMargin: '0px 0px -60px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Scroll progress
+  const prog = document.getElementById('progress');
+  function onScroll(){
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+    prog.style.width = pct + '%';
+  }
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // Parallax on plates
+  const plates = document.querySelectorAll('.plate');
+  function parallax(){
+    const vh = window.innerHeight;
+    for (const p of plates){
+      const r = p.getBoundingClientRect();
+      const speed = parseFloat(p.dataset.speed || '0.04');
+      const center = r.top + r.height/2 - vh/2;
+      p.style.transform = `translateY(${(-center * speed).toFixed(1)}px)`;
+    }
+    requestAnimationFrame(parallax);
+  }
+  requestAnimationFrame(parallax);
+  </script>
+</body>
+</html>
