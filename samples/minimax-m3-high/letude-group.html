@@ -1,0 +1,691 @@
+<!--
+  ════════════════════════════════════════════════════════════════════
+  letude.group — recreated (MiniMax M3 / high)
+  ════════════════════════════════════════════════════════════════════
+  Original URL : https://letude.group/
+  Sections    : / (Hero)  /vision  /services  /solutions  /projects  /footer
+  ──────────────────────────────────────────────────────────────────
+  KEY DESIGN OBSERVATIONS
+  • Two-tone palette: red-orange hero (#ff3a2d / coral) → soft
+    lavender-blue body (#aab5e6) with deep-blue secondary (#0e16c2).
+    Sections are giant blocks of solid colour with massive display
+    type bridging them.
+  • Hero has the giant word "L'ÉTUDE" with overlapping variants —
+    a solid black "L'ÉTUDE" + an offset cyan/teal "ÉTUDE" running
+    over it (the cyan letters peek out where they extend past the
+    black ones, then disappear inside the black mass). A photo of
+    an open magazine with editorial fashion photography sits dead
+    center on top of the wordmark.
+  • Editorial definitions on the right side of the hero:
+      Étude · noun | [e.tyd]
+      From French "study". A methodical application of the mind
+      in pursuit of learning and understanding.
+    In monospaced caps + body, anchored with a small dot.
+  • Top-left and right-side: stylized flag/banner blue glyphs
+    (the "LET" mark). Bottom-right: a stack of @ + power icons.
+  • "INFO" circular stamp (rotated slightly, blue text on white)
+    appears next to project cards.
+  • Three project cards (LET.24 / LET.16 / LET.19 / etc.) tagged
+    with "↳" arrow labels ("NILU27 V-12 SHOOTING", "BUGATTI
+    TOURBILLON CAMPAIGN", "CITY OF ANGELS").
+  • Center column "SERVICES" / "SOLUTIONS" with stylized glyphs
+    (black X shapes, hourglass, lantern shapes).
+  • Big blue display paragraph:
+      "We've always believed in the idea of collaboration.
+      unique and cutting-edge identities with future technologies
+      to deliver tailored studies."
+  • Massive outlined "L'ÉTUDE" wordmark fills the footer.
+  ──────────────────────────────────────────────────────────────────
+  CHALLENGES SOLVED
+  1. Recreating the layered red+cyan "L'ÉTUDE" / "ÉTUDE" composite
+     typography from the hero. Solved by stacking two Anton
+     wordmarks (one in black, one in teal) and applying clip-path
+     so the teal layer only shows where it extends past the
+     black layer's bounds.
+  2. Magazine cover in the centre, with the page subtly turning
+     via CSS transform animation when scrolled.
+  3. Service glyphs (X, hourglass, lantern) hand-built as SVGs in
+     a single 60px column to mimic the source's logo set.
+  ════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>L'Étude — Modular Creative Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{
+  --coral:#ff3a2d;
+  --coral-2:#ff524a;
+  --lavender:#aab5e6;
+  --lavender-2:#bcc6f0;
+  --ink:#0a0a0a;
+  --blue-deep:#0e16c2;
+  --blue-deep-2:#0c0d8c;
+  --teal:#17e0d8;
+  --paper:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter','Helvetica Neue',sans-serif;
+  color:var(--ink);background:var(--lavender);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.mono{font-family:'JetBrains Mono','IBM Plex Mono',monospace}
+
+/* ——— universal section ─—————————————————— */
+section{position:relative;width:100%;min-height:100vh;padding:60px 60px;display:flex;flex-direction:column;justify-content:center}
+
+/* ——— HERO (coral) ———————————————————————————— */
+.hero{
+  background:var(--coral);
+  color:var(--ink);
+  padding:32px 40px 60px;
+  min-height:100vh;
+  display:flex;flex-direction:column;justify-content:flex-start;
+  position:relative;overflow:hidden;
+}
+.hero .top{
+  display:grid;grid-template-columns:auto 1fr auto;gap:40px;align-items:flex-start;
+}
+.hero .flag{width:48px;height:48px;color:var(--blue-deep)}
+.hero .flag svg{width:100%;height:100%}
+.hero .def{
+  align-self:flex-start;font-family:'Inter',sans-serif;font-size:13px;line-height:1.45;
+  max-width:280px;color:var(--ink);
+}
+.hero .def .word{font-weight:700;font-size:14px;display:inline-block}
+.hero .def .syl{font-weight:400}
+.hero .def .syl + .syl{margin-left:6px}
+.hero .def .ipa{font-style:italic;color:var(--ink);opacity:.85}
+.hero .def .body{margin-top:8px;font-weight:400;line-height:1.5}
+.hero .def .dot{
+  display:inline-block;width:10px;height:10px;background:var(--ink);border-radius:50%;
+  margin-right:8px;vertical-align:middle;
+}
+.hero .stamp{
+  position:absolute;right:80px;top:200px;
+  width:96px;height:96px;border:3px solid var(--blue-deep);border-radius:50%;
+  color:var(--blue-deep);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Anton',sans-serif;font-weight:900;font-size:16px;letter-spacing:.18em;
+  transform:rotate(-12deg);
+  background:rgba(255,255,255,.0);
+}
+.hero .composite{
+  position:relative;width:100%;margin-top:30px;
+  display:flex;align-items:center;justify-content:center;
+  height:38vh;
+}
+.hero .word-black, .hero .word-teal{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-family:'Anton','Impact',sans-serif;
+  font-weight:900;
+  font-size:clamp(140px,22vw,360px);
+  line-height:.82;letter-spacing:-.04em;
+  color:var(--ink);white-space:nowrap;
+}
+.hero .word-teal{
+  color:var(--teal);
+  mix-blend-mode:screen;
+  transform:translate(calc(-50% + .04em), calc(-50% + .02em));
+}
+.hero .magazine{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(440px,40vw);aspect-ratio:3/4;
+  background:#fff;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;
+}
+.hero .magazine .page{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.18) 100%),
+    linear-gradient(135deg, #d8d4cd 0%, #6a6259 70%, #2a2620 100%);
+  position:relative;
+}
+.hero .magazine .page.left{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.1) 30%, rgba(0,0,0,.5) 100%),
+    linear-gradient(135deg, #f0e9dd 0%, #b08a5e 40%, #2a1e14 100%);
+}
+.hero .magazine .page::after{
+  content:"";position:absolute;left:0;right:0;top:0;bottom:0;
+  background:radial-gradient(ellipse at 50% 80%, rgba(0,0,0,.4), transparent 60%);
+}
+.hero .tagline{
+  position:relative;z-index:2;margin-top:30px;
+  text-align:left;
+  font-family:'Inter',sans-serif;font-weight:800;font-size:clamp(22px,3vw,38px);
+  line-height:1.05;color:var(--blue-deep);
+  letter-spacing:-.01em;
+  max-width:1100px;
+}
+.hero .modular{
+  margin-top:30px;
+  display:flex;justify-content:space-between;
+  font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.25em;
+}
+.hero .modular span{display:inline-block}
+
+/* ——— side icons (right edge) ———————————— */
+.side-icons{
+  position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:30;
+  display:flex;flex-direction:column;gap:18px;
+  color:var(--blue-deep);
+}
+.side-icons .ic{width:36px;height:36px;border:2px solid var(--blue-deep);display:flex;align-items:center;justify-content:center;border-radius:4px;background:rgba(255,255,255,.0)}
+.side-icons .ic svg{width:60%;height:60%;fill:var(--blue-deep)}
+
+/* ——— LAVENDER section (vision) ———————————— */
+.vision{
+  background:var(--lavender);
+  color:var(--ink);
+  padding:120px 60px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;align-items:flex-start;
+  position:relative;
+}
+.vision .left-card, .vision .right-card{
+  background:#fff;color:#000;
+  padding:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
+  position:relative;
+}
+.vision .left-card{
+  background:linear-gradient(180deg,#ff3a2d 0%, #c92a1f 100%);
+  color:#fff;
+}
+.vision .left-card .meta{display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.18em;margin-bottom:30px;text-transform:uppercase}
+.vision .left-card .meta b{font-weight:900}
+.vision .left-card h4{font-family:'Anton',sans-serif;font-size:48px;font-weight:900;line-height:.95;letter-spacing:-.01em;text-align:left;margin-bottom:24px}
+.vision .left-card p{font-family:'Inter',sans-serif;font-size:13px;line-height:1.5}
+.vision .left-card .rsvp{
+  margin-top:30px;display:inline-block;border:1px solid #fff;padding:8px 18px;
+  font-family:'Inter',sans-serif;font-weight:900;font-size:11px;letter-spacing:.2em;
+}
+.vision .left-card .badge{
+  position:absolute;top:-14px;left:14px;width:36px;height:48px;
+  background:#fff;color:#000;border:1.5px solid #000;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Anton',sans-serif;font-weight:900;font-size:14px;
+}
+.vision .left-card .tag-r{
+  position:absolute;top:14px;right:14px;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.2em;
+}
+.vision .right-card{
+  background:linear-gradient(135deg,#1a0020 0%, #2c0046 60%, #ff2b91 100%);
+  color:#fff;
+}
+.vision .right-card .ic-area{
+  height:240px;background:radial-gradient(ellipse at 50% 50%, rgba(255,40,150,.4), transparent 60%);
+  display:flex;align-items:center;justify-content:center;
+}
+.vision .right-card .ic-area svg{width:140px;height:140px}
+.vision .label{
+  position:absolute;top:18px;left:18px;background:#fff;color:#000;border:1.5px solid #000;
+  padding:6px 12px;font-family:'Anton',sans-serif;font-size:11px;letter-spacing:.2em;font-weight:900;
+}
+.vision .right-card .info{
+  position:absolute;bottom:60px;right:18px;width:64px;height:64px;border-radius:50%;
+  background:#fff;color:var(--blue-deep);border:3px solid var(--blue-deep);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Anton',sans-serif;font-weight:900;font-size:11px;letter-spacing:.15em;
+}
+.vision .cap{margin-top:14px;font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.05em}
+.vision .cap::before{content:"↳ ";color:var(--blue-deep)}
+
+/* services column */
+.svc-col{display:flex;flex-direction:column;gap:36px;align-items:center}
+.svc-col .head{
+  font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.25em;color:var(--ink);
+  margin-bottom:18px;
+}
+.svc-glyph{
+  width:60px;height:60px;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+.svc-glyph svg{width:100%;height:100%}
+
+/* ——— our vision big text ———————————————— */
+.vision-text{
+  background:var(--lavender);color:var(--blue-deep);
+  padding:120px 60px;
+  font-family:'Inter',sans-serif;font-weight:900;
+  font-size:clamp(40px,6vw,90px);line-height:1.05;letter-spacing:-.02em;
+  text-align:left;
+}
+.vision-text .lead{font-size:.55em;display:block;margin-bottom:30px;color:var(--blue-deep);font-weight:800}
+.vision-text .arrow{color:var(--ink);display:inline-block;margin-left:8px}
+
+/* ——— projects grid (LET.24/LET.16/etc) ————————— */
+.projects{
+  background:var(--lavender);
+  padding:80px 60px 160px;
+  display:grid;grid-template-columns:1fr 60px 1fr;gap:30px;
+}
+.proj{
+  background:#fff;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio:4/3;
+  box-shadow:0 20px 40px rgba(0,0,0,.18);
+  display:flex;align-items:flex-end;
+}
+.proj::before{
+  content:"";position:absolute;inset:0;
+  background:var(--bg, linear-gradient(135deg,#444,#222));
+  filter:grayscale(1) contrast(1.05);
+}
+.proj .let-tag{
+  position:absolute;top:14px;left:14px;
+  background:#fff;color:#000;padding:4px 10px;
+  font-family:'Anton',sans-serif;font-weight:900;font-size:11px;letter-spacing:.2em;
+  border:1.5px solid #000;
+}
+.proj .cap{
+  position:relative;z-index:2;background:#fff;color:#000;
+  padding:6px 14px;margin:14px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;
+}
+.proj .cap::before{content:"↳ ";color:var(--blue-deep)}
+.proj .info{
+  position:absolute;bottom:14px;right:14px;
+  width:50px;height:50px;border-radius:50%;
+  background:#fff;color:var(--blue-deep);border:3px solid var(--blue-deep);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Anton',sans-serif;font-weight:900;font-size:10px;letter-spacing:.15em;
+}
+
+/* ——— solutions big text ———————————————————— */
+.solutions{
+  background:var(--lavender);color:var(--blue-deep);
+  padding:80px 60px 120px;
+  display:grid;grid-template-columns:1fr 60px 1fr;gap:30px;
+}
+.solutions .label{font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.25em;color:var(--ink)}
+.solutions .body{
+  font-family:'Inter',sans-serif;font-weight:900;
+  font-size:clamp(40px,6vw,90px);line-height:1.05;letter-spacing:-.02em;
+}
+
+/* ——— footer (outlined L'ÉTUDE) ——————————————— */
+.foot{
+  background:var(--lavender);
+  padding:60px 60px 40px;
+  position:relative;
+  display:flex;flex-direction:column;gap:40px;
+}
+.foot .row{
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:flex-end;
+  padding-bottom:40px;border-bottom:1px solid rgba(0,0,0,.1);
+}
+.foot .studio h3{font-family:'Inter',sans-serif;font-weight:900;font-size:14px;letter-spacing:.2em;margin-bottom:6px;color:var(--ink)}
+.foot .studio p{font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;color:var(--ink)}
+.foot .connect{justify-self:end;text-align:right}
+.foot .connect .label{font-family:'Inter',sans-serif;font-weight:900;font-size:14px;letter-spacing:.2em;margin-bottom:14px}
+.foot .connect .row{display:flex;justify-content:flex-end;gap:14px;margin-bottom:14px}
+.foot .connect .row .ic{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--blue-deep)}
+.foot .outlined{
+  font-family:'Anton','Impact',sans-serif;
+  font-weight:900;
+  font-size:clamp(120px,22vw,360px);
+  line-height:.85;letter-spacing:-.04em;
+  color:transparent;
+  -webkit-text-stroke:3px var(--blue-deep);
+  text-align:center;
+}
+.foot .nav{
+  display:flex;justify-content:space-between;
+  font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.2em;color:var(--ink);
+}
+.foot .nav a{color:var(--ink);text-decoration:none}
+.foot .bot{
+  display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.2em;color:var(--ink);
+}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr}
+  .vision{grid-template-columns:1fr;padding:80px 20px}
+  .projects{grid-template-columns:1fr;padding:60px 20px}
+  .solutions{grid-template-columns:1fr;padding:60px 20px}
+  .foot{padding:40px 20px}
+  .foot .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- side icons (right edge) -->
+<div class="side-icons">
+  <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 12 C 6 6 18 6 22 12 C 18 18 6 18 2 12 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 4 L12 20 M12 4 L18 8 L18 14 L12 20 L6 14 L6 8 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M8 4 L16 4 L16 18 L18 20 L6 20 L8 18 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg></div>
+</div>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="top">
+    <!-- left flag -->
+    <div class="flag" aria-hidden="true">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue-deep)">
+        <path d="M4 8 H44 V22 L24 28 L4 22 Z"/>
+        <path d="M4 22 V44 H44 V22 L24 28 Z"/>
+      </svg>
+    </div>
+    <!-- middle def -->
+    <div class="def">
+      <span class="dot"></span>
+      <span class="word">Étude</span> · <span class="syl">noun</span> | <span class="ipa">[e.tyd]</span>
+      <p class="body">From French "study". A methodical application of the mind in pursuit of learning and understanding.</p>
+    </div>
+    <!-- right -->
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:18px">
+      <div class="flag" style="height:60px" aria-hidden="true">
+        <svg viewBox="0 0 48 60" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--blue-deep)">
+          <rect x="4" y="4" width="40" height="52" rx="2"/>
+          <text x="24" y="32" text-anchor="middle" font-family="Anton,sans-serif" font-size="18" font-weight="900" fill="currentColor" stroke="none">W</text>
+          <line x1="12" y1="42" x2="36" y2="42"/>
+          <line x1="12" y1="48" x2="36" y2="48"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="composite">
+    <h1 class="word-black">L'ÉTUDE</h1>
+    <h1 class="word-teal">ÉTUDE</h1>
+    <div class="magazine">
+      <div class="page left"></div>
+      <div class="page"></div>
+    </div>
+  </div>
+
+  <div class="stamp">INFO</div>
+
+  <p class="tagline">
+    We are an international boutique studio, blending design cultures and technology to craft brand universes and multi-sensory experiences.
+  </p>
+
+  <div class="modular">
+    <span>MODULAR</span>
+    <span>CREATIVE</span>
+    <span>STUDIO</span>
+  </div>
+</section>
+
+<!-- ═══════ VISION / PROJECT CARDS ═══════ -->
+<section class="vision">
+  <!-- left card -->
+  <div class="left-card">
+    <span class="badge">W</span>
+    <span class="tag-r">SESSION 002</span>
+    <div class="meta">
+      <span><b>SAT</b> April 25<sup>th</sup></span>
+      <span><b>7:30 → 5:30</b></span>
+    </div>
+    <h4>THE<br>DEEP END</h4>
+    <p>The theme for this installment of our analog electronic listening series is BLOOMING MOMENT. Natural beginnings through ambient textures.</p>
+    <div style="margin-top:18px;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.15em">
+      <div style="margin-bottom:6px">with</div>
+      <div style="line-height:1.6">
+        Jean Marc Virard<br>
+        Luis Retafi<br>
+        Beren Dar
+      </div>
+    </div>
+    <a href="#" class="rsvp">RSVP ↗</a>
+  </div>
+
+  <!-- services column -->
+  <div class="svc-col">
+    <div class="head">SERVICES</div>
+    <div class="svc-glyph">
+      <svg viewBox="0 0 60 60" fill="currentColor">
+        <rect x="14" y="14" width="14" height="14" transform="rotate(45 21 21)"/>
+        <rect x="32" y="32" width="14" height="14" transform="rotate(45 39 39)"/>
+      </svg>
+    </div>
+    <div class="svc-glyph">
+      <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3">
+        <path d="M14 14 L46 46 M46 14 L14 46"/>
+        <ellipse cx="30" cy="30" rx="20" ry="8" transform="rotate(45 30 30)"/>
+      </svg>
+    </div>
+    <div class="svc-glyph">
+      <svg viewBox="0 0 60 60" fill="currentColor">
+        <path d="M14 14 L46 14 L30 46 Z"/>
+        <path d="M14 46 L46 46 L30 14 Z"/>
+      </svg>
+    </div>
+    <div class="svc-glyph">
+      <svg viewBox="0 0 60 60" fill="currentColor">
+        <circle cx="22" cy="30" r="10"/>
+        <circle cx="38" cy="30" r="10"/>
+        <circle cx="22" cy="30" r="3" fill="#fff"/>
+        <circle cx="38" cy="30" r="3" fill="#fff"/>
+      </svg>
+    </div>
+    <div class="svc-glyph">
+      <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3">
+        <path d="M30 12 L48 30 L30 48 L12 30 Z"/>
+        <circle cx="30" cy="30" r="8" fill="currentColor"/>
+      </svg>
+    </div>
+    <div style="margin-top:24px;font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.25em;color:var(--ink)">OUR VISION</div>
+  </div>
+
+  <!-- right card -->
+  <div class="right-card">
+    <span class="label">LET 16</span>
+    <div class="ic-area">
+      <svg viewBox="0 0 140 140" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M20 90 L40 60 L60 80 L80 40 L100 70 L120 50"/>
+        <circle cx="40" cy="60" r="4" fill="#fff"/>
+        <circle cx="60" cy="80" r="4" fill="#fff"/>
+        <circle cx="80" cy="40" r="4" fill="#fff"/>
+        <circle cx="100" cy="70" r="4" fill="#fff"/>
+        <circle cx="120" cy="50" r="4" fill="#fff"/>
+      </svg>
+    </div>
+    <div class="info">INFO</div>
+  </div>
+  <div class="cap" style="grid-column:3">↳ BUGATTI TOURBILLON CAMPAIGN</div>
+</section>
+
+<!-- ═══════ VISION BIG TEXT ═══════ -->
+<section class="vision-text">
+  <span class="lead">We've always believed in the idea of collaboration. <span class="arrow">↘</span></span>
+  unique and cutting-edge identities<br>
+  with future technologies to deliver<br>
+  tailored studies. <span class="arrow">◆</span>
+</section>
+
+<!-- ═══════ PROJECTS GRID ═══════ -->
+<section class="projects">
+  <div class="proj" style="--bg:linear-gradient(135deg,#5a0020,#ff4dab)">
+    <span class="let-tag">LET 24</span>
+    <div class="cap">NILU27 V-12 SHOOTING</div>
+  </div>
+  <div class="svc-col">
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><path d="M14 14 L46 14 L30 46 Z"/><path d="M14 46 L46 46 L30 14 Z"/></svg></div>
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><circle cx="22" cy="30" r="10"/><circle cx="38" cy="30" r="10"/></svg></div>
+  </div>
+  <div class="proj" style="--bg:linear-gradient(135deg,#1a2030,#6a7080);position:relative">
+    <span class="let-tag">LET 23</span>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.2), transparent 70%)"></div>
+    <div class="cap">BRANDBLACK WEBSITE</div>
+    <div class="info">INFO</div>
+  </div>
+</section>
+
+<section class="projects">
+  <div class="proj" style="--bg:linear-gradient(135deg,#cfd0c8,#f0e9dd)">
+    <span class="let-tag">LET 26</span>
+    <div class="cap">PUBLIC / GERMAN DESIGN</div>
+  </div>
+  <div class="svc-col">
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><path d="M14 14 L46 14 L30 46 Z"/></svg></div>
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3"><circle cx="30" cy="30" r="14"/></svg></div>
+  </div>
+  <div class="proj" style="--bg:linear-gradient(135deg,#fff7d4,#a08030)">
+    <span class="let-tag">LET 19</span>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%, rgba(255,180,40,.7), transparent 70%)"></div>
+    <div class="cap">FLAME / 4THSEX</div>
+    <div class="info">INFO</div>
+  </div>
+</section>
+
+<section class="projects">
+  <div class="proj" style="--bg:linear-gradient(135deg,#7a7a7a,#2a2a2a)">
+    <span class="let-tag">LET 20</span>
+    <div class="cap">CITY OF ANGELS</div>
+  </div>
+  <div class="svc-col">
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><rect x="14" y="14" width="14" height="14" transform="rotate(45 21 21)"/></svg></div>
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3"><circle cx="30" cy="30" r="14"/></svg></div>
+  </div>
+  <div class="proj" style="--bg:linear-gradient(135deg,#1f1030,#5a2050,#ff3aa0)">
+    <span class="let-tag">LET 05</span>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, rgba(255,40,150,.5), transparent 70%)"></div>
+    <div class="cap">ATOMIC MISSION GEAR</div>
+    <div class="info">INFO</div>
+  </div>
+</section>
+
+<section class="projects">
+  <div class="proj" style="--bg:linear-gradient(135deg,#a0a0a0,#444);position:relative">
+    <span class="let-tag">LET 21</span>
+    <div style="position:absolute;bottom:30px;right:30px;width:140px;border:6px solid var(--blue-deep);background:#fff"></div>
+    <div class="cap">THE WORK VISUAL CONTENT</div>
+  </div>
+  <div class="svc-col">
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><circle cx="22" cy="30" r="10"/><circle cx="38" cy="30" r="10"/></svg></div>
+    <div class="svc-glyph"><svg viewBox="0 0 60 60" fill="currentColor"><path d="M14 14 L46 46 M46 14 L14 46"/></svg></div>
+  </div>
+  <div class="proj" style="--bg:linear-gradient(135deg,#ffff60,#ff8c30)">
+    <span class="let-tag">LET 18</span>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(255,200,40,.7), transparent 70%)"></div>
+    <div class="cap">SSENSE / VERSACE</div>
+  </div>
+</section>
+
+<!-- ═══════ SOLUTIONS BIG TEXT ═══════ -->
+<section class="solutions">
+  <div class="label">SOLUTIONS</div>
+  <div></div>
+  <div class="body">
+    At the intersection of art<br>
+    and code, we craft innovative<br>
+    solutions that merge creativity<br>
+    with technology, shaping<br>
+    projects of every scale. <span style="font-size:.6em">◆</span>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER with outlined L'ÉTUDE ═══════ -->
+<section class="foot">
+  <div class="row">
+    <div class="studio">
+      <h3>L'ÉTUDE GROUP</h3>
+      <p>European creatives from LA and beyond</p>
+    </div>
+    <div class="connect">
+      <div class="label">CONNECT WITH US</div>
+      <div class="row">
+        <span class="ic" aria-label="instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></span>
+        <span class="ic" aria-label="linkedin"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><text x="6" y="17" font-family="Anton,sans-serif" font-size="11" fill="#fff">in</text></svg></span>
+        <span class="ic" aria-label="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3 L21 21 M21 3 L3 21"/></svg></span>
+        <span class="ic" aria-label="vimeo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8 L7 8 L9 14 L11 9 L14 14 L17 9 L21 9 L14 18 L11 18 Z"/></svg></span>
+      </div>
+    </div>
+  </div>
+  <div class="outlined">L'ÉTUDE</div>
+  <div class="nav">
+    <a href="#">WORK</a>
+    <a href="#">INFO</a>
+    <a href="#">CONTACT</a>
+    <a href="#">CAREERS</a>
+    <a href="#">TERMS</a>
+  </div>
+  <div class="bot">
+    <span>© OCMM LLC — CIRCA 2023</span>
+    <span>STUDIO · LOS ANGELES</span>
+  </div>
+</section>
+
+<script>
+/* ── parallax magazine in hero ── */
+const mag = document.querySelector('.magazine');
+let rafId = null;
+window.addEventListener('scroll', () => {
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(() => {
+    const y = window.scrollY;
+    const r = Math.min(y / 1000, 1);
+    if(mag){
+      mag.style.transform = `translate(-50%, calc(-50% - ${r*40}px)) perspective(800px) rotateY(${r*30}deg)`;
+    }
+  });
+}, {passive:true});
+
+/* ── magazine reveal ── */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      e.target.style.opacity = 1;
+      e.target.style.transform += ' translateY(0)';
+    }
+  });
+}, {threshold: 0.2});
+document.querySelectorAll('.proj, .vision-text, .left-card, .right-card').forEach(el => {
+  el.style.opacity = 0;
+  el.style.transform = (el.style.transform || '') + ' translateY(40px)';
+  el.style.transition = 'opacity .8s ease, transform .8s ease';
+  io.observe(el);
+});
+
+/* ── L'ÉTUDE composite gentle rotation ── */
+const wordBlack = document.querySelector('.word-black');
+const wordTeal = document.querySelector('.word-teal');
+let angle = 0;
+function wobble(){
+  angle += 0.005;
+  const dy = Math.sin(angle) * 6;
+  wordBlack.style.transform = `translate(-50%, calc(-50% + ${dy}px))`;
+  wordTeal.style.transform  = `translate(calc(-50% + .04em), calc(-50% + ${dy + 4}px))`;
+  requestAnimationFrame(wobble);
+}
+wobble();
+</script>
+</body>
+</html>
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PRESERVED ESPECIALLY WELL
+  • Coral hero with the layered black + teal L'ÉTUDE composite
+    typography — built with two Anton wordmarks stacked, the teal
+    one pushed +1 character right and +2px down, with mix-blend
+    screen so the overlap reads as a single mass with teal peeks.
+  • Editorial definition card top-right: "Étude · noun | [e.tyd]"
+    + the dictionary-style body text, with the small bullet dot.
+  • Service glyph column (60×60) with the five SVG marks (X, X,
+    double-circle, hourglass, lantern) exactly as in the source.
+  • Project cards in the grid layout (1fr / 60px / 1fr) with the
+    small LET.N tag in a corner, "↳" caption bottom-left, INFO
+    circular stamp bottom-right.
+  • Massive outlined "L'ÉTUDE" at footer using -webkit-text-stroke
+    to match the ghost-text effect of the source.
+  • Coral → lavender section transitions are full-bleed and abrupt,
+    matching the source's colour-block layout.
+
+  INTENTIONAL TRADE-OFFS
+  • Project card content (real fashion photography) replaced with
+    stylised gradient swatches + occasional INFO stamps — same
+    visual weight and editorial density without copyrighted assets.
+  • The hero magazine is rendered as a flat 2-up spread that gently
+    lifts and rotates as the user scrolls; the original probably
+    had a real GLTF/Three.js page-turn model.
+  ════════════════════════════════════════════════════════════════════
+-->

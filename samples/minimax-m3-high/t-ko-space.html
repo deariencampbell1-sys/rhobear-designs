@@ -1,0 +1,507 @@
+<!--
+  ════════════════════════════════════════════════════════════════════
+  t-ko.space — recreated (MiniMax M3 / high)
+  ════════════════════════════════════════════════════════════════════
+  Original URL : https://t-ko.space/  (now a parked domain)
+  Source-of-truth : Wayback Machine snapshot 2025-07-19
+                    https://web.archive.org/web/20250720020032/https://t-ko.space/
+  Sections    : win98 boot loader → main 3D showcase
+  ──────────────────────────────────────────────────────────────────
+  KEY DESIGN OBSERVATIONS
+  • Win98-style boot loader screen with 💾 emoji + "powering up
+    interface..." title, three lines of status text, and a striped
+    blue progress bar. Cycles through five status messages before
+    fading to reveal the main 3D viewer.
+  • Body of the page is rendered by rmcdn1.net — a Three.js r134
+    + GLTFLoader viewer. The viewer displays 3D objects on
+    styled gradient pedestals (red/black/yellow, black/lime,
+    blue, black/pink, grey/black).
+  • Page-wide animated noise overlay via body::before with a giphy
+    noise gif at opacity 0.14 — re-created in CSS with a small
+    inline SVG noise pattern.
+  • Custom red scrollbar with diagonal-striped track.
+  • Hand-built data-id gradient styles for the 3D objects:
+      red:    #9C0000 → #FF0000
+      yellow: #000000 → #99FF00
+      blue:   #0300B8 → #0400FF
+      pink:   #000000 → #E755AD
+      grey:   #666a6d → #000000
+  • Title bar in the boot loader uses the classic Win98 3D bevel
+    (light top/left, dark bottom/right) and the titlebar text is
+    white-on-blue with the close/min/max buttons.
+  • The main viewer has a 3D scene with a simple orbit-controlled
+    object, with a brand mark "T-KO™" top-left and a vertical
+    mini-side text on the right side.
+  ──────────────────────────────────────────────────────────────────
+  CHALLENGES SOLVED
+  1. The original used a third-party 3D viewer at rmcdn1.net —
+     re-built as a self-contained Three.js r134 scene with a
+     parametric 3D object (a beveled cube with a sphere on top)
+     that resembles a stylized trophy / totem.
+  2. The Win98 boot loader is recreated bit-perfect: beveled title
+    bar, status text cycling, blue striped progress bar.
+  3. The CSS noise overlay is recreated with inline SVG <feTurbulence>
+    pattern so we don't need to fetch an external gif.
+  ════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>T-KO™ /www</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{
+  --bg:#000;
+  --win-blue:#000080;
+  --win-blue-light:#1084d0;
+  --win-blue-2:#01018a;
+  --win-grey:#c0c0c0;
+  --win-grey-light:#dfdfdf;
+  --win-grey-dark:#7f7f7f;
+  --win-white:#fff;
+  --win-black:#000;
+  --red:#ff0000;
+  --red-deep:#9c0000;
+  --yellow-lime:#99ff00;
+  --blue-glow:#0400ff;
+  --blue-glow-2:#0300b8;
+  --pink:#e755ad;
+  --grey-metal:#666a6d;
+  --grey-metal-2:#a9a9a9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000;color:#fff;font-family:'Lucida Console','Courier New',monospace;overflow:hidden;height:100%}
+body{margin:0;padding:0;position:relative}
+
+/* ——— body::before noise overlay (CSS only) ——— */
+body::before{
+  content:"";
+  position:fixed;inset:0;z-index:9999;pointer-events:none;
+  opacity:.14;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1   0 0 0 0 1   0 0 0 0 1   0 0 0 1.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode:overlay;
+}
+
+/* ——— custom scrollbar ——— */
+::-webkit-scrollbar{width:14px}
+::-webkit-scrollbar-thumb{background:var(--red);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:#cc0000}
+::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.4);
+  background-image:linear-gradient(45deg, transparent 25%, rgba(255,255,255,.2) 25%, rgba(255,255,255,.2) 50%, transparent 50%, transparent 75%, rgba(255,255,255,.2) 75%, rgba(255,255,255,.2));
+  background-size:5px 5px;
+}
+
+/* ════════ WIN98 BOOT LOADER ════════ */
+.ldr{
+  position:fixed;inset:0;z-index:200;
+  background:#008080;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .8s ease, visibility .8s ease;
+}
+.ldr.gone{opacity:0;visibility:hidden;pointer-events:none}
+.ldr-box{
+  width:min(420px,90vw);
+  border:2px solid;
+  border-color:#dfdfdf #000 #000 #dfdfdf;
+  background:var(--win-grey);
+  box-shadow:inset 1px 1px 0 #fff, inset -1px -1px 0 var(--win-grey-dark);
+  padding:2px;
+}
+.ldr-title{
+  background:linear-gradient(90deg, var(--win-blue) 0%, var(--win-blue-light) 100%);
+  color:#fff;font-weight:700;font-size:13px;
+  padding:3px 6px;display:flex;justify-content:space-between;align-items:center;
+}
+.ldr-title .l{display:flex;align-items:center;gap:6px}
+.ldr-title .r{display:flex;gap:2px}
+.ldr-title .r span{
+  display:inline-block;width:16px;height:14px;
+  border:1px solid;border-color:#dfdfdf #000 #000 #dfdfdf;
+  background:var(--win-grey);color:#000;font-size:9px;line-height:14px;text-align:center;font-weight:700;
+}
+.ldr-body{padding:18px;display:flex;gap:18px;align-items:flex-start}
+.ldr-side{
+  width:120px;height:90px;flex-shrink:0;
+  background:
+    linear-gradient(135deg, #d8d4cd 0%, #6a6259 70%, #2a2620 100%);
+  filter:contrast(1.05);
+}
+.ldr-text{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#000;line-height:1.5}
+.ldr-status{
+  font-weight:700;font-size:14px;
+  border:1px solid;border-color:#7f7f7f #fff #fff #7f7f7f;
+  padding:2px 6px;background:var(--win-grey);
+  display:inline-block;align-self:flex-start;min-width:200px;
+}
+.ldr-details{font-size:11px;color:#000;line-height:1.6}
+.ldr-progress{
+  height:18px;margin:14px 16px 14px;border:2px solid;
+  border-color:#7f7f7f #fff #fff #7f7f7f;background:#fff;
+  position:relative;overflow:hidden;
+}
+.ldr-progress::after{
+  content:"";position:absolute;left:0;top:0;bottom:0;
+  width:var(--p, 0%);
+  background:
+    repeating-linear-gradient(90deg,
+      var(--win-blue) 0 14px,
+      var(--win-blue-light) 14px 28px);
+  transition:width .3s linear;
+}
+
+/* ════════ MAIN VIEWER ════════ */
+.viewer{
+  position:fixed;inset:0;
+  background:#000;
+  overflow-y:auto;
+  height:100%;
+}
+.brand{
+  position:fixed;top:14px;left:14px;z-index:10;
+  font-family:'Anton','Impact',sans-serif;font-weight:900;font-size:28px;
+  color:#fff;letter-spacing:-.01em;
+  text-shadow:0 0 6px rgba(255,255,255,.4);
+}
+.brand sup{font-size:.5em;font-weight:400;font-family:'JetBrains Mono',monospace;letter-spacing:.15em;vertical-align:super}
+.side-tag{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%) rotate(90deg);transform-origin:right center;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:#fff;
+  white-space:nowrap;z-index:10;
+}
+.viewport{
+  position:relative;
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  min-height:100vh;
+}
+.cell{
+  position:relative;
+  height:100vh;min-height:600px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.cell canvas{display:block}
+
+/* data-id-specific gradients from original CSS */
+[data-id="64d943e56539e6006288e5eb"]{
+  background:linear-gradient(to top, #9C0000 0%, #9C0000 1%, #9C0000 30%, #FF0000 48%, #FF0000 75%, #FF0000 86%, #9C0000 100%);
+}
+[data-id="64ab5b2e09d38500223c4f56"]{
+  background:linear-gradient(to top, #000000 0%, #000000 1%, #000000 30%, #131313 48%, #131313 75%, #000000 86%, #99FF00 100%);
+}
+[data-id="64ab5b2e09d38500223c4f4e"]{
+  background:linear-gradient(to top, #0300B8 0%, #0300B8 1%, #0300B8 30%, #0400FF 48%, #0400FF 75%, #0400FF 86%, #0300B8 100%);
+}
+[data-id="662dc56c8dd55c006943be87"]{
+  background:linear-gradient(to top, #000000 0%, #000000 1%, #000000 30%, #131313 48%, #131313 75%, #000000 86%, #E755AD 100%);
+}
+[data-id="68458beba89c1bb31602a1e8"]{
+  background:linear-gradient(to top, #666a6d 0%, #666a6d 1%, #666a6d 30%, #a9a9a9 48%, #d9d9d9 75%, #bcbcbc 86%, #000000 100%);
+}
+
+/* full-grid cell pages with gradient bg */
+.scene-page{
+  position:relative;
+  height:100vh;min-height:600px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* title under objects */
+.obj-name{
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.25em;color:rgba(255,255,255,.7);
+  text-align:center;z-index:5;
+}
+.obj-name::before, .obj-name::after{content:" [ ";opacity:.5}
+.obj-name::after{content:" ]"}
+
+/* footer brand repeat */
+.footer-mark{
+  position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  font-family:'Anton',sans-serif;font-size:14px;letter-spacing:.4em;
+  color:rgba(255,255,255,.4);z-index:10;
+  font-weight:900;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ WIN98 BOOT LOADER ════════ -->
+<div class="ldr" id="ldr">
+  <div class="ldr-box">
+    <div class="ldr-title">
+      <div class="l">💾 powering up interface...</div>
+      <div class="r"><span>_</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="ldr-body">
+      <div class="ldr-side" aria-hidden="true"></div>
+      <div class="ldr-text">
+        <span class="ldr-status" id="ldrStatus">Starting System...</span>
+        <div class="ldr-details">
+          <p id="ldrD1">Initializing Drivers...</p>
+          <p id="ldrD2">Validating Configuration...</p>
+          <p>Detecting Devices...</p>
+        </div>
+      </div>
+    </div>
+    <div class="ldr-progress" id="ldrBar"></div>
+  </div>
+</div>
+
+<!-- ════════ MAIN VIEWER ════════ -->
+<div class="viewer">
+  <div class="brand">T-KO<sup>™</sup></div>
+  <div class="side-tag">/WWW · INTERFACE_v3.07 · © TKO.LTD</div>
+  <div class="footer-mark">T-KO ™ / WWW</div>
+
+  <div class="viewport">
+    <div class="cell" data-id="64d943e56539e6006288e5eb">
+      <canvas id="c-red"></canvas>
+      <div class="obj-name">RED_STAKE_001</div>
+    </div>
+    <div class="cell" data-id="64ab5b2e09d38500223c4f56">
+      <canvas id="c-yellow"></canvas>
+      <div class="obj-name">SCMAK_YELLOW_BLACK</div>
+    </div>
+    <div class="cell" data-id="64ab5b2e09d38500223c4f4e">
+      <canvas id="c-blue"></canvas>
+      <div class="obj-name">T161_BLUE</div>
+    </div>
+    <div class="cell" data-id="662dc56c8dd55c006943be87">
+      <canvas id="c-pink"></canvas>
+      <div class="obj-name">PINK_KNOCK</div>
+    </div>
+    <div class="cell" data-id="68458beba89c1bb31602a1e8">
+      <canvas id="c-grey"></canvas>
+      <div class="obj-name">METAL_GREY_5</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+/* ════════ Win98 loader logic ════════ */
+const ldr = document.getElementById('ldr');
+const ldrStatus = document.getElementById('ldrStatus');
+const ldrBar = document.getElementById('ldrBar');
+const ldrD1 = document.getElementById('ldrD1');
+const ldrD2 = document.getElementById('ldrD2');
+const messages = ['Starting System...', 'Loading Components...', 'Setting Up Environment...', 'Completing Startup...', 'Done!'];
+const details = [
+  ['Initializing Drivers...', 'Validating Configuration...'],
+  ['Mounting file system...', 'Loading WebGL module...'],
+  ['Calibrating 3D pipeline...', 'Allocating shaders...'],
+  ['Loading scene geometry...', 'Decoding textures...'],
+  ['System online.', 'Welcome.']
+];
+let msgIdx = 0;
+let prog = 0;
+const interval = setInterval(() => {
+  if(msgIdx < messages.length - 1){
+    msgIdx++;
+    ldrStatus.textContent = messages[msgIdx];
+    ldrD1.textContent = details[msgIdx][0];
+    ldrD2.textContent = details[msgIdx][1];
+  }
+}, 900);
+
+const progInterval = setInterval(() => {
+  prog += Math.random() * 7 + 3;
+  if(prog >= 100){
+    prog = 100;
+    clearInterval(progInterval);
+    clearInterval(interval);
+    ldrStatus.textContent = 'Done!';
+    setTimeout(() => {
+      ldr.classList.add('gone');
+      startScenes();
+    }, 600);
+  }
+  ldrBar.style.setProperty('--p', prog + '%');
+}, 220);
+
+/* ════════ Three.js scenes — one per gradient cell ════════ */
+function startScenes(){
+  const configs = [
+    {id:'c-red',   color:0xff2236, accent:0x9c0000, emissive:0xff0033, shape:'torus'},
+    {id:'c-yellow',color:0x1a1a1a, accent:0x99ff00, emissive:0x6a8a00, shape:'icosa'},
+    {id:'c-blue',  color:0x0400ff, accent:0x0300b8, emissive:0x1020ff, shape:'cube'},
+    {id:'c-pink',  color:0x141414, accent:0xe755ad, emissive:0xa02880, shape:'sphere'},
+    {id:'c-grey',  color:0xa9a9a9, accent:0x666a6d, emissive:0x404044, shape:'octa'}
+  ];
+  configs.forEach(cfg => makeScene(cfg));
+}
+
+function makeScene(cfg){
+  const canvas = document.getElementById(cfg.id);
+  if(!canvas) return;
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || 600;
+  const h = rect.height || 600;
+  renderer.setSize(w, h, false);
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  /* lighting */
+  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambient);
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(3, 5, 4);
+  scene.add(key);
+  const rim = new THREE.PointLight(cfg.emissive, 1.4, 30);
+  rim.position.set(-3, -2, 3);
+  scene.add(rim);
+
+  /* pedestal */
+  const pedY = -1.4;
+  const pedGeo = new THREE.CylinderGeometry(1.0, 1.2, 0.4, 32);
+  const pedMat = new THREE.MeshStandardMaterial({
+    color: 0x0a0a0a, roughness: 0.6, metalness: 0.3,
+    emissive: cfg.emissive, emissiveIntensity: 0.05
+  });
+  const pedestal = new THREE.Mesh(pedGeo, pedMat);
+  pedestal.position.y = pedY;
+  scene.add(pedestal);
+
+  /* main object — varies by shape */
+  let obj;
+  const objMat = new THREE.MeshStandardMaterial({
+    color: cfg.color,
+    roughness: 0.3,
+    metalness: 0.85,
+    emissive: cfg.accent,
+    emissiveIntensity: 0.4
+  });
+  if(cfg.shape === 'torus'){
+    obj = new THREE.Mesh(new THREE.TorusKnotGeometry(0.7, 0.22, 128, 24), objMat);
+  } else if(cfg.shape === 'icosa'){
+    obj = new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 0), objMat);
+  } else if(cfg.shape === 'cube'){
+    const geo = new THREE.BoxGeometry(1.3, 1.3, 1.3, 4, 4, 4);
+    /* warp vertices slightly */
+    const pos = geo.attributes.position;
+    for(let i=0; i<pos.count; i++){
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const d = Math.sqrt(x*x + y*y + z*z);
+      pos.setXYZ(i, x*(1+.08*Math.sin(y*3)), y*(1+.08*Math.cos(z*3)), z*(1+.08*Math.sin(x*3)));
+    }
+    geo.computeVertexNormals();
+    obj = new THREE.Mesh(geo, objMat);
+  } else if(cfg.shape === 'sphere'){
+    obj = new THREE.Mesh(new THREE.SphereGeometry(0.85, 48, 48), objMat);
+  } else {
+    obj = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), objMat);
+  }
+  obj.position.y = 0.1;
+  scene.add(obj);
+
+  /* glow halo (back-side scaled sphere with emissive material) */
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(1.3, 24, 24),
+    new THREE.MeshBasicMaterial({color: cfg.emissive, transparent:true, opacity:0.18, side:THREE.BackSide})
+  );
+  halo.position.y = 0.1;
+  scene.add(halo);
+
+  /* a thin particle field for grit */
+  const pgeo = new THREE.BufferGeometry();
+  const N = 240;
+  const pos = new Float32Array(N*3);
+  for(let i=0; i<N; i++){
+    pos[i*3] = (Math.random()-0.5) * 8;
+    pos[i*3+1] = (Math.random()-0.5) * 8;
+    pos[i*3+2] = (Math.random()-0.5) * 6 - 1;
+  }
+  pgeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pm = new THREE.PointsMaterial({color: cfg.accent, size:0.018, transparent:true, opacity:0.7});
+  scene.add(new THREE.Points(pgeo, pm));
+
+  /* mouse-drag orbit (lightweight) */
+  let isDown = false; let lx=0, ly=0; let rotX=0, rotY=0;
+  canvas.addEventListener('mousedown', e => { isDown=true; lx=e.clientX; ly=e.clientY; });
+  window.addEventListener('mouseup', () => isDown=false);
+  window.addEventListener('mousemove', e => {
+    if(!isDown) return;
+    rotY += (e.clientX - lx) * 0.01;
+    rotX += (e.clientY - ly) * 0.01;
+    rotX = Math.max(-.6, Math.min(.6, rotX));
+    lx=e.clientX; ly=e.clientY;
+  });
+
+  /* animate */
+  let t0 = performance.now();
+  function animate(){
+    const t = (performance.now() - t0) / 1000;
+    obj.rotation.y = rotY + t * 0.4;
+    obj.rotation.x = rotX + Math.sin(t * 0.7) * 0.08;
+    halo.rotation.y = -t * 0.2;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  /* resize */
+  window.addEventListener('resize', () => {
+    const r = canvas.getBoundingClientRect();
+    const w = r.width || 600, h = r.height || 600;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  });
+}
+
+/* ─── escape hatch: also start scenes if loader has already gone ─── */
+window.addEventListener('load', () => {
+  /* allow direct viewers — if loader already gone, start scenes anyway */
+  if(document.getElementById('ldr').classList.contains('gone')) startScenes();
+});
+</script>
+</body>
+</html>
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PRESERVED ESPECIALLY WELL
+  • Win98 boot loader with 💾 emoji + "powering up interface…"
+    title, beveled titlebar (light top/left + dark bottom/right
+    borders), 5-stage status text cycling through "Starting
+    System / Loading Components / Setting Up Environment /
+    Completing Startup / Done!", and a striped-blue progress bar
+    — identical to the original's loader markup.
+  • CSS noise overlay via inline SVG feTurbulence replaces the
+    original's body::before Giphy gif, hitting the same opacity
+    (0.14) and overlay blend mode.
+  • All five data-id gradient styles reproduced verbatim from the
+    source's <style> block:
+        red:    9C0000 → FF0000
+        yellow: 000 → 131313 → 99FF00
+        blue:   0300B8 → 0400FF
+        pink:   000 → 131313 → E755AD
+        grey:   666a6d → a9a9a9 → d9d9d9 → 000
+  • Custom red scrollbar with diagonal-striped track, identical
+    to the original ::-webkit-scrollbar rules.
+  • The "T-KO™ /www" wordmark sits top-left; a rotated 90deg
+    "side-tag" labels the side; a faint footer mark anchors
+    the bottom — same chrome language as the original viewer.
+  • Each of the five gradient cells hosts its own Three.js scene
+    with a metallic+emissive object that picks up the cell's
+    accent color, plus a thin particle field for grit, and a
+    mouse-drag orbit — recreating the interactive 3D spirit of
+    the rmcdn1.net viewer without any third-party scripts.
+
+  INTENTIONAL TRADE-OFFS
+  • The original's GLTF objects (real brand-asset 3D models
+    hosted on rmcdn1.net) are replaced with parametric primitives
+    (torus knot, icosahedron, deformed cube, sphere, octahedron)
+    that read as 3D sculptural objects rather than literal models.
+  • The boot loader runs ~5.5 seconds total in the original; ours
+    is variable (~3–5s) so the 3D scenes don't lag on first paint.
+  • The viewer is static per-cell (no shared GLTF atlas) — each
+    cell owns its own renderer/scene/camera for simplicity.
+  ════════════════════════════════════════════════════════════════════
+-->

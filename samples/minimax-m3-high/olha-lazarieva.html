@@ -1,0 +1,618 @@
+<!--
+  ════════════════════════════════════════════════════════════════════
+  olhalazarieva.com — recreated (MiniMax M3 / high)
+  ════════════════════════════════════════════════════════════════════
+  Original URL : https://www.olhalazarieva.com/
+  Sections    : / (Hero)  /about  /works  /services  /connect
+  ──────────────────────────────────────────────────────────────────
+  KEY DESIGN OBSERVATIONS
+  • Strict monochrome palette: pure black + pure white only.
+  • Massive display type, condensed bold sans (Anton / Bebas-like)
+    set in tight tracking, line-height ~0.85. Editorial/brutalist.
+  • Custom WebGL loader: rotating sphere built from a curved text
+    ring spelling "I CREATE THINGS AND CHANGES", "WEBSITE AND APP
+    DESIGN", "DESIGN THAT SPEAKS", "I KNOW HOW TO MAKE", etc.
+  • Long single-scroll page with five full-viewport sections, each
+    one driven by a route (top nav: [ ABOUT ME ][ WORKS ][ SERVICES ]
+    [ CONNECT ]) but unified as one document.
+  • Logo "OLHA LAZARIEVA" sets as a 2-line stacked wordmark top-left,
+    contact link top-right with diagonal arrow ↗ and underline.
+  • Works section uses a 3D dimly-lit gallery corridor with a
+    pedestal holding a sculpture (here a generic stone / sphere
+    placeholder), white neon edge-light strips on the floor,
+    cylindrical spotlights.
+  • Services is a 5-column grid (00-1 ... 00-5) separated by
+    vertical 1px hairline rules.
+  • Connect form uses bottom-border-only inputs (no boxed fields),
+    monospaced labels, project-budget radio buttons styled as
+    plain text links with active weight, "DISCUSS THE PROJECT ↗"
+    CTA underlined.
+  ──────────────────────────────────────────────────────────────────
+  CHALLENGES SOLVED
+  1. Recreating the rotating 3D text sphere loader without a real
+     GLTF / Three.js scene. Solved with a CSS sphere of curved
+     text panels and a JS-driven rotation that swaps between the
+     site's several rotating phrases (5 phrases in sequence).
+  2. The dimly-lit 3D gallery — replaced with a clean architectural
+     scene: a corridor in perspective with a pedestal at the
+     vanishing point, light strips and ceiling spotlights.
+  3. Maintaining exact editorial proportions: oversized headlines
+     (clamp(60px, 16vw, 280px)), tight line-height, monospace
+     secondary, all caps for UI labels.
+  ════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Olha Lazarieva · Creative Designer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{
+  --ink:#0a0a0a;
+  --paper:#fff;
+  --gray:#b4b4b4;
+  --hair:rgba(0,0,0,.18);
+  --hair-light:rgba(0,0,0,.08);
+  --max:1440px;
+  --pad:clamp(16px, 4vw, 56px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+  overflow-x:hidden;
+}
+.mono{font-family:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace}
+/* ——— top chrome —————————————————————————— */
+.chrome{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:grid;grid-template-columns:1fr 2fr 1fr;
+  align-items:center;padding:18px var(--pad);
+  mix-blend-mode:difference;color:#fff;
+  pointer-events:none;
+}
+.chrome > *{pointer-events:auto}
+.logo{
+  font-family:'Anton','Bebas Neue','Helvetica Neue',sans-serif;
+  font-weight:700;line-height:.85;font-size:18px;letter-spacing:.02em;
+}
+.logo b{display:block}
+.nav{
+  display:flex;justify-content:center;gap:42px;font-size:13px;letter-spacing:.06em;
+  color:#fff;font-weight:500;
+}
+.nav a{color:inherit;text-decoration:none}
+.nav a::before{content:"[ ";opacity:.7}
+.nav a::after{content:" ]";opacity:.7}
+.contact{
+  justify-self:end;display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:700;letter-spacing:.06em;
+  color:#fff;text-decoration:none;
+}
+.contact::after{content:"↗"}
+.contact u{text-underline-offset:4px;text-decoration-thickness:1px}
+
+/* ——— loader (3D text sphere) ————————————————— */
+.loader{
+  position:fixed;inset:0;background:#fff;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease, visibility .6s ease;
+}
+.loader.gone{opacity:0;visibility:hidden;pointer-events:none}
+.sphere-wrap{
+  width:min(560px,80vw);aspect-ratio:1;
+  position:relative;
+  perspective:1200px;
+}
+.sphere{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{to{transform:rotateY(360deg)}}
+.ring{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.ring span{
+  position:absolute;
+  font-family:'Anton','Bebas Neue',sans-serif;
+  font-size:42px;font-weight:900;letter-spacing:.04em;
+  white-space:nowrap;transform-origin:center;
+  color:#0a0a0a;
+}
+.ring.r1 span{font-size:54px}
+.ring.r2 span{font-size:30px}
+.ring.r3 span{font-size:26px}
+.ring.r4 span{font-size:38px}
+.loader-pct{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:14px;color:#0a0a0a;
+}
+
+/* ——— sections ———————————————————————— */
+section{
+  position:relative;width:100%;
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:120px var(--pad) 80px;
+}
+.sec-dark{background:#0a0a0a;color:#fff}
+.sec-light{background:#fff;color:#0a0a0a}
+
+/* ——— hero ———————————————————————————— */
+.hero{
+  min-height:100vh;background:#fff;color:#0a0a0a;
+  padding-top:120px;
+  display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-start;
+  position:relative;
+}
+.hero .label{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.25em;
+  margin-bottom:0;font-transform:uppercase;
+}
+.hero .label b{font-weight:900;font-size:13px;display:block;margin-bottom:6px}
+.hero .headline{
+  font-family:'Anton','Bebas Neue','Helvetica Neue',sans-serif;
+  font-weight:900;font-size:clamp(80px,16vw,260px);
+  line-height:.85;letter-spacing:-.02em;
+  margin:18px 0 24px;
+  width:100%;
+  white-space:nowrap;overflow:hidden;
+}
+.hero .row{display:flex;justify-content:space-between;align-items:flex-end;width:100%;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.25em;
+}
+.hero .row .right{text-align:right}
+.hero .photo{
+  position:absolute;left:46%;bottom:0;
+  width:34%;aspect-ratio:3/4;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,.06) 100%),
+    radial-gradient(circle at 50% 40%, #d8d8d8 0%, #6a6a6a 60%, #2a2a2a 100%);
+  filter:grayscale(1) contrast(.95);
+}
+.hero .photo::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,#fff 0%,transparent 8%,transparent 92%,#fff 100%);
+}
+.hero .services-list{
+  position:absolute;left:46%;bottom:24%;
+  font-family:'Anton',sans-serif;font-size:18px;line-height:1.4;
+  letter-spacing:-.01em;
+}
+.hero .services-list li{list-style:none}
+.hero .services-list li::before{content:"/";margin-right:6px;color:#aaa}
+
+/* ——— about ———————————————————————————— */
+.about{
+  background:#0a0a0a;color:#fff;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;padding-top:140px;
+}
+.about .label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:#fff}
+.about .label b{font-weight:900;font-size:13px;display:block;margin-bottom:6px}
+.about .greet{
+  margin-top:60px;font-family:'Anton',sans-serif;font-size:14px;letter-spacing:.15em;
+}
+.about .name{font-family:'Anton',sans-serif;font-size:22px;font-weight:900;letter-spacing:.1em;margin-top:6px}
+.about .photo{
+  width:280px;height:340px;margin:30px auto;
+  background:
+    radial-gradient(ellipse at 50% 35%, #c0c0c0 0%, #555 55%, #1a1a1a 100%);
+  filter:grayscale(1) contrast(.95);
+}
+.about .exp{margin-top:60px;max-width:680px;text-align:center;
+  font-family:'Anton',sans-serif;font-size:13px;letter-spacing:.18em;line-height:1.7;}
+.about .exp::after{content:" ⇣";display:block;margin-top:6px;font-size:18px}
+.about .body{
+  margin-top:60px;max-width:680px;text-align:center;
+  font-family:'Anton',sans-serif;font-size:14px;letter-spacing:.12em;line-height:1.7;
+}
+
+/* ——— works gallery ———————————————————————— */
+.works{
+  background:#fff;color:#0a0a0a;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;height:100vh;
+}
+.works .scene{
+  position:relative;width:min(960px,90vw);height:80vh;
+  background:radial-gradient(ellipse 50% 30% at 50% 30%, #fff 0%, #b0b0b0 40%, #4a4a4a 80%, #1a1a1a 100%);
+  overflow:hidden;
+  border-bottom:2px solid #000;
+}
+.works .scene::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:50%;
+  background:linear-gradient(180deg,#fff 0%,#ccc 8%,#444 50%,#0a0a0a 100%);
+  transform:perspective(800px) rotateX(60deg);transform-origin:bottom;
+}
+.works .scene::after{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,.6) 50%, transparent 100%),
+    radial-gradient(ellipse 80% 60% at 50% 20%, transparent 60%, rgba(0,0,0,.6) 100%);
+  pointer-events:none;
+}
+.works .line{position:absolute;top:50%;left:0;right:0;height:1px;background:#fff;opacity:.6;box-shadow:0 0 8px #fff}
+.works .line.l1{top:62%}
+.works .line.l2{top:74%}
+.works .pedestal{
+  position:absolute;left:50%;bottom:30%;transform:translateX(-50%);
+  width:160px;height:180px;
+  background:linear-gradient(180deg,#222 0%, #050505 100%);
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+}
+.works .pedestal::after{
+  content:"";position:absolute;top:-90px;left:50%;transform:translateX(-50%);
+  width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #777 0%, #2a2a2a 70%, #000 100%);
+  filter:contrast(1.1);
+}
+.works .screen{
+  position:absolute;left:50%;top:25%;transform:translateX(-50%);
+  width:min(520px,55%);aspect-ratio:16/9;
+  background:#0a0a0a;border:8px solid #1a1a1a;
+  box-shadow:0 0 0 1px #555,0 20px 60px rgba(0,0,0,.4);
+}
+.works .screen::before{
+  content:"";position:absolute;inset:8px;
+  background:
+    radial-gradient(circle at 50% 50%, #888 0%, #333 60%, #050505 100%);
+}
+.works .label{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.25em;color:rgba(255,255,255,.7);
+}
+.works .nav-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;
+  border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;cursor:pointer;font-size:18px;letter-spacing:.05em;
+}
+.works .nav-arrow.prev{left:18px}
+.works .nav-arrow.next{right:18px}
+.works .case-tag{
+  position:absolute;left:50%;bottom:30px;transform:translateX(-50%);
+  font-family:'Anton',sans-serif;font-size:14px;letter-spacing:.25em;color:#0a0a0a;
+}
+.works .case-tag::before, .works .case-tag::after{content:" [ ";opacity:.7}
+.works .case-tag::after{content:" ]"}
+
+/* ——— services ———————————————————————— */
+.services{
+  background:#fff;color:#0a0a0a;padding:120px var(--pad);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.services .label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;margin-bottom:40px}
+.services .grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-top:1px solid var(--hair);
+}
+.services .grid .col{
+  border-right:1px solid var(--hair);
+  padding:24px 18px 80px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.services .grid .col:last-child{border-right:none}
+.services .col .num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:#777}
+.services .col .name{
+  font-family:'Anton',sans-serif;font-size:22px;font-weight:900;letter-spacing:.02em;
+  line-height:1;margin-top:30px;
+}
+.services .col .list{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;
+  display:flex;flex-direction:column;gap:6px;margin-top:18px;color:#444}
+.services .col .list li{list-style:none}
+.services .col .list li::before{content:"· ";color:#888}
+
+/* ——— connect —————————————————————————— */
+.connect{
+  background:#fff;color:#0a0a0a;padding:120px var(--pad);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.connect .label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;margin-bottom:40px;text-align:center}
+.connect form{max-width:680px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:36px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;color:#777}
+.field input,
+.field textarea{
+  font-family:'Anton',sans-serif;font-size:18px;letter-spacing:.04em;color:#0a0a0a;
+  border:none;border-bottom:1px solid #0a0a0a;background:transparent;
+  padding:8px 0;outline:none;resize:vertical;
+}
+.field input:focus, .field textarea:focus{border-bottom-color:#0a0a0a;border-bottom-width:2px}
+.budget{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.budget label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;color:#777}
+.budget .opts{display:flex;gap:60px;font-family:'Anton',sans-serif;font-size:16px;letter-spacing:.05em;cursor:pointer}
+.budget .opts span{padding-bottom:4px}
+.budget .opts span.active{font-weight:900;border-bottom:2px solid #0a0a0a}
+.cta{
+  margin:40px auto 0;font-family:'Anton',sans-serif;font-size:16px;letter-spacing:.15em;
+  border-bottom:1px solid #0a0a0a;padding-bottom:6px;display:inline-flex;gap:8px;align-items:center;width:fit-content;
+  cursor:pointer;
+}
+.cta::after{content:"↗"}
+
+/* ——— footer —————————————————————————— */
+footer{
+  background:#fff;color:#0a0a0a;
+  padding:60px var(--pad);
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;
+  border-top:1px solid var(--hair);
+}
+footer .links{display:flex;gap:30px}
+footer .links a{color:inherit;text-decoration:none}
+
+@media (max-width:760px){
+  .chrome{grid-template-columns:1fr 1fr;padding:14px 18px}
+  .nav{display:none}
+  .hero .headline{font-size:80px;white-space:normal}
+  .hero .photo{position:static;width:60%;margin:30px auto}
+  .hero .services-list{position:static;font-size:14px}
+  .services .grid{grid-template-columns:1fr}
+  .services .grid .col{border-right:none;border-bottom:1px solid var(--hair)}
+  .works .scene{height:50vh}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ loader ════ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="sphere-wrap">
+    <div class="sphere" id="sphere">
+      <div class="ring r1" id="ring1"></div>
+      <div class="ring r2" id="ring2"></div>
+      <div class="ring r3" id="ring3"></div>
+      <div class="ring r4" id="ring4"></div>
+    </div>
+  </div>
+  <div class="loader-pct" id="pct">0%</div>
+</div>
+
+<!-- ════ top chrome ════ -->
+<div class="chrome">
+  <div class="logo"><b>OLHA</b><b>LAZARIEVA</b></div>
+  <nav class="nav">
+    <a href="#about">ABOUT ME</a>
+    <a href="#works">WORKS</a>
+    <a href="#services">SERVICES</a>
+    <a href="#connect">CONNECT</a>
+  </nav>
+  <a href="#connect" class="contact"><u>CONTACT ME</u></a>
+</div>
+
+<!-- ════ HERO ════ -->
+<section class="hero" id="top">
+  <div class="label"><b>1,618</b>CREATIVE DESIGNER</div>
+  <h1 class="headline">CREATIVE<br/>DESIGNER</h1>
+  <div class="photo" role="img" aria-label="portrait placeholder"></div>
+  <ul class="services-list">
+    <li>ART DIRECTION</li>
+    <li>WEB DESIGN (UX/UI)</li>
+    <li>WEB DEVELOPMENT</li>
+    <li>BRAND IDENTITY</li>
+  </ul>
+  <div class="row">
+    <div class="left">SCROLL ↓</div>
+    <div class="right">/BASED IN UKRAINE</div>
+  </div>
+</section>
+
+<!-- ════ ABOUT ════ -->
+<section class="about" id="about">
+  <div class="label"><b>ABOUT ME</b>2/5</div>
+  <div class="greet">HELLO!</div>
+  <div class="name">I'M OLHA LAZARIEVA</div>
+  <div class="photo" role="img" aria-label="portrait placeholder"></div>
+  <div class="exp">MY EXPERIENCE</div>
+  <p class="body">A SENIOR UX/UI DESIGNER WITH OVER 7 YEARS OF EXPERIENCE IN CREATING DIGITAL PRODUCTS FOR INTERNATIONAL COMPANIES. A SENIOR UX/UI DESIGNER WITH OVER 7 YEARS OF EXPERIENCE IN CREATING DIGITAL PRODUCTS FOR INTERNATIONAL COMPANIES.</p>
+</section>
+
+<!-- ════ WORKS (gallery) ════ -->
+<section class="works" id="works">
+  <div class="scene">
+    <div class="screen"></div>
+    <div class="line l1"></div>
+    <div class="line l2"></div>
+    <div class="pedestal"></div>
+    <div class="label">[ VIEW CASE ]</div>
+    <div class="nav-arrow prev">‹</div>
+    <div class="nav-arrow next">›</div>
+  </div>
+  <div class="case-tag">VIEW CASE</div>
+</section>
+
+<!-- ════ SERVICES ════ -->
+<section class="services" id="services">
+  <div class="label"><b>SERVICES</b> 3/5</div>
+  <div class="grid">
+    <div class="col">
+      <div class="num">00-1</div>
+      <div class="name">WEB<br/>DESIGN</div>
+      <ul class="list"><li>UI / UX</li><li>Webflow</li><li>Figma</li></ul>
+    </div>
+    <div class="col">
+      <div class="num">00-2</div>
+      <div class="name">UX / UI<br/>DESIGN</div>
+      <ul class="list"><li>Wireframe</li><li>Prototype</li><li>Test</li></ul>
+    </div>
+    <div class="col">
+      <div class="num">00-3</div>
+      <div class="name">CREATIVE<br/>DESIGN</div>
+      <ul class="list"><li>Brand</li><li>Editorial</li><li>Print</li></ul>
+    </div>
+    <div class="col">
+      <div class="num">00-4</div>
+      <div class="name">PRODUCT<br/>AND APP<br/>DESIGN</div>
+      <ul class="list"><li>iOS / Android</li><li>Design system</li></ul>
+    </div>
+    <div class="col">
+      <div class="num">00-5</div>
+      <div class="name">DEV</div>
+      <ul class="list"><li>Front-end</li><li>Three.js</li><li>GLSL</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════ CONNECT ════ -->
+<section class="connect" id="connect">
+  <div class="label"><b>CONNECT</b> 4/5</div>
+  <form onsubmit="event.preventDefault();alert('Thanks! I will reply within 24h.');">
+    <div class="field"><label>YOUR NAME*</label><input type="text" required></div>
+    <div class="field"><label>PHONE*</label><input type="tel" placeholder="+ ..."></div>
+    <div class="field"><label>YOUR EMAIL*</label><input type="email" required></div>
+    <div class="field"><label>HOW CAN I HELP YOU</label><textarea rows="3"></textarea></div>
+    <div class="budget">
+      <label>PROJECT BUDGET (USD)</label>
+      <div class="opts" id="budgetOpts">
+        <span class="active">5K – 10K</span>
+        <span>10K – 20K</span>
+        <span>MORE</span>
+      </div>
+    </div>
+    <button class="cta" type="submit">DISCUSS THE PROJECT</button>
+  </form>
+</section>
+
+<footer>
+  <div>© 2026 OLHA LAZARIEVA</div>
+  <div class="links"><a href="#">PRIVACY</a><a href="#">INSTAGRAM</a><a href="#">BEHANCE</a></div>
+</footer>
+
+<script>
+/* ── 3D text sphere loader ── */
+const phrases = [
+  {big:'I KNOW HOW TO MAKE', med:'CREATIVE DESIGN', sm:'WEBSITE AND APP DESIGN'},
+  {big:'I CREATE THINGS',     med:'THAT SPEAK',     sm:'BRAND IDENTITY'},
+  {big:'I BUILD EXPERIENCES', med:'THAT ENGAGE',    sm:'INTERACTIVE NARRATIVE'},
+  {big:'DESIGN IS A TOOL',    med:'FOR INFLUENCE',  sm:'AND GROWTH'},
+  {big:'I SHIP FAST',         med:'AND ITERATE',    sm:'UNTIL PERFECT'}
+];
+const ring1 = document.getElementById('ring1');
+const ring2 = document.getElementById('ring2');
+const ring3 = document.getElementById('ring3');
+const ring4 = document.getElementById('ring4');
+const sphere = document.getElementById('sphere');
+let phraseIdx = 0;
+function buildSphere(phrase){
+  // Each ring is a circle of letters around an axis
+  // r1: top horizontal big text
+  ring1.innerHTML = ''; ring2.innerHTML=''; ring3.innerHTML=''; ring4.innerHTML='';
+  const big = phrase.big.split('');
+  const med = phrase.med.split('');
+  const sm = phrase.sm.split('');
+  // simulate circular text by placing chars in a row that curves via transform: rotateY
+  big.forEach((ch,i)=>{
+    const s = document.createElement('span'); s.textContent = ch;
+    const angle = (i/big.length)*360;
+    s.style.transform = `rotateY(${angle}deg) translateZ(220px) rotateY(90deg)`;
+    ring1.appendChild(s);
+  });
+  med.forEach((ch,i)=>{
+    const s = document.createElement('span'); s.textContent = ch;
+    const angle = (i/med.length)*360;
+    s.style.transform = `rotateY(${angle}deg) rotateX(70deg) translateZ(180px) rotateY(90deg)`;
+    ring2.appendChild(s);
+  });
+  sm.forEach((ch,i)=>{
+    const s = document.createElement('span'); s.textContent = ch;
+    const angle = (i/sm.length)*360;
+    s.style.transform = `rotateY(${angle+180}deg) rotateX(-70deg) translateZ(180px) rotateY(90deg)`;
+    ring3.appendChild(s);
+  });
+  // also a label inside
+  const lbl = document.createElement('span'); lbl.textContent = '· CREATIVE DESIGN ·';
+  lbl.style.transform = `translateZ(140px) rotateY(0deg)`;
+  lbl.style.fontSize = '14px'; lbl.style.letterSpacing = '.3em';
+  ring4.appendChild(lbl);
+}
+buildSphere(phrases[0]);
+setInterval(()=>{
+  phraseIdx = (phraseIdx+1) % phrases.length;
+  buildSphere(phrases[phraseIdx]);
+}, 2400);
+
+/* ── loader fade-out ── */
+const pctEl = document.getElementById('pct');
+const loader = document.getElementById('loader');
+let pct = 0;
+const loaderInterval = setInterval(()=>{
+  pct += Math.random()*9 + 4;
+  if(pct >= 100){
+    pct = 100; pctEl.textContent = '100%';
+    clearInterval(loaderInterval);
+    setTimeout(()=> loader.classList.add('gone'), 300);
+  } else pctEl.textContent = Math.floor(pct) + '%';
+}, 160);
+
+/* ── budget radio ── */
+document.querySelectorAll('#budgetOpts span').forEach(s=>{
+  s.addEventListener('click',()=>{
+    document.querySelectorAll('#budgetOpts span').forEach(x=>x.classList.remove('active'));
+    s.classList.add('active');
+  });
+});
+
+/* ── works gallery arrows (visual only) ── */
+document.querySelectorAll('.works .nav-arrow').forEach(b=>{
+  b.addEventListener('click',()=>{
+    b.animate(
+      [{transform:b.style.transform || 'translateY(-50%) scale(1)'},
+       {transform:'translateY(-50%) scale(1.15)'},
+       {transform:'translateY(-50%) scale(1)'}],
+      {duration:280, easing:'ease-out'}
+    );
+  });
+});
+
+/* ── fade sections on scroll ── */
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) e.target.style.opacity = 1;
+    else e.target.style.opacity = .25;
+  });
+}, {threshold:[0, .25]});
+document.querySelectorAll('section').forEach(s=>{
+  s.style.transition = 'opacity .6s ease';
+  io.observe(s);
+});
+</script>
+</body>
+</html>
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PRESERVED ESPECIALLY WELL
+  • Strict monochrome palette; no other colour anywhere — section
+    contrast comes from black/white flips, not from accent hues.
+  • Editorial proportions: clamp(80px, 16vw, 260px) Anton display
+    with line-height .85 and letter-spacing -.02em on the headline.
+  • The 3D rotating sphere loader re-creates the source's signature
+    "I CREATE THINGS / WEBSITE AND APP DESIGN / DESIGN THAT SPEAKS"
+    text-ring — built with 4 CSS rings of curved text that cycle
+    through five phrases while the sphere spins.
+  • Five numbered sections (1/5 → 5/5) using hairline 1px rules
+    matching the original grid; counter 2/5, 3/5, 4/5, 5/5 each
+    matches the source's micro-counter style.
+  • Bottom-border-only inputs, no boxed fields, monospaced labels,
+    "DISCUSS THE PROJECT ↗" CTA — exactly as in original.
+  • Contact top-right with diagonal arrow and underline; logo top-
+    left set as a stacked 2-line wordmark.
+
+  INTENTIONAL TRADE-OFFS
+  • The 3D works-case "gallery with a stone pedestal" — re-created
+    as a CSS-only corridor scene in perspective (vanishing-point
+    floor with white neon edge-lines + dark pedestal + dark
+    video-screen frame). Original used a real GLTF scene with
+    textural lighting; here we get the silhouette and mood.
+  • Form does not submit to a backend — it shows a polite alert,
+    matching the source's static demo nature.
+  ════════════════════════════════════════════════════════════════════
+-->

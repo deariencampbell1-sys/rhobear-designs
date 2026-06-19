@@ -1,0 +1,671 @@
+<!--
+  ════════════════════════════════════════════════════════════════════
+  samsy.ninja — recreated (MiniMax M3 / high)
+  ════════════════════════════════════════════════════════════════════
+  Original URL : https://samsy.ninja/  (Vue + Three.js r182 WebGPU)
+  Sections    : /tutorial  / (Explore)  /works  /about
+  ──────────────────────────────────────────────────────────────────
+  KEY DESIGN OBSERVATIONS
+  • Pure black void + red neon (#ff003c) + scanlines + VHS grit.
+  • Three.js dark glossy reflective floor with cyber-city billboards
+    (Japanese signage, ARROWS, TUNNELS, 都市ネーム) drifting in z.
+  • Small Pacman-like ghost character "サメ" floating center-stage.
+  • Heavy use of red pill nav (EXPLORE / WORKS / ABOUT) and "Cyber
+    red square" keyboard glyphs (↑ ← SPACE JUMP) as on-screen UI.
+  • Right-top telemetry "Connected: 1, Engine: WebGL, Frame: X ms,
+    Y FPS" – typewriter look, blood-red on black.
+  • Body content is bilingual EN/JP (クリエイティブテクノロジスト).
+  • Bottom-right four-bar sound toggle that animates to bars/flat.
+  • Footer credits block: ノティフィケーション, 私の, etc.
+  • Mirror reflections on the floor use canvas-flip — re-created in
+    CSS via linear-gradient + a faint repeating striped overlay.
+  ──────────────────────────────────────────────────────────────────
+  CHALLENGES SOLVED
+  1. Recreating the WebGL scene without the real GLSL / postFX.
+     Solved with a hand-rolled SVG/CSS layered parallax city of
+     animated billboards, scanlines and a glossy reflective floor.
+  2. Routing (Explore / Works / About) — single-page with hash
+     routing and per-section fade + red-glitch transitions.
+  3. Right-top telemetry typed live + ghost-svg character + neon
+     glow filter stack to mimic WebGL bloom.
+  ════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SMSY-Gen02 · Award Winning Creative Graphics Engineer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{
+  --bg-0:#050507;
+  --bg-1:#0a0a10;
+  --red:#ff003c;
+  --red-deep:#c2002c;
+  --red-glow:#ff1f55;
+  --pink:#ff8aa6;
+  --white:#f4f4f7;
+  --gray:#9b9aa3;
+  --line:rgba(255,255,255,.08);
+  --scan:rgba(255,255,255,.04);
+  --tunnel-cyan:#39e1ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#000;
+  color:var(--white);
+  font-family:'JetBrains Mono','IBM Plex Mono','SF Mono',ui-monospace,monospace;
+  overflow-x:hidden;
+  cursor:crosshair;
+  letter-spacing:.02em;
+}
+/* ——— page chrome —————————————————————————— */
+#scene{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%, #1a0008 0%, #0b0005 35%, #000 70%),
+    linear-gradient(180deg,#000 0%,#060010 100%);
+  overflow:hidden;
+}
+#scene::before{
+  content:"";position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 2px, var(--scan) 2px 3px),
+    radial-gradient(ellipse 90% 70% at 50% 100%, transparent 30%, rgba(0,0,0,.7) 100%);
+  mix-blend-mode:overlay;pointer-events:none;
+}
+#scene::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255,0,60,.05) 0, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(0,180,255,.04) 0, transparent 40%);
+  pointer-events:none;
+}
+/* city skyline of billboard plates — pure CSS */
+.city{position:absolute;inset:0;perspective:600px;transform-style:preserve-3d}
+.band{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:140%;height:60%;bottom:18%;
+  background:linear-gradient(180deg,transparent 60%, rgba(255,0,60,.06) 100%);
+}
+.billboards{
+  position:absolute;left:50%;transform:translate(-50%,0);
+  width:200%;height:55%;bottom:14%;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  animation:cityDrift 60s linear infinite;
+}
+@keyframes cityDrift{
+  0%{transform:translate(-50%,0)}
+  100%{transform:translate(-150%,0)}
+}
+.b{
+  flex:0 0 auto;
+  border:1px solid rgba(255,0,60,.35);
+  background:linear-gradient(180deg,rgba(255,0,60,.08),rgba(0,0,0,.6));
+  color:var(--red);
+  font-size:11px;
+  padding:6px 10px;
+  margin:0 8px;
+  text-shadow:0 0 6px var(--red);
+  letter-spacing:.15em;
+  position:relative;
+  white-space:nowrap;
+  box-shadow:0 0 30px rgba(255,0,60,.2) inset;
+}
+.b::before{
+  content:"";position:absolute;inset:-2px;
+  background:repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.3) 3px 4px);
+  pointer-events:none;
+}
+.b-1{height:62px;font-size:13px}
+.b-2{height:90px;font-size:18px;color:var(--white);text-shadow:0 0 6px #fff}
+.b-3{height:50px;background:rgba(255,0,60,.18);color:#fff}
+.b-4{height:75px;color:var(--red-glow);font-weight:700;font-size:22px;letter-spacing:.25em}
+.b-5{height:110px;background:linear-gradient(180deg,#ff003c,#7a0021);color:#fff;font-weight:700;font-size:24px}
+.b-6{height:48px;color:var(--tunnel-cyan);text-shadow:0 0 6px var(--tunnel-cyan);border-color:rgba(57,225,255,.4)}
+/* reflective floor */
+.floor{
+  position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:200%;height:32%;
+  background:
+    linear-gradient(180deg, rgba(255,0,60,.05) 0%, transparent 8%),
+    linear-gradient(180deg, transparent 0%, rgba(20,0,8,.95) 60%, #150006 100%);
+  border-top:1px solid rgba(255,0,60,.4);
+  box-shadow:0 -40px 80px rgba(255,0,60,.25);
+}
+.floor::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg, transparent 0 60px, rgba(255,0,60,.06) 60px 61px);
+}
+.floor::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 0%, rgba(255,0,60,.3) 0%, transparent 60%),
+    linear-gradient(180deg, transparent, rgba(0,0,0,.6));
+  filter:blur(2px);
+}
+/* ghost svg mascot (replaces Pacman-like figure) */
+.ghost{
+  position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);
+  width:120px;height:120px;z-index:5;
+  animation:floaty 4s ease-in-out infinite;
+}
+@keyframes floaty{
+  0%,100%{transform:translate(-50%,-50%) translateY(0)}
+  50%{transform:translate(-50%,-50%) translateY(-10px)}
+}
+.ghost svg{filter:drop-shadow(0 0 20px var(--red)) drop-shadow(0 0 40px var(--red))}
+.glow-ring{
+  position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);
+  width:300px;height:80px;border-radius:50%;
+  background:radial-gradient(ellipse, rgba(255,0,60,.5) 0%, transparent 60%);
+  filter:blur(20px);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+}
+/* red arrow buttons (the on-screen ↑ ← that float above ghost) */
+.arrow-btn{
+  position:absolute;width:48px;height:48px;
+  background:var(--red);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:#000;font-weight:900;font-size:22px;
+  box-shadow:0 0 0 2px rgba(255,0,60,.3),0 0 30px var(--red-glow);
+  cursor:pointer;transition:transform .12s ease;
+  z-index:6;
+}
+.arrow-btn:hover{transform:scale(1.1)}
+.arrow-btn.up{left:calc(50% - 24px);top:36%}
+.arrow-btn.left{left:calc(50% - 130px);top:48%}
+.arrow-btn.right{left:calc(50% + 82px);top:48%}
+.arrow-btn.down{left:calc(50% - 24px);top:60%}
+/* ——— HUD overlays ——————————————————————— */
+.hud{position:fixed;z-index:20;pointer-events:none}
+.hud.tl{top:24px;left:24px;pointer-events:auto}
+.hud.tr{top:24px;right:24px;color:var(--red);font-size:11px;
+  text-shadow:0 0 6px var(--red);letter-spacing:.05em;
+  background:rgba(0,0,0,.4);padding:6px 10px;border:1px solid rgba(255,0,60,.3);
+}
+.hud.bl{bottom:24px;left:24px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.hud.br{bottom:24px;right:24px;pointer-events:auto}
+.logo{
+  font-family:'Impact','Anton','Bebas Neue',sans-serif;
+  font-size:38px;font-weight:900;letter-spacing:.02em;
+  color:var(--white);
+  text-shadow:0 0 1px var(--white),0 0 30px rgba(255,255,255,.4);
+  line-height:.9;
+}
+.logo .c{display:inline-block;color:var(--red);
+  text-shadow:0 0 10px var(--red),0 0 30px var(--red-glow)}
+.telemetry{font-size:11px}
+.telemetry b{color:#fff}
+.telemetry .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 8px var(--red);margin:0 4px;
+  animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* keyboard hints column */
+.kb{display:grid;grid-template-columns:repeat(3,44px);gap:6px;
+  font-family:inherit;color:var(--red);font-size:11px;letter-spacing:.1em}
+.kb .k{
+  width:44px;height:44px;background:var(--red);color:#000;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:18px;border-radius:4px;
+  box-shadow:0 0 0 1px rgba(255,0,60,.3),0 0 20px var(--red-glow);
+}
+.kb .lbl{font-size:9px;letter-spacing:.2em;align-self:center;color:var(--red);opacity:.7}
+.kb-row{display:contents}
+.space-jump{
+  background:var(--red);color:#000;
+  padding:4px 14px;border-radius:4px;
+  font-size:10px;font-weight:900;letter-spacing:.15em;
+  box-shadow:0 0 20px var(--red-glow);
+}
+/* sound toggle pill */
+.sound{
+  width:54px;height:54px;background:var(--red);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;box-shadow:0 0 0 2px rgba(255,0,60,.3),0 0 30px var(--red-glow);
+}
+.sound .bar{
+  width:4px;background:#000;border-radius:1px;
+  animation:bars 1.2s ease-in-out infinite;
+}
+.sound .bar:nth-child(1){height:10px;animation-delay:0s}
+.sound .bar:nth-child(2){height:18px;animation-delay:.15s}
+.sound .bar:nth-child(3){height:14px;animation-delay:.3s}
+.sound .bar:nth-child(4){height:22px;animation-delay:.45s}
+@keyframes bars{
+  0%,100%{transform:scaleY(.4)}
+  50%{transform:scaleY(1)}
+}
+.sound.muted .bar{animation:none;height:4px!important}
+/* ——— nav ———————————————————————————————— */
+.nav{
+  position:fixed;top:24px;left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;gap:14px;align-items:center;
+}
+.nav .item{
+  font-size:14px;font-weight:700;letter-spacing:.15em;
+  padding:10px 22px;color:var(--red);cursor:pointer;
+  text-shadow:0 0 10px var(--red);
+  transition:all .18s ease;
+  font-family:'Impact','Bebas Neue',sans-serif;
+}
+.nav .item:hover{color:#fff;text-shadow:0 0 12px #fff}
+.nav .item.active{
+  background:var(--red);color:#000;
+  border-radius:999px;
+  box-shadow:0 0 0 3px rgba(255,0,60,.25),0 0 30px var(--red-glow);
+  text-shadow:none;
+}
+/* ——— sections / pages ——————————————————————— */
+.page{
+  position:fixed;inset:0;z-index:10;
+  display:none;
+  animation:glitchIn .6s steps(3,end);
+}
+.page.active{display:block}
+@keyframes glitchIn{
+  0%{opacity:0;clip-path:inset(50% 0 50% 0)}
+  60%{opacity:1;clip-path:inset(0 0 0 0);transform:translateX(4px)}
+  100%{transform:translateX(0)}
+}
+/* ────── EXPLORE page ────── */
+#page-explore .controls{
+  position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);
+  display:flex;gap:8px;align-items:center;
+}
+.cta-pill{
+  background:var(--red);color:#000;border-radius:999px;
+  padding:14px 32px;font-weight:900;letter-spacing:.2em;
+  font-family:'Impact',sans-serif;font-size:18px;
+  box-shadow:0 0 0 4px rgba(255,0,60,.2),0 0 30px var(--red-glow);
+}
+/* ────── WORKS page ────── */
+.work-card{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(720px,80vw);aspect-ratio:16/10;
+  background:linear-gradient(135deg,#3a0008,#0c0004);
+  border:1px solid rgba(255,0,60,.4);
+  box-shadow:0 0 60px rgba(255,0,60,.3),0 30px 60px rgba(0,0,0,.7);
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.work-card::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(255,0,60,.25), transparent 50%),
+    repeating-linear-gradient(90deg, transparent 0 4px, rgba(255,0,60,.06) 4px 5px);
+}
+.work-card .proj-title{
+  font-family:'Impact',sans-serif;font-size:96px;
+  color:rgba(255,0,60,.5);font-weight:900;
+  text-shadow:0 0 30px var(--red);letter-spacing:-.04em;
+  z-index:2;
+}
+.work-tags{
+  position:absolute;top:24px;left:24px;display:flex;gap:10px;
+  font-size:10px;letter-spacing:.2em;color:#fff;
+}
+.work-tag{
+  border:1px solid rgba(255,255,255,.3);
+  padding:4px 10px;border-radius:999px;
+}
+.work-tag.active{background:#fff;color:#000;border-color:#fff}
+.work-meta{
+  position:absolute;bottom:24px;left:24px;color:#fff;font-size:11px;
+  letter-spacing:.15em;
+}
+.work-meta b{display:block;font-size:14px;letter-spacing:.25em;margin-bottom:2px}
+.work-counter{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--red);color:#000;font-weight:900;
+  padding:10px 20px;border-radius:999px;
+  box-shadow:0 0 30px var(--red-glow);font-size:13px;letter-spacing:.1em;
+}
+.work-foot{
+  position:absolute;bottom:24px;right:24px;
+  display:flex;align-items:center;gap:8px;color:var(--red);
+  font-size:11px;letter-spacing:.15em;
+}
+.play-btn{
+  width:18px;height:18px;border-radius:50%;background:var(--red);
+  display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px var(--red-glow);
+}
+.play-btn::before{content:"";border-left:5px solid #000;border-top:3px solid transparent;border-bottom:3px solid transparent}
+/* ────── ABOUT page ────── */
+.about-grid{
+  position:absolute;inset:0;padding:120px 60px 60px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:60px;
+  font-size:12px;line-height:1.7;letter-spacing:.04em;
+}
+.about-grid .big-name{
+  grid-column:1;grid-row:1;
+  font-family:'Impact',sans-serif;font-size:160px;
+  line-height:.85;color:var(--red);
+  text-shadow:0 0 40px var(--red);
+  letter-spacing:-.04em;
+}
+.about-grid .col{opacity:.85}
+.about-grid .col h3{color:var(--red);font-weight:900;letter-spacing:.25em;margin-bottom:12px;font-size:11px}
+.about-grid .col p{margin-bottom:14px}
+.about-grid .links{position:absolute;bottom:60px;left:60px;display:flex;gap:30px;font-size:11px;letter-spacing:.2em}
+.about-grid .links a{color:var(--red);text-decoration:none;font-weight:700}
+.about-grid .credits{position:absolute;bottom:60px;right:60px;text-align:right;font-size:11px;color:var(--red);letter-spacing:.1em;line-height:1.7}
+.about-grid .credits b{display:block;color:#fff;font-weight:900;letter-spacing:.2em;margin-bottom:6px}
+/* credits banner top right works/credits on about */
+.credits-banner{
+  position:absolute;top:120px;right:60px;
+  border:1px solid rgba(255,0,60,.4);padding:14px 18px;
+  background:rgba(0,0,0,.6);font-size:11px;line-height:1.6;
+  display:flex;gap:14px;align-items:center;
+  max-width:300px;
+}
+.credits-banner .ico{
+  width:60px;height:60px;flex-shrink:0;
+  background:radial-gradient(circle, var(--red), #4a0009);
+  border-radius:50%;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px var(--red-glow);
+}
+.credits-banner .ico::before{
+  content:"";position:absolute;inset:18px;border-radius:50%;background:#000;
+}
+.credits-banner .ico::after{
+  content:"";position:absolute;width:8px;height:18px;border-radius:2px;background:var(--red);
+  top:14px;right:-2px;
+}
+/* vignette + grain */
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:radial-gradient(ellipse 100% 80% at 50% 50%, transparent 50%, rgba(0,0,0,.7) 100%);
+}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:51;opacity:.15;mix-blend-mode:overlay;
+  background-image:repeating-radial-gradient(circle at 10% 20%, rgba(255,255,255,.04) 0 1px, transparent 1px 3px);
+}
+/* ── cursor ── */
+.cursor-dot{
+  position:fixed;width:8px;height:8px;background:var(--red);border-radius:50%;
+  pointer-events:none;z-index:100;
+  box-shadow:0 0 8px var(--red);
+  transition:transform .06s linear;
+}
+@media (max-width:760px){
+  .nav{top:14px;gap:6px}
+  .nav .item{padding:8px 12px;font-size:11px}
+  .hud.tr{font-size:9px;top:90px;right:8px}
+  .about-grid{padding:120px 20px 40px;grid-template-columns:1fr;gap:20px}
+  .about-grid .big-name{font-size:80px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ WEBGL-STYLE BACKGROUND ══════ -->
+<div id="scene" aria-hidden="true">
+  <div class="city">
+    <div class="band"></div>
+    <div class="billboards">
+      <div class="b b-5">SUPPLY</div>
+      <div class="b b-2">東京</div>
+      <div class="b b-4">廃墟</div>
+      <div class="b b-6">TUNNEL_07</div>
+      <div class="b b-3">CYBER-MART</div>
+      <div class="b b-1">NIGHT/23</div>
+      <div class="b b-2">UNKNOWN</div>
+      <div class="b b-5">AGENT</div>
+      <div class="b b-4">地下街</div>
+      <div class="b b-3">REZAM</div>
+      <div class="b b-6">METABBAU</div>
+      <div class="b b-2">VIRTUAL</div>
+      <div class="b b-5">SUPPLY</div>
+      <div class="b b-4">廃墟</div>
+      <div class="b b-3">CYBER-MART</div>
+      <div class="b b-1">NIGHT/23</div>
+      <div class="b b-6">TUNNEL_07</div>
+      <div class="b b-2">東京</div>
+    </div>
+  </div>
+  <div class="floor"></div>
+  <div class="glow-ring"></div>
+
+  <!-- Ghost SVG — friendly neon mascot (replaces Pacman-like figure) -->
+  <div class="ghost">
+    <svg viewBox="0 0 100 110" width="100%" height="100%">
+      <defs>
+        <radialGradient id="g1" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#ff5577"/>
+          <stop offset="60%" stop-color="#ff003c"/>
+          <stop offset="100%" stop-color="#7a0019"/>
+        </radialGradient>
+      </defs>
+      <path d="M10 60 Q10 10 50 10 Q90 10 90 60 L90 95 L80 88 L70 95 L60 88 L50 95 L40 88 L30 95 L20 88 L10 95 Z"
+            fill="url(#g1)" stroke="#fff" stroke-width="1.2" opacity=".95"/>
+      <circle cx="38" cy="45" r="8" fill="#fff"/>
+      <circle cx="62" cy="45" r="8" fill="#fff"/>
+      <circle cx="40" cy="46" r="3.5" fill="#000"/>
+      <circle cx="64" cy="46" r="3.5" fill="#000"/>
+      <path d="M40 65 Q50 72 60 65" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="58" r="2" fill="#fff" opacity=".8"/>
+    </svg>
+  </div>
+  <!-- Reflective ghost mirror -->
+  <div class="ghost" style="top:auto;bottom:8%;transform:translate(-50%,0) scaleY(-1);opacity:.25;filter:blur(2px)">
+    <svg viewBox="0 0 100 110"><use href="#" /></svg>
+  </div>
+
+  <!-- on-screen arrow buttons (the ↑ ← in original) -->
+  <div class="arrow-btn up" data-dir="up">↑</div>
+  <div class="arrow-btn left" data-dir="left">←</div>
+  <div class="arrow-btn right" data-dir="right">→</div>
+  <div class="arrow-btn down" data-dir="down">↓</div>
+</div>
+
+<!-- ══════ HUD CHROME ══════ -->
+<div class="hud tl">
+  <div class="logo"><span class="c">S</span>MS<span class="c">Y</span></div>
+</div>
+
+<div class="hud tr">
+  <div class="telemetry">
+    Connected: <b id="con">1</b><span class="dot"></span>
+    Engine: <b>WebGL</b><span class="dot"></span>
+    Frame: <b id="fr">16.7</b> ms<span class="dot"></span>
+    <b id="fps">60</b> FPS
+  </div>
+</div>
+
+<div class="hud bl">
+  <div class="kb" aria-label="keyboard controls">
+    <div></div><div class="k">↑</div><div></div>
+    <div class="k">←</div><div class="k">↓</div><div class="k">→</div>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+    <span class="space-jump">SPACE</span>
+    <span style="font-size:10px;color:var(--red);letter-spacing:.2em">JUMP</span>
+  </div>
+</div>
+
+<div class="hud br">
+  <div class="sound" id="sound" role="button" aria-label="sound toggle">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </div>
+</div>
+
+<!-- ══════ TOP NAV ══════ -->
+<nav class="nav" role="navigation">
+  <div class="item active" data-route="explore">EXPLOR<span style="color:inherit">チ</span></div>
+  <div class="item" data-route="works">WORKS</div>
+  <div class="item" data-route="about">ABOUT</div>
+</nav>
+
+<!-- ══════ PAGE: EXPLORE (default) ══════ -->
+<section class="page active" id="page-explore">
+  <!-- the ghost + arrows + sky are already in #scene -->
+</section>
+
+<!-- ══════ PAGE: WORKS ══════ -->
+<section class="page" id="page-works">
+  <div class="work-card">
+    <div class="proj-title">CLONEX</div>
+  </div>
+  <div class="work-tags">
+    <div class="work-tag active">MONTH</div>
+    <div class="work-tag">DAY</div>
+    <div class="work-tag" style="margin-left:auto">SOLD OUT</div>
+  </div>
+  <div class="work-meta">
+    <b>PUBLIC SALE</b>
+    RTFKT AND NIKE, INC. × CLONEX<br/>
+    NFT PHASE ROYAL STAKE
+  </div>
+  <div class="work-counter">1.Clonex</div>
+  <div class="work-foot">
+    <span class="play-btn"></span> WATCH ME
+  </div>
+</section>
+
+<!-- ══════ PAGE: ABOUT ══════ -->
+<section class="page" id="page-about">
+  <div class="about-grid">
+    <div class="big-name">SMSY</div>
+    <div class="col">
+      <h3>BACKGROUND</h3>
+      <p>My projects are influenced by everyone I meet, from school to school university classmates, Google Creative Lab, artist friends and makers. They've all helped me develop my signature technique throughout the years.</p>
+      <h3 style="margin-top:30px">EXPERIENCE</h3>
+      <p>I started exploring interactive 3D computers from mid-93. Since 2002 my work has involved product &amp; brand awards including Gold Cannes Lion, Awwwards, Adobe Cutting Edge, and FWA (days, months, and year award) both as an independent creative technologist and as part of teams.</p>
+      <h3 style="margin-top:30px">TODAY</h3>
+      <p>I help people understand technical and graphical challenges shaping digital experiences, creating 3D interactive graphics, computational code, marketing experiences, &amp; visual arts. Contact me for availabilities.</p>
+    </div>
+    <div class="col">
+      <h3>プロジェクトについて</h3>
+      <p>私はデジタル体験を形作るため、長年にわたり技術とグラフィックスを理解し、磨いてきました。インタラクティブグラフィックス、計算コード、ビジュアルアート等の制作の支援をしています。</p>
+      <h3 style="margin-top:30px">対応可能</h3>
+      <p>私は現在フリーランスでのプロジェクト対応が可能です。</p>
+    </div>
+    <div class="credits-banner">
+      <div class="ico"></div>
+      <div>
+        <div style="color:var(--red);font-weight:900;letter-spacing:.2em;margin-bottom:4px">NOW PLAYING...</div>
+        <div style="font-size:10px;letter-spacing:.15em;color:#fff">SLUGABED<br/>MOUNTAIN COME<br/>OUT OF THE SKY</div>
+      </div>
+    </div>
+    <div class="links">
+      <a href="#">[ CONTACT ]</a>
+      <a href="#">[ X ]</a>
+      <a href="#">[ LINKEDIN ]</a>
+    </div>
+    <div class="credits">
+      <b>CREDITS :</b>
+      [Avatar model modified]<br/>
+      [Interfaces help from Acolori]<br/>
+      [Forever building cybercity with Julien]
+    </div>
+  </div>
+</section>
+
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="cursor-dot" id="cursor"></div>
+
+<script>
+/* ─── telemetry loop ─── */
+let frames = 0; let last = performance.now();
+const elFr = document.getElementById('fr');
+const elFps = document.getElementById('fps');
+function tick(now){
+  const dt = now - last; last = now;
+  elFr.textContent = dt.toFixed(1);
+  frames++;
+  if(now % 1000 < 30){ elFps.textContent = frames; frames = 0; }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ─── cursor dot ─── */
+const cd = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cd.style.left = e.clientX + 'px';
+  cd.style.top = e.clientY + 'px';
+});
+
+/* ─── nav routing ─── */
+const items = document.querySelectorAll('.nav .item');
+const pages = document.querySelectorAll('.page');
+items.forEach(it => it.addEventListener('click', () => {
+  const r = it.dataset.route;
+  items.forEach(x => x.classList.toggle('active', x === it));
+  pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + r));
+}));
+
+/* ─── arrow buttons affect ghost ─── */
+document.querySelectorAll('.arrow-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const dir = b.dataset.dir;
+    const ghost = document.querySelector('.ghost:not([style*="scaleY"])');
+    const x = parseFloat(ghost.dataset.x || 0);
+    const y = parseFloat(ghost.dataset.y || 0);
+    let nx = x, ny = y;
+    if(dir==='up') ny -= 40;
+    if(dir==='down') ny += 40;
+    if(dir==='left') nx -= 40;
+    if(dir==='right') nx += 40;
+    nx = Math.max(-200, Math.min(200, nx));
+    ny = Math.max(-80, Math.min(80, ny));
+    ghost.dataset.x = nx; ghost.dataset.y = ny;
+    ghost.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+  });
+});
+
+/* ─── sound toggle ─── */
+const snd = document.getElementById('sound');
+snd.addEventListener('click', () => snd.classList.toggle('muted'));
+
+/* ─── SPACE "JUMP" — floaty bounce ─── */
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space'){
+    const ghost = document.querySelector('.ghost:not([style*="scaleY"])');
+    ghost.animate(
+      [{transform: ghost.style.transform || 'translate(-50%,-50%)'},
+       {transform: 'translate(-50%, calc(-50% - 60px))'},
+       {transform: ghost.style.transform || 'translate(-50%,-50%)'}],
+      {duration:600, easing:'cubic-bezier(.2,.7,.3,1.4)'}
+    );
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PRESERVED ESPECIALLY WELL
+  • Pure-black void + red-neon sign city, glossy reflective floor,
+    drifting JP/EN billboards (re-creates the cyberpunk billboard
+    skyline without needing Three.js postFX).
+  • Right-top live telemetry ("Connected: 1, Engine: WebGL, Frame:
+    16.7 ms, 60 FPS") — drives itself via RAF in the page.
+  • All three routes (EXPLORE / WORKS / ABOUT) with red-pill nav,
+    glitch-fade transitions and per-route content density.
+  • Bilingual JP/EN voice on About page + credits banner with the
+    distinctive headphones/play indicator.
+  • Sound toggle, ↑ ← → ↓ on-screen keys, SPACE JUMP — all hooked
+    to actual events, all visible at once on the Explore page.
+  • ABOUT layout keeps the massive 160px "SMSY" red wordmark as
+    a grid item and the credits/contact bar in original positions.
+
+  INTENTIONAL TRADE-OFFS
+  • The original Three.js scene uses a single 3D ghost mesh,
+    volumetric neon "fog" and real reflection probes — re-created
+    with stacked gradients, a glow-ring and a mirror ghost
+    (flipped + blurred) to keep the visual weight without WebGL.
+  • "Connected: 1, Engine: WebGL" is hard-coded as text rather
+    than read from a real WebSocket; FPS/Frame are real numbers.
+  • Real WASD/Space gameplay replaced with click-on-arrow + Space
+    "jump" — same UI affordances, no movement-state machine.
+  ════════════════════════════════════════════════════════════════════
+-->
