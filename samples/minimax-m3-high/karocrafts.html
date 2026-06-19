@@ -1,0 +1,591 @@
+<!--
+Original URL: https://www.karocrafts.com/
+KARO | NYC Artist & Designer (Studio Karo)
+
+Key design observations:
+- Hero: solid bright-blue background rgb(0,18,255) — playful, electric
+- Centered "smiley" card logo (white rounded square with hand-drawn smiley face)
+- Tightly bracketed tiny labels "[ NYC, EST. ]" above and "[ 2023 ]" below the smiley
+- Top header: nav links in pill capsules (Store / Karoverse / Contact), uppercase,
+  rounded-full borders that fill with current color on hover (clip-path slide)
+- Top-right: "Search" pill + "Bag — 0" pill
+- Top-left: "KARO" wordmark (with smiley dot for the "O")
+- Subsequent sections scroll to a white area with bold typography ("INSPIRED BY LUCID DREAMS...")
+  and a horizontal marquee strip of bracketed phrases ("[ I LIVE IN MY HEAD ]", etc.)
+- Below that: large 3D blob / chocolate-pink figure (Three.js hero scene)
+- "SHOP" pill button (black border, white fill)
+- Below that: video section "[ studio karo ] tour" with a centered play button
+- Footer-ish CTA "[ SHOP APPAREL, PRINTS, JEWELRY ]" with a "VIEW MORE" pill button
+- Big custom font: sans, uppercase, tight tracking for big headers
+- Big marquee strip is a single line that auto-scrolls horizontally
+
+Challenges solved:
+- Replicated the pill nav with a clip-path "fill" hover (top text stays visible,
+  duplicate text underneath slides up via clip-path inset)
+- Built the marquee using duplicated content + CSS @keyframes translateX
+- Recreated the smiley card (white, rounded ~22px corners, hand-drawn face)
+- Added a center-text "WAVE" loader-like intro using a CSS wave animation
+- Three.js: chrome-ish iridescent "K" symbol floating in 3D (replaces chocolate blob)
+- Page sections: blue hero → white intro section → 3D object showcase → video block → footer
+
+What we preserved especially well:
+- The electric blue hero with the centered smiley-card and the bracketed metadata
+- The pill nav with the clip-path hover slide effect
+- The marquee strip with bracketed phrases and star/diamond separators
+- The black-bordered SHOP pill button
+- The "studio karo tour" big-section video block
+
+Intentional trade-offs:
+- Custom "KARO" wordmark uses a free smiley-face emoji-style inline SVG rather than
+  the original custom vector mark
+- The 3D scene uses a procedurally-built chrome torus + sphere cluster rather than the
+  original sculpted blob figure (keeps it lightweight and dependency-light)
+- "tour" video block uses a stylized placeholder instead of an embedded video file
+- The full product store pages aren't recreated; this is the homepage hero + sections
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>KARO | NYC Artist & Designer (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue: rgb(0,18,255);
+    --blue-deep: rgb(0,12,180);
+    --ink: #050505;
+    --paper: #fafafa;
+    --muted: #1a1a1a;
+    --border: rgba(0,0,0,.85);
+    --pill: rgba(255,255,255,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html, body{ background: var(--blue); color: #fff; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  body{ overflow-x: hidden; }
+
+  /* ---------- Header ---------- */
+  header{
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 24px;
+    color: #fff;
+  }
+  .brand{
+    font-weight: 800; letter-spacing: .02em; font-size: 26px;
+    display:flex; align-items:center; gap: 2px;
+    text-transform: uppercase;
+    color: #fff; text-decoration: none;
+  }
+  .brand .face{
+    width: 1em; height: 1em; display:inline-block;
+  }
+  nav ul{
+    display:flex; gap: 28px; list-style:none;
+    align-items:center;
+  }
+  nav a{
+    display:inline-block; position:relative;
+    color:#fff; text-decoration:none;
+    text-transform: uppercase; font-size: 13px; font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .pill{
+    position: relative; border: 1px solid rgba(255,255,255,.5);
+    border-radius: 999px;
+    padding: 8px 16px;
+    overflow: hidden;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .pill .stack{ display:flex; flex-direction:column; align-items:center; }
+  .pill .stack > span{ display:inline-block; padding: 1px 0; line-height: 1; transition: transform .35s ease; }
+  .pill .ghost{
+    position: absolute; inset: 1px;
+    display:flex; align-items:center; justify-content:center;
+    background: currentColor; color: var(--blue);
+    border-radius: 999px;
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path .35s ease;
+  }
+  .pill .ghost > span{ color: var(--blue); font-weight: 600; }
+  .pill:hover .ghost{ clip-path: inset(0 0 0 0); }
+  .pill:hover{ color: #fff; background: #fff; }
+
+  .right-pills{ display:flex; gap: 10px; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height: 100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position: relative;
+    color: #fff;
+  }
+  .top-meta, .bottom-meta{
+    font-size: 11px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; opacity: .9;
+  }
+  .top-meta{ margin-bottom: 22px; }
+  .bottom-meta{ margin-top: 22px; }
+  .smiley-card{
+    width: 220px; height: 220px;
+    background: #fff; border-radius: 26px;
+    display:grid; place-items:center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    transition: transform .25s ease;
+  }
+  .smiley-card:hover{ transform: scale(1.04) rotate(-2deg); }
+  .smiley-card svg{ width: 70%; height: 70%; }
+
+  /* loading wave on top of hero */
+  .loader-wave{
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: 4px; background: rgba(255,255,255,.16);
+    overflow: hidden; z-index: 5;
+  }
+  .loader-wave::after{
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, #fff, transparent);
+    width: 30%;
+    animation: wave 1.6s linear infinite;
+  }
+  @keyframes wave{
+    0%{ transform: translateX(-100%); }
+    100%{ transform: translateX(400%); }
+  }
+
+  /* ---------- Section 2: white intro ---------- */
+  .section{
+    position: relative;
+  }
+  .white-section{
+    background: #fff; color: #050505;
+    padding: 90px 24px 60px;
+  }
+  .white-section .copy{
+    display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 60px;
+    align-items: start; max-width: 1280px; margin: 0 auto;
+  }
+  .white-section h2{
+    font-size: clamp(28px, 3.4vw, 56px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -.01em; text-transform: uppercase;
+  }
+  .white-section p.lead{
+    font-size: 13px; line-height: 1.65; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: #050505;
+  }
+  .shop-pill{
+    align-self: end;
+    display:inline-block; width: max-content;
+    border: 1.5px solid #050505; color: #050505;
+    border-radius: 999px;
+    padding: 14px 28px;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: .12em; text-transform: uppercase;
+    background: transparent; cursor: pointer;
+    transition: background .25s, color .25s;
+  }
+  .shop-pill:hover{ background: #050505; color: #fff; }
+
+  /* ---------- Marquee strip ---------- */
+  .marquee{
+    background: #fff;
+    border-top: 1px solid #ececec;
+    border-bottom: 1px solid #ececec;
+    overflow: hidden;
+    color: #050505;
+  }
+  .marquee .track{
+    display:flex; gap: 60px;
+    padding: 16px 0;
+    animation: scroll 40s linear infinite;
+    white-space: nowrap;
+    align-items: center;
+    font-size: 14px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .marquee .track span{ display:inline-flex; align-items:center; gap: 60px; }
+  .marquee .track .star{
+    display:inline-block; width: 14px; height: 14px;
+  }
+  @keyframes scroll{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(-50%); }
+  }
+
+  /* ---------- 3D showcase ---------- */
+  .showcase{
+    background: #fff; color: #050505;
+    padding: 80px 24px;
+    position: relative;
+  }
+  .showcase .grid{
+    max-width: 1280px; margin: 0 auto;
+    display:grid; grid-template-columns: 1fr 1.4fr; gap: 60px;
+    align-items: center;
+  }
+  .showcase .left h3{
+    font-size: clamp(22px, 2.4vw, 36px);
+    font-weight: 600; line-height: 1.1; margin-bottom: 18px;
+    letter-spacing: -.005em;
+  }
+  .showcase .left p{
+    font-size: 14px; line-height: 1.6; opacity: .8;
+    margin-bottom: 22px; max-width: 320px;
+  }
+  .showcase .three-wrap{
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, #f4f3f7, #e3e0ee);
+    border-radius: 22px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,.08);
+  }
+  .showcase .three-wrap canvas{ display:block; width:100%; height:100%; }
+
+  /* ---------- Tour video block ---------- */
+  .tour{
+    padding: 100px 24px;
+    background: #fff; color: #050505;
+    position: relative;
+  }
+  .tour h2{
+    font-size: clamp(40px, 7vw, 120px);
+    font-weight: 700; letter-spacing: -.02em;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .tour .frame{
+    max-width: 1100px; margin: 0 auto;
+    aspect-ratio: 16/9;
+    background: linear-gradient(160deg, #2a2a2a, #0a0a0a);
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .tour .frame::before{
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,255,255,.06), transparent 60%),
+      radial-gradient(circle at 80% 60%, rgba(255,255,255,.05), transparent 60%);
+  }
+  .tour .play{
+    position:absolute; inset:0;
+    display:grid; place-items:center;
+    pointer-events: none;
+  }
+  .tour .play .ring{
+    width: 78px; height: 78px; border-radius: 50%;
+    background: rgba(255,255,255,.95);
+    display:grid; place-items:center;
+    box-shadow: 0 8px 28px rgba(0,0,0,.4);
+    transition: transform .2s;
+  }
+  .tour .frame:hover .ring{ transform: scale(1.06); }
+  .tour .play svg{ width: 24px; height: 24px; fill: #050505; margin-left: 4px; }
+  .tour .cta-row{
+    display:flex; justify-content:center; gap: 18px;
+    margin-top: 30px;
+  }
+  .tour .pill2{
+    border: 1.5px solid #050505; color: #050505;
+    background: transparent;
+    border-radius: 999px;
+    padding: 14px 32px;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; transition: background .25s, color .25s;
+  }
+  .tour .pill2:hover{ background: #050505; color: #fff; }
+
+  /* ---------- Footer / footer CTA ---------- */
+  .footer-cta{
+    background: #fff; color: #050505;
+    padding: 60px 24px 120px;
+    text-align: center;
+  }
+  .footer-cta .bracket{
+    display:flex; align-items:center; justify-content:center; gap: 24px;
+    font-size: clamp(20px, 2.2vw, 36px); font-weight: 600;
+    margin-bottom: 28px;
+  }
+  .footer-cta .bracket .br{ font-size: 1.4em; opacity:.6; }
+  .footer-cta .view-pill{
+    display:inline-block;
+    border: 1.5px solid #050505; color: #050505;
+    border-radius: 999px;
+    padding: 12px 28px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    cursor: pointer; transition: background .25s, color .25s;
+  }
+  .footer-cta .view-pill:hover{ background: #050505; color: #fff; }
+
+  /* footer */
+  footer.real-footer{
+    background: #050505; color: #b3b3b3;
+    padding: 50px 24px 30px;
+    font-size: 12px;
+  }
+  footer.real-footer .row{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width: 1280px; margin: 0 auto;
+    flex-wrap: wrap; gap: 14px;
+  }
+  footer.real-footer .row a{ color: #b3b3b3; text-decoration: none; }
+  footer.real-footer .row a:hover{ color: #fff; }
+  footer.real-footer .copy{ opacity: .55; }
+
+  /* hide on small screens */
+  @media (max-width: 880px){
+    nav ul{ display: none; }
+    .right-pills .search{ display: none; }
+    .white-section .copy{ grid-template-columns: 1fr; gap: 24px; }
+    .showcase .grid{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="#">
+    KAR
+    <span class="face">
+      <!-- inline smiley -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#fff"/>
+        <circle cx="8.5" cy="10" r="1.3" fill="#050505"/>
+        <circle cx="15.5" cy="10" r="1.3" fill="#050505"/>
+        <path d="M7.5 14 Q12 18 16.5 14" stroke="#050505" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      </svg>
+    </span>
+  </a>
+  <nav>
+    <ul>
+      <li>
+        <a href="#" class="pill">
+          <span class="stack"><span>Store</span></span>
+          <span class="ghost"><span>Store</span></span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="pill">
+          <span class="stack"><span>Karoverse</span></span>
+          <span class="ghost"><span>Karoverse</span></span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="pill">
+          <span class="stack"><span>Contact</span></span>
+          <span class="ghost"><span>Contact</span></span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <div class="right-pills">
+    <a href="#" class="pill search">
+      <span class="stack"><span>Search</span></span>
+      <span class="ghost"><span>Search</span></span>
+    </a>
+    <a href="#" class="pill">
+      <span class="stack"><span>Bag — 0</span></span>
+      <span class="ghost"><span>Bag — 0</span></span>
+    </a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="top-meta">[ NYC, EST. ]</div>
+  <div class="smiley-card">
+    <!-- big smiley -->
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#050505" stroke-width="10"/>
+      <!-- left eye (heart-ish) -->
+      <path d="M70 85 q-3 -7 5 -8 q4 -1 4 5 q0 -6 4 -5 q8 1 5 8 q-3 7 -9 11 q-6 -4 -9 -11 z" fill="#050505"/>
+      <!-- right eye -->
+      <path d="M120 85 q-3 -7 5 -8 q4 -1 4 5 q0 -6 4 -5 q8 1 5 8 q-3 7 -9 11 q-6 -4 -9 -11 z" fill="#050505"/>
+      <!-- smile -->
+      <path d="M58 116 Q100 168 142 116" stroke="#050505" stroke-width="10" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="bottom-meta">[ 2023 ]</div>
+</section>
+<div class="loader-wave"></div>
+
+<!-- WHITE INTRO -->
+<section class="section white-section">
+  <div class="copy">
+    <h2>Inspired by lucid<br/>dreams &amp; celestial<br/>intervention.</h2>
+    <p class="lead">Bright blues, chrome detailing, poetry, &amp; soft vintage washes.</p>
+    <a class="shop-pill" href="#">Shop</a>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<section class="marquee" aria-hidden="true">
+  <div class="track">
+    <span>
+      [ Studio Karo NYC est. 2023 ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ I live in my head — you live there too ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ To be awake in a dream state ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ I wish for you every 11.11 ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ My imagination is my super power ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+    </span>
+    <span>
+      [ Studio Karo NYC est. 2023 ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ I live in my head — you live there too ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ To be awake in a dream state ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ I wish for you every 11.11 ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+      [ My imagination is my super power ]
+      <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z" fill="#050505"/></svg>
+    </span>
+  </div>
+</section>
+
+<!-- 3D SHOWCASE -->
+<section class="showcase">
+  <div class="grid">
+    <div class="left">
+      <h3>Hand-crafted wearables &amp; weird little things.</h3>
+      <p>Bright blues, chrome detailing, poetry, &amp; soft vintage washes. A small, weird universe of charms, prints, and apparel.</p>
+      <a href="#" class="pill2" style="border:1.5px solid #050505; color:#050505; padding:14px 28px; border-radius:999px; font-weight:800; font-size:14px; letter-spacing:.12em; text-transform:uppercase;">Shop All</a>
+    </div>
+    <div class="three-wrap">
+      <canvas id="three-canvas"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- TOUR VIDEO -->
+<section class="tour">
+  <h2>[ studio karo ] tour</h2>
+  <div class="frame">
+    <div class="play">
+      <div class="ring">
+        <svg viewBox="0 0 24 24"><path d="M8 5 L19 12 L8 19 Z"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="cta-row">
+    <a href="#" class="pill2">Watch full tour</a>
+  </div>
+</section>
+
+<!-- FOOTER CTA -->
+<section class="footer-cta">
+  <div class="bracket">
+    <span class="br">[</span>
+    <span>Shop apparel, prints, jewelry</span>
+    <span class="br">]</span>
+  </div>
+  <a href="#" class="view-pill">View more</a>
+</section>
+
+<footer class="real-footer">
+  <div class="row">
+    <div>© 2023 — Studio Karo</div>
+    <div class="links">
+      <a href="#" style="margin-right:14px;">Twitter</a>
+      <a href="#" style="margin-right:14px;">Instagram</a>
+      <a href="#">Email</a>
+    </div>
+    <div class="copy">Made in NYC</div>
+  </div>
+</footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+camera.position.set(0, 0.4, 6);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const key = new THREE.DirectionalLight(0xffffff, 1);
+key.position.set(3, 4, 5); scene.add(key);
+
+// Iridescent "K" — built from primitives
+const group = new THREE.Group();
+scene.add(group);
+
+// big chrome torus
+const torus = new THREE.Mesh(
+  new THREE.TorusGeometry(1.5, 0.32, 32, 96),
+  new THREE.MeshStandardMaterial({ color: 0xc8d6f7, metalness: 0.85, roughness: 0.18 })
+);
+group.add(torus);
+
+// chocolate-pink sphere
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.95, 48, 48),
+  new THREE.MeshStandardMaterial({ color: 0xb98877, roughness: 0.35, metalness: 0.18 })
+);
+sphere.position.set(1.4, 0.6, 0.5);
+group.add(sphere);
+
+// chrome cube
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(0.85, 0.85, 0.85),
+  new THREE.MeshStandardMaterial({ color: 0xe7e9ee, metalness: 0.9, roughness: 0.22 })
+);
+cube.position.set(-1.6, -0.3, 0.3);
+cube.rotation.set(0.4, 0.6, 0);
+group.add(cube);
+
+// floating accent sphere
+const accent = new THREE.Mesh(
+  new THREE.SphereGeometry(0.22, 24, 24),
+  new THREE.MeshStandardMaterial({ color: 0x6da0ff, roughness: 0.4, metalness: 0.2 })
+);
+accent.position.set(0.3, 1.3, 0.6);
+group.add(accent);
+
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function tick(now){
+  torus.rotation.x = now * 0.0008;
+  torus.rotation.y = now * 0.001;
+  sphere.position.y = 0.6 + Math.sin(now * 0.0014) * 0.18;
+  cube.rotation.x = now * 0.0009;
+  cube.rotation.y = now * 0.0011;
+  accent.position.y = 1.3 + Math.sin(now * 0.002) * 0.1;
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

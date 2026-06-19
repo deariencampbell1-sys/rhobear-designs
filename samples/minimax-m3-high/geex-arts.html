@@ -1,0 +1,562 @@
+<!--
+Original URL: https://www.geex-arts.com/
+Geex | UI/UX Design, Branding & Development for Startups
+
+Key design observations:
+- Background: warm off-white cream rgb(244, 244, 242)
+- Logo: lowercase serif "geex" with custom ligature, top-left
+- Top center nav: pill-shaped buttons with subtle text + grey text (rgba(.04)), 14px,
+  using Suisse Int'l / Helvetica fallback — minimalist, lots of breathing room
+- Top right: dark pill CTA "Let's Talk →" with shadow + arrow icon
+- Hero: massive serif display type "Designing Future® / Digital Experiences™"
+  using Instrument Serif — 100–110px, italic ® / ™ superscript marks
+- Subtle floating 3D jelly-like objects (purple, green, lavender, chrome) in hero background
+- Section: numbered services — circled numbers 1 / 2 / 3 next to serif words
+  "Branding → / Developing → / Design →" (the arrows are slim line-arrow SVGs)
+- Featured works: large rounded card grid with project covers (dark green/purple/lavender)
+- "My industry" section: stacked cards with title + subtitle on left, large media on right
+- Industries: AI & ML (smart AI-driven apps) with dark purple/maroon swatches
+- 3D objects floating in soft pastel/lavender backgrounds — jelly-like organic shapes
+- Big serif "Featured works" and "My industry" section titles
+- Footer: dark/colored with lots of info, social links, newsletter input
+
+Challenges solved:
+- Recreated the Instrument Serif feel with Playfair Display (close serif display family)
+- Built pill nav and the dark CTA pill (with arrow + soft shadow)
+- Made the floating 3D jelly-blob scene with Three.js (semi-transparent mesh + fresnel look)
+- Numbered services with circled numerals + slim line arrows
+- Card grid "Featured works" with generic colorful placeholder cards
+- Built the 3D scene with multiple organic metaballs merged together
+
+What we preserved especially well:
+- The cream/serif aesthetic with massive display type and ®/™ superscripts
+- The pill nav + dark CTA pill in the header
+- The 3 floating jelly-blob 3D objects in the hero (purple/green/lavender + chrome ring)
+- The numbered services section with arrows
+- The featured works card grid + industries section layout
+
+Intentional trade-offs:
+- Instrument Serif replaced with Playfair Display (very close serif display feel)
+- The featured work images use simple gradient placeholders instead of real project screenshots
+- The "My industry" cards use abstract 3D-shape placeholders
+- The footer is a simplified version (no full newsletter form to keep it self-contained)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Geex — Designing Future® Digital Experiences™ (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #f4f4f2;
+    --paper-2: #ecece9;
+    --ink: #050505;
+    --muted: #6c6c6c;
+    --line: rgba(0,0,0,.06);
+    --pill-bg: rgba(0,0,0,.04);
+    --dark: #050505;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{ scroll-behavior: smooth; }
+  body{
+    background: var(--paper); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .serif{ font-family: 'Playfair Display', 'Instrument Serif', Georgia, serif; font-weight: 400; }
+
+  /* ---------- Header ---------- */
+  header{
+    position: sticky; top: 0; z-index: 30;
+    display:grid; grid-template-columns: 1fr auto 1fr; align-items:center;
+    padding: 18px 32px;
+    background: var(--paper);
+  }
+  .logo{
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 500;
+    color: var(--ink); text-decoration: none; letter-spacing: -.01em;
+  }
+  nav ul{
+    display:flex; gap: 8px; list-style: none;
+    background: rgba(0,0,0,.04);
+    border-radius: 999px;
+    padding: 5px;
+  }
+  nav a{
+    display:inline-block; padding: 8px 18px;
+    color: var(--muted); text-decoration: none;
+    font-size: 13px; font-weight: 500;
+    border-radius: 999px;
+    transition: background .2s, color .2s;
+  }
+  nav a:hover{ background: rgba(0,0,0,.06); color: var(--ink); }
+  .cta-pill{
+    justify-self: end;
+    display:inline-flex; align-items:center; gap: 14px;
+    background: var(--dark); color: #fff;
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-size: 13px; font-weight: 500;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(0,0,0,.12);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .cta-pill:hover{ transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+  .cta-pill .arrow{
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; color: var(--dark);
+    display:grid; place-items:center;
+  }
+  .cta-pill .arrow svg{ width: 12px; height: 12px; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position: relative;
+    padding: 100px 32px 80px;
+    min-height: 90vh;
+    display:flex; flex-direction:column; align-items:center;
+    overflow: hidden;
+  }
+  .hero h1{
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(56px, 9vw, 130px);
+    line-height: 1.0;
+    letter-spacing: -.02em;
+    font-weight: 400;
+    color: var(--ink);
+    position: relative; z-index: 2;
+  }
+  .hero h1 .r{ font-size: .35em; vertical-align: super; margin-left: 2px; opacity:.7; }
+  .hero h1 .t{ font-size: .35em; vertical-align: super; margin-left: 2px; opacity:.7; }
+  .hero .three-bg{
+    position: absolute; inset: 60% 0 0 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .hero .three-bg canvas{ display:block; width:100%; height:100%; }
+  .marquee-dots{
+    position:absolute; left:0; right:0; bottom: 18px;
+    display:flex; justify-content: space-between; padding: 0 32px;
+    z-index: 3;
+  }
+  .marquee-dots .dot{ width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,.25); }
+
+  /* ---------- Numbered services ---------- */
+  .services{
+    padding: 140px 32px 60px;
+    max-width: 1100px; margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+  .services h2{
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 56px);
+    line-height: 1.05;
+    margin-bottom: 70px;
+  }
+  .services .row{
+    display:flex; align-items:center; justify-content:center;
+    gap: 30px; margin: 18px auto;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 90px);
+    line-height: 1;
+  }
+  .services .num{
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.3);
+    display:inline-grid; place-items:center;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 500;
+    color: var(--ink);
+  }
+  .services .arrow{
+    width: 60px; height: 24px;
+    display:inline-block;
+  }
+
+  /* ---------- Featured works ---------- */
+  .featured{
+    padding: 100px 32px;
+  }
+  .featured h2{
+    text-align:center;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 6.5vw, 96px);
+    margin-bottom: 60px;
+  }
+  .featured .grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    max-width: 1280px; margin: 0 auto;
+  }
+  .card{
+    border-radius: 28px; overflow: hidden;
+    aspect-ratio: 4/3;
+    position: relative;
+    transition: transform .35s ease;
+  }
+  .card:hover{ transform: translateY(-4px); }
+  .card .placeholder{
+    position: absolute; inset:0;
+  }
+  .card .overlay{
+    position: absolute; left: 22px; bottom: 22px; right: 22px;
+    color: #fff;
+    display:flex; align-items:flex-end; justify-content:space-between;
+  }
+  .card .overlay .title{
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; line-height: 1;
+    text-transform: uppercase;
+  }
+  .card .overlay .tag{
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .15em;
+    opacity: .85;
+  }
+
+  /* card color/gradient schemes */
+  .card.c1 .placeholder{ background: radial-gradient(circle at 30% 30%, #6a3fa8, #1c103a 70%); }
+  .card.c2 .placeholder{ background: radial-gradient(circle at 70% 30%, #cda3ff, #2a0d4a 70%); }
+  .card.c3 .placeholder{ background: radial-gradient(circle at 50% 50%, #1f7f50, #062d1e 70%); }
+  .card.c4 .placeholder{ background: radial-gradient(circle at 30% 70%, #f5a45d, #4b1d0d 70%); }
+
+  /* ---------- My industry ---------- */
+  .industries{
+    padding: 100px 32px;
+    max-width: 1280px; margin: 0 auto;
+  }
+  .industries > h2{
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 6.5vw, 96px);
+    margin-bottom: 36px;
+  }
+  .industries .ind-row{
+    display:grid; grid-template-columns: 1fr 1.6fr; gap: 40px;
+    align-items: center;
+    background: #fff;
+    border-radius: 28px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.04);
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .industries .ind-row .info{ padding: 30px 30px 30px 36px; }
+  .industries .ind-row .info h3{
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; margin-bottom: 6px;
+  }
+  .industries .ind-row .info p{
+    font-size: 13px; opacity: .6;
+  }
+  .industries .ind-row .visual{
+    aspect-ratio: 16/9; position: relative; overflow: hidden;
+  }
+  .ind-row.r1 .visual{ background: linear-gradient(135deg, #d1c5e2, #937bb0); }
+  .ind-row.r2 .visual{ background: linear-gradient(135deg, #c5d2e2, #7b94b0); }
+  .ind-row.r3 .visual{ background: linear-gradient(135deg, #e2d1c5, #b09479); }
+  .ind-row .visual canvas{ display:block; width:100%; height:100%; }
+
+  /* ---------- footer ---------- */
+  footer{
+    background: var(--dark); color: #d8d8d8;
+    padding: 80px 32px 30px;
+  }
+  footer .top{
+    display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 50px;
+    max-width: 1280px; margin: 0 auto;
+    padding-bottom: 60px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  footer h4{
+    font-size: 12px; text-transform: uppercase; letter-spacing: .2em;
+    opacity: .55; margin-bottom: 18px;
+  }
+  footer ul{ list-style: none; }
+  footer ul li{ margin-bottom: 10px; font-size: 14px; }
+  footer a{ color: #d8d8d8; text-decoration: none; }
+  footer a:hover{ color: #fff; }
+  footer .brand-block .brand{
+    font-family: 'Playfair Display', serif;
+    font-size: 56px; line-height: 1;
+    margin-bottom: 20px;
+  }
+  footer .brand-block p{ font-size: 14px; opacity: .7; max-width: 360px; }
+  footer .bottom{
+    padding-top: 22px;
+    display:flex; justify-content:space-between; align-items:center;
+    max-width: 1280px; margin: 0 auto;
+    font-size: 12px; opacity: .55;
+  }
+
+  @media (max-width: 900px){
+    nav{ display: none; }
+    header{ grid-template-columns: 1fr auto; }
+    .featured .grid{ grid-template-columns: 1fr; }
+    .industries .ind-row{ grid-template-columns: 1fr; }
+    footer .top{ grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" class="logo">geex</a>
+  <nav>
+    <ul>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#industries">Industries</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+  <a href="#contact" class="cta-pill">
+    Let's Talk
+    <span class="arrow">
+      <svg viewBox="0 0 12 12"><path d="M2 6 H10 M7 3 L10 6 L7 9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>
+    Designing Future<span class="r">®</span><br>
+    Digital Experiences<span class="t">™</span>
+  </h1>
+  <div class="three-bg"><canvas id="hero-canvas"></canvas></div>
+  <div class="marquee-dots"><span class="dot"></span><span class="dot"></span></div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <h2>What we offer</h2>
+  <div class="row"><span class="num">1</span> Branding
+    <svg class="arrow" viewBox="0 0 60 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 12 H56 M44 4 L56 12 L44 20" stroke="#050505" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="row"><span class="num">2</span> Developing
+    <svg class="arrow" viewBox="0 0 60 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 12 H56 M44 4 L56 12 L44 20" stroke="#050505" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="row"><span class="num">3</span> Design
+    <svg class="arrow" viewBox="0 0 60 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 12 H56 M44 4 L56 12 L44 20" stroke="#050505" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</section>
+
+<!-- FEATURED WORKS -->
+<section class="featured" id="works">
+  <h2 class="serif">Featured works</h2>
+  <div class="grid">
+    <div class="card c1">
+      <div class="placeholder"></div>
+      <div class="overlay">
+        <div class="title">Learn&nbsp;on</div>
+        <div class="tag">CGI · UI/UX</div>
+      </div>
+    </div>
+    <div class="card c2">
+      <div class="placeholder"></div>
+      <div class="overlay">
+        <div class="title">Eyeball</div>
+        <div class="tag">Sites · Branding</div>
+      </div>
+    </div>
+    <div class="card c3">
+      <div class="placeholder"></div>
+      <div class="overlay">
+        <div class="title">Verdant</div>
+        <div class="tag">Brand · Web</div>
+      </div>
+    </div>
+    <div class="card c4">
+      <div class="placeholder"></div>
+      <div class="overlay">
+        <div class="title">Embers</div>
+        <div class="tag">CGI · Site</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INDUSTRIES -->
+<section class="industries" id="industries">
+  <h2 class="serif">My industry</h2>
+
+  <div class="ind-row r1">
+    <div class="info">
+      <h3>AI &amp; ML</h3>
+      <p>Smart AI-driven apps</p>
+    </div>
+    <div class="visual"><canvas id="ind1"></canvas></div>
+  </div>
+
+  <div class="ind-row r2">
+    <div class="info">
+      <h3>SaaS</h3>
+      <p>Software as a service</p>
+    </div>
+    <div class="visual"><canvas id="ind2"></canvas></div>
+  </div>
+
+  <div class="ind-row r3">
+    <div class="info">
+      <h3>Fintech</h3>
+      <p>Payments and money tools</p>
+    </div>
+    <div class="visual"><canvas id="ind3"></canvas></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="top">
+    <div class="brand-block">
+      <div class="brand">geex</div>
+      <p>A small studio designing the future of digital experiences for startups. Branding, design &amp; development.</p>
+    </div>
+    <div>
+      <h4>Studio</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Works</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Connect</h4>
+      <ul>
+        <li><a href="#">Twitter</a></li>
+        <li><a href="#">Dribbble</a></li>
+        <li><a href="#">Instagram</a></li>
+        <li><a href="#">LinkedIn</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:hi@geex-arts.com">hi@geex-arts.com</a></li>
+        <li><a href="#">Start a project</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom">
+    <div>© 2024 Geex. All rights reserved.</div>
+    <div>Crafted with care</div>
+  </div>
+</footer>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+function setup(canvas){
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+  camera.position.set(0, 0, 5);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.9);
+  dl.position.set(3, 4, 5); scene.add(dl);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  return { renderer, scene, camera };
+}
+
+/* hero floating jelly blobs */
+{
+  const { renderer, scene, camera } = setup(document.getElementById('hero-canvas'));
+  const mat = new THREE.MeshStandardMaterial({ color: 0xe2c8ff, roughness: 0.45, metalness: 0.05, transparent: true, opacity: 0.95 });
+
+  // central big jelly
+  const blobs = [];
+  function blob(x, y, z, color, scale = 1){
+    const g = new THREE.IcosahedronGeometry(1, 4);
+    const m = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.1 });
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set(x, y, z);
+    mesh.scale.setScalar(scale);
+    mesh.userData.base = mesh.position.clone();
+    scene.add(mesh);
+    blobs.push(mesh);
+    return mesh;
+  }
+  blob( 0.0, 0.0, 0.0, 0xe5d4ff, 1.4);   // lavender
+  blob( 2.4, 0.6, -0.4, 0x7dcc97, 0.9);  // green
+  blob(-2.2, -0.5, -0.2, 0xc7d6ec, 1.1); // soft blue
+  blob( 1.4, -0.7, 0.6, 0xf2e1c2, 0.7);  // warm beige
+
+  // chrome ring
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(1.4, 0.18, 24, 64),
+    new THREE.MeshStandardMaterial({ color: 0xdedede, metalness: 0.9, roughness: 0.2 })
+  );
+  ring.position.set(0.2, -0.3, 0.5);
+  scene.add(ring);
+
+  function tick(now){
+    blobs.forEach((b, i) => {
+      b.position.y = b.userData.base.y + Math.sin(now * 0.001 + i) * 0.2;
+      b.rotation.x = now * 0.0004;
+      b.rotation.y = now * 0.0005 + i;
+    });
+    ring.rotation.x = now * 0.0008;
+    ring.rotation.y = now * 0.0009;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* industries */
+function makeInd(id, hue){
+  const c = document.getElementById(id);
+  const { renderer, scene, camera } = setup(c);
+  const sphere = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(1.1, 3),
+    new THREE.MeshStandardMaterial({ color: hue, roughness: 0.45, metalness: 0.1 })
+  );
+  scene.add(sphere);
+  const accent = new THREE.Mesh(
+    new THREE.TorusGeometry(0.9, 0.12, 16, 48),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.6 })
+  );
+  scene.add(accent);
+
+  function tick(now){
+    sphere.rotation.y = now * 0.0006;
+    accent.rotation.x = now * 0.001;
+    accent.rotation.z = now * 0.0008;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+makeInd('ind1', 0xb8a0d0);
+makeInd('ind2', 0xa3b8d0);
+makeInd('ind3', 0xd0b8a3);
+</script>
+</body>
+</html>

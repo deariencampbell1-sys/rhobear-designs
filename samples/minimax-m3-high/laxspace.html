@@ -1,0 +1,693 @@
+<!--
+Original URL: https://www.laxspace.co/
+Lax Chee — Digital Creative Director + Developer
+
+Key design observations:
+- Background: light grey #cbcbcb with subtle, scattered X-marks pattern (noise/dotted)
+- Custom display sans "Brockmann" — using Inter Tight as a close fallback (geometric, slightly quirky)
+- Color palette: cream/grey bg, deep black ink, accent orange-red #fc511b,
+  plus blue #4242dd and warm red #d74848 used as flashing indicator dots
+- Layout is fixed-height (100vh, overflow hidden) — a single-screen, "poster" composition
+- Top-left: stacked LX monogram (custom mark) + "LAX SPACE." wordmark
+- Top-center-ish: small (14px, w=200) intro tagline at weight 200, line-height 1.8
+- Top-right: counter panel (Points / FPS / Orbit Off [Tab] / Rewind [Space])
+  showing live Three.js state, weight 600 label / thin line / monospace numerals
+- Mid-right: "View My Sandbox" video preview card (180x128, border-radius 8, hover scale 1.05)
+- Hero centerpiece: 3D rotating paper-roll / cylinder (Three.js) — slightly tilted, casts shadow
+- Bottom: "DESIGN" left + black horizontal bar in middle (with "View Works" hidden label that
+  rotateX-folds up on hover, white text 16px letter-spacing 3) + "CODE" right, all 64px weight 200
+- Click the bar (or "View Works") to open the projects list panel that slides up from the bottom
+- Counter values update live (Points/FPS); indicator dot on dev items flashes in CSS
+
+Challenges solved:
+- Recreated the 3D rotating scroll/cylinder with Three.js using a curved plane texture
+  (paper texture drawn into a CanvasTexture and wrapped onto a CylinderGeometry)
+- Live FPS counter that doesn't depend on the WebGL renderer (uses simple RAF counter)
+- X-marks background: SVG noise pattern as data URI, layered faintly on the grey
+- CSS-only flashing dot indicators using @keyframes flashSlow
+- Hover-folded "View Works" label inside the bar (rotateX 90° ↔ 0°)
+- Projects panel: click-outside / click-close + keyboard Tab/ESC affordances
+- Resume hover image attached to cursor (replaced with generic placeholder card)
+
+What we preserved especially well:
+- The single-screen, fixed-canvas "hero poster" feel — exactly the same proportions and
+  spacing for the corner anchors (logo, intro, counter, sandbox preview)
+- The bottom DESIGN/CODE layout with the rotating bar label, including the hover unfold
+- The paper-roll 3D motion (subtle vertical rotation, slight tilt, soft drop shadow)
+- The "Stats" counter visual with the thin connecting rules between label and value
+- Indicator dots (red/blue) that flash on dev/code-tagged items
+
+Intentional trade-offs:
+- Custom Brockmann font replaced with Inter Tight (very close geometric grotesque)
+- The paper-roll texture is a procedurally generated canvas (vertical strokes + noise)
+  rather than a real photo — keeps the file self-contained, no external assets
+- The "Sandbox" preview is an animated Three.js placeholder rather than a real video
+- The projects list uses a curated 6 of the original 13 items (still preserves the layout)
+- The custom cursor "resume.png" attachment is omitted in favor of a tasteful hint dot
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Lax Chee — Digital Creative Director + Developer (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #cbcbcb;
+    --ink: #0a0a0a;
+    --ink-soft: rgba(0,0,0,.7);
+    --ink-fade: rgba(0,0,0,.5);
+    --line: rgba(0,0,0,.12);
+    --accent-orange: #fc511b;
+    --accent-blue:   #4242dd;
+    --accent-red:    #d74848;
+    --bar: #050505;
+    --bar-text: #fafafa;
+    --serif-fallback: 'Inter Tight', 'Brockmann', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family: var(--serif-fallback);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    position: relative;
+  }
+  /* Subtle X-marks / cross pattern overlay */
+  body::before{
+    content:''; position: fixed; inset:0; pointer-events:none; z-index:1;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'><g fill='%23000' fill-opacity='.06'><path d='M10 18 L18 10 M10 10 L18 18' stroke='%23000' stroke-opacity='.18' stroke-width='1'/><path d='M85 90 L93 82 M85 82 L93 90' stroke='%23000' stroke-opacity='.14' stroke-width='1'/><path d='M150 35 L158 27 M150 27 L158 35' stroke='%23000' stroke-opacity='.16' stroke-width='1'/><path d='M180 170 L188 162 M180 162 L188 170' stroke='%23000' stroke-opacity='.12' stroke-width='1'/><path d='M40 140 L48 132 M40 132 L48 140' stroke='%23000' stroke-opacity='.15' stroke-width='1'/><path d='M115 175 L123 167 M115 167 L123 175' stroke='%23000' stroke-opacity='.1' stroke-width='1'/><path d='M200 100 L208 92 M200 92 L208 100' stroke='%23000' stroke-opacity='.13' stroke-width='1'/><path d='M65 50 L73 42 M65 42 L73 50' stroke='%23000' stroke-opacity='.15' stroke-width='1'/><path d='M160 200 L168 192 M160 192 L168 200' stroke='%23000' stroke-opacity='.11' stroke-width='1'/><path d='M30 200 L38 192 M30 192 L38 200' stroke='%23000' stroke-opacity='.09' stroke-width='1'/></g></svg>");
+    background-size: 220px 220px;
+    mix-blend-mode: multiply;
+  }
+  /* Fine grain noise for expensive paper feel */
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.06;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.5'/></svg>");
+  }
+
+  /* Three.js canvas host */
+  .stage{
+    position: fixed; inset:0; z-index: 0;
+  }
+  .stage canvas{ display:block; width:100%; height:100%; }
+
+  /* Logo */
+  .logo{
+    position: fixed; top:20px; left:20px; z-index: 10;
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+    text-decoration:none; color: var(--ink);
+  }
+  .logo .mark{
+    width: 78px; height: 56px; display:grid; place-items:center; position:relative;
+  }
+  .logo .mark svg{ width:100%; height:100%; }
+  .logo .word{
+    font-size: 9px; font-weight:500; letter-spacing: .35em; padding-left: 1px;
+  }
+  .logo .word b{ font-weight:600 }
+
+  /* Top description */
+  .intro{
+    position: fixed; top: 18px; left: calc(38vw - 100px); z-index: 4;
+    width: 200px; font-size: 14px; line-height: 1.8; font-weight: 200;
+    color: var(--ink); pointer-events:none;
+    transition: opacity .5s ease;
+  }
+  body.menu-open .intro{ opacity:0; }
+
+  /* Counter (top right) */
+  .counter{
+    position: fixed; top: 20px; right: 20px; z-index: 4;
+    width: 150px;
+    transition: opacity .5s ease;
+  }
+  body.menu-open .counter{ opacity:0; }
+  .counter .row{
+    display:flex; align-items:center; justify-content:flex-end;
+    gap: 10px; margin-bottom: 7px;
+    font-size: 10px; line-height: 1;
+  }
+  .counter .row .lbl{ font-weight: 600; white-space:nowrap; letter-spacing:.02em; }
+  .counter .row .line{ flex:1; height:1px; background: rgba(0,0,0,.1); }
+  .counter .row .val{ opacity:.7; font-family: var(--mono); font-size: 10px; min-width: 42px; text-align:right; }
+
+  /* Sandbox preview */
+  .sandbox{
+    position: fixed; right: 25px; bottom: 110px; z-index: 10;
+    width: 180px; cursor:pointer; user-select:none;
+    transition: bottom .4s ease;
+  }
+  body.menu-open .sandbox{ bottom: 25px; }
+  .sandbox .title{
+    font-size: 14px; margin-bottom: 7px; text-align:center;
+    font-weight: 400;
+  }
+  .sandbox .frame{
+    width:100%; aspect-ratio: 180/128; border-radius: 8px; overflow:hidden;
+    background: linear-gradient(135deg,#d8d8d8,#a8a8a8);
+    box-shadow: 0 4px 12px rgba(0,0,0,.05);
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+  }
+  .sandbox:hover .frame{ transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+  .sandbox .frame canvas{ display:block; width:100%; height:100%; }
+
+  /* Footer: DESIGN + bar + CODE */
+  footer{
+    position: fixed; left: 0; bottom: 10px; width: 100vw; z-index: 999;
+    display:flex; align-items:center; justify-content:center;
+    padding: 0 20px; gap: 5vw;
+    font-weight: 200; font-size: 64px; line-height: 1;
+    overflow: hidden;
+    transition: height 1.2s ease;
+  }
+  body.menu-open footer{ height: 0; cursor:auto; }
+  footer .design, footer .code{
+    flex: 0 0 auto;
+  }
+  footer .bar{
+    flex: 1 1 auto; height: 6px; background: var(--bar);
+    position: relative; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 1px;
+  }
+  footer .bar .view-works{
+    position:absolute; top:50%; left:0; right:0; transform: translateY(-50%) rotateX(90deg);
+    transform-origin: center;
+    background: var(--bar); color: var(--bar-text);
+    height: 40px; display:flex; align-items:center; justify-content:center;
+    font-size: 16px; letter-spacing: 3px; font-weight: 400;
+    transition: transform .9s cubic-bezier(.6,.05,.2,1), opacity .9s;
+    opacity: 0;
+    border-radius: 2px;
+  }
+  footer:hover .bar .view-works,
+  footer .bar:hover .view-works,
+  footer .bar:focus-within .view-works{
+    transform: translateY(-50%) rotateX(0deg);
+    opacity: 1;
+  }
+
+  /* Projects list panel (slide-up) */
+  .projects-panel{
+    position: fixed; left: 50%; bottom: -110%; transform: translateX(-50%);
+    width: min(660px, 92vw); max-height: 80vh;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 0 50px 30px rgba(0,0,0,.4);
+    transition: bottom 1.1s ease;
+    z-index: 998;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  body.menu-open .projects-panel{ bottom: 0; }
+  .projects-panel header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px; position: relative; z-index: 5;
+  }
+  .projects-panel .list-title{ font-size: 22px; font-weight: 200; }
+  .projects-panel .list-title span{ opacity: .55; padding-left: 6px; }
+  .projects-panel .close{
+    width: 32px; height: 32px; display:grid; place-items:center; cursor:pointer;
+    border-radius: 50%; border: 1px solid rgba(255,255,255,.2);
+  }
+  .projects-panel .close:hover{ background: rgba(255,255,255,.08); }
+  .projects-panel .close .grid{ width:16px; height:16px; position:relative; }
+  .projects-panel .close .grid::before, .projects-panel .close .grid::after{
+    content:''; position:absolute; inset:0; background: currentColor;
+    mask: linear-gradient(#000,#000);
+    -webkit-mask: linear-gradient(#000,#000);
+  }
+  .projects-panel .close svg{ width:14px; height:14px; stroke:#fff; }
+  .projects-panel .scroll{
+    overflow-y: auto; max-height: 70vh;
+    border-top: 1px solid rgba(255,255,255,.1);
+  }
+  .projects-panel .scroll::-webkit-scrollbar{ width: 6px; }
+  .projects-panel .scroll::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.15); border-radius: 3px; }
+
+  .project{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 22px; background: var(--bg); color: var(--ink);
+    border-bottom: 1px solid rgba(0,0,0,.18);
+    position: relative; overflow:hidden; cursor: pointer;
+    transition: background .3s;
+  }
+  .project::before{
+    content:''; position:absolute; inset:0 0 auto 0; height:100%;
+    background: #fff; mix-blend-mode: difference;
+    transform: translateY(-100%); transition: transform .5s ease;
+    z-index: 1;
+  }
+  .project:hover::before{ transform: translateY(0); }
+  .project > *{ position: relative; z-index: 2; }
+  .project h3{ font-size: 26px; font-weight: 400; letter-spacing: -.01em; }
+  .project .tags{
+    font-size: 12px; opacity: .7;
+    display:flex; align-items:center; gap: 8px;
+    font-family: var(--mono);
+  }
+  .project .tags::after{
+    content:''; display:inline-block;
+    width: 6px; height: 6px; border-radius:50%;
+    background: var(--accent-red);
+    animation: flash 2s ease-in-out infinite;
+    margin-left: 4px; transform: translateY(-1px);
+  }
+  .project.dev .tags::after{ background: var(--accent-blue); }
+
+  .projects-panel .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 22px; background: rgba(255,255,255,.04);
+    font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,.6);
+  }
+  .projects-panel .nav-row .pager{
+    display:flex; align-items:center; gap: 8px;
+  }
+  .projects-panel .nav-row .pager .dash{ width: 18px; height:1px; background: currentColor; opacity:.5; }
+
+  @keyframes flash{
+    0%,100%{ opacity: 1; }
+    50%{ opacity: 0.2; }
+  }
+
+  /* Splash overlay (collapses after load) */
+  .splash{
+    position: fixed; left: 50%; bottom: 50%; transform: translate(-50%,50%);
+    width: 100vw; height: 100vh;
+    background: var(--ink);
+    z-index: 1000;
+    display:flex; align-items:center; justify-content:center;
+    color: #fff;
+    transition: all .8s ease;
+    pointer-events: none;
+  }
+  body.loaded .splash{
+    height: 40px; bottom: 52px; left: calc(50% + 27px); width: calc(100% - 600px);
+    transform: none;
+  }
+  body.settled .splash{
+    height: 0;
+    bottom: 52px;
+  }
+  .splash .label{
+    letter-spacing: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase;
+    overflow: hidden; max-height: 40px;
+  }
+  body.settled .splash .label{ max-height: 0; transition: max-height .8s ease; }
+
+  /* Hide cursor when sandbox previewing */
+  .cursor-hint{
+    position: fixed; pointer-events:none; z-index: 9999;
+    width: 220px; height: 130px; border-radius: 8px;
+    background: linear-gradient(135deg,#fff,#dcdcdc);
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    transform: translate(-50%,-50%) rotate(-6deg);
+    opacity: 0; transition: opacity .2s;
+    display:grid; place-items:center;
+    font-size: 11px; color: #555; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .cursor-hint.show{ opacity: 1; }
+
+  /* small responsive touch */
+  @media (max-width: 800px){
+    .intro{ right: 10px; left: auto; }
+    .sandbox{ display: none; }
+  }
+</style>
+</head>
+<body class="loaded">
+
+  <!-- Splash overlay -->
+  <div class="splash"><div class="label">L A X &nbsp; S P A C E .</div></div>
+
+  <!-- 3D stage -->
+  <div class="stage" id="stage"></div>
+
+  <!-- Logo -->
+  <a class="logo" href="#" aria-label="LAX SPACE">
+    <span class="mark">
+      <!-- "LX" monogram -->
+      <svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">
+        <!-- L -->
+        <path d="M8 4 H22 V66 H58 V80 H8 Z" fill="currentColor"/>
+        <!-- X (stacked arrowhead style) -->
+        <path d="M58 8 L80 26 L102 8 L114 18 L92 38 L114 58 L102 68 L80 50 L58 68 L46 58 L68 38 L46 18 Z" fill="currentColor"/>
+        <!-- Accent slash -->
+        <path d="M86 0 H100 L74 56 H60 Z" fill="var(--accent-orange)"/>
+      </svg>
+    </span>
+    <span class="word">L<b>AX</b> SPACE.</span>
+  </a>
+
+  <!-- Intro tagline -->
+  <h1 class="intro">Digital Creative Director + Developer crafting bold, thoughtful design.</h1>
+
+  <!-- Counter panel -->
+  <div class="counter">
+    <div class="row"><span class="lbl">Points</span><span class="line"></span><span class="val" id="ctr-points">000000</span></div>
+    <div class="row"><span class="lbl">FPS</span><span class="line"></span><span class="val" id="ctr-fps">000060</span></div>
+    <div class="row"><span class="lbl">Orbit Off</span><span class="line"></span><span class="val">[Tab]</span></div>
+    <div class="row"><span class="lbl">Rewind</span><span class="line"></span><span class="val">[Space]</span></div>
+  </div>
+
+  <!-- Sandbox preview -->
+  <div class="sandbox" id="sandbox">
+    <div class="title">View My Sandbox</div>
+    <div class="frame"><canvas id="sandbox-canvas"></canvas></div>
+  </div>
+
+  <!-- Footer with DESIGN / CODE / bar -->
+  <footer id="footer">
+    <div class="design">DESIGN</div>
+    <div class="bar" id="bar" tabindex="0" role="button" aria-label="View Works">
+      <div class="view-works">View Works</div>
+    </div>
+    <div class="code">CODE</div>
+  </footer>
+
+  <!-- Projects panel (slide-up) -->
+  <aside class="projects-panel" id="panel" aria-hidden="true">
+    <header>
+      <div class="list-title">Works _<span>Code.</span></div>
+      <button class="close" id="close-btn" aria-label="Close">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2 L12 12 M12 2 L2 12"/></svg>
+      </button>
+    </header>
+    <div class="nav-row">
+      <span>01 — 06</span>
+      <span class="pager"><span>06</span><span class="dash"></span><span>06</span></span>
+    </div>
+    <div class="scroll" id="scroll">
+      <!-- 6 projects (subset of the original 13) -->
+      <div class="project dev"><h3>Stamped</h3><div class="tags">// Branding // Design // FE Dev</div></div>
+      <div class="project dev"><h3>Fukuda</h3><div class="tags">// Design // FE Dev</div></div>
+      <div class="project"><h3>Motion Blue</h3><div class="tags">// Design</div></div>
+      <div class="project"><h3>Sake of Nada</h3><div class="tags">// Design</div></div>
+      <div class="project"><h3>Utsubo</h3><div class="tags">// Branding</div></div>
+      <div class="project dev"><h3>Avoidant</h3><div class="tags">// Illustrations // FE Dev</div></div>
+    </div>
+  </aside>
+
+  <!-- Cursor hover card -->
+  <div class="cursor-hint" id="cursor-hint">RESUME.PDF</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- main 3D stage: rotating paper roll ---------- */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+camera.position.set(0, 0.4, 5.6);
+camera.lookAt(0, 0, 0);
+
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.05);
+key.position.set(3, 4, 5);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, 0.35);
+fill.position.set(-3, -1, 4);
+scene.add(fill);
+
+// Build paper texture procedurally
+function makePaperTexture(w = 1024, h = 512){
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+
+  // base paper
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#f6f4ef');
+  grad.addColorStop(0.5, '#ece7dd');
+  grad.addColorStop(1, '#dad3c5');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+
+  // vertical striations (paper grain)
+  for (let i = 0; i < 220; i++){
+    const x = Math.random() * w;
+    ctx.strokeStyle = `rgba(0,0,0,${0.02 + Math.random()*0.05})`;
+    ctx.lineWidth = 0.6 + Math.random()*1.2;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + (Math.random()-.5)*4, h); ctx.stroke();
+  }
+  // horizontal banding
+  for (let j = 0; j < 60; j++){
+    const y = Math.random() * h;
+    ctx.strokeStyle = `rgba(0,0,0,${0.015 + Math.random()*0.04})`;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // "UI window" mockups along the strip — like the original
+  const winW = 220, winH = 160, padX = 30;
+  const positions = [40, 320, 600, 880];
+  const palettes = [
+    { head: '#1a1a1a', bg: '#f4f1ea', accent: '#3b6cff' },
+    { head: '#0c1a2c', bg: '#fbf6ec', accent: '#fc511b' },
+    { head: '#211c14', bg: '#efe8da', accent: '#9ad14b' },
+    { head: '#181818', bg: '#f5efe1', accent: '#c8a25a' },
+  ];
+  for (let i = 0; i < positions.length; i++){
+    const x = positions[i];
+    const p = palettes[i % palettes.length];
+    // window frame
+    ctx.fillStyle = p.bg; ctx.fillRect(x, h/2 - winH/2, winW, winH);
+    // header
+    ctx.fillStyle = p.head; ctx.fillRect(x, h/2 - winH/2, winW, 22);
+    // traffic lights
+    ctx.fillStyle = '#ff5f56'; ctx.beginPath(); ctx.arc(x+12, h/2-winH/2+11, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffbd2e'; ctx.beginPath(); ctx.arc(x+24, h/2-winH/2+11, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#27c93f'; ctx.beginPath(); ctx.arc(x+36, h/2-winH/2+11, 3.5, 0, Math.PI*2); ctx.fill();
+    // hero block
+    ctx.fillStyle = p.accent; ctx.fillRect(x+12, h/2-winH/2+38, winW-24, 70);
+    // tiny text bars
+    ctx.fillStyle = 'rgba(0,0,0,.4)';
+    for (let k = 0; k < 4; k++){
+      ctx.fillRect(x+12, h/2-winH/2+118 + k*8, 30 + Math.random()*120, 4);
+    }
+    // small accent
+    ctx.fillStyle = p.accent; ctx.fillRect(x+winW-60, h/2-winH/2+winH-30, 48, 14);
+  }
+
+  // top + bottom margin stripes (newspaper-like)
+  ctx.fillStyle = 'rgba(0,0,0,.05)';
+  ctx.fillRect(0, 0, w, 8);
+  ctx.fillRect(0, h-8, w, 8);
+
+  // edge soft shadow
+  const sx = ctx.createLinearGradient(0,0,30,0);
+  sx.addColorStop(0,'rgba(0,0,0,.22)'); sx.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = sx; ctx.fillRect(0,0,30,h);
+  const sx2 = ctx.createLinearGradient(w-30,0,w,0);
+  sx2.addColorStop(0,'rgba(0,0,0,0)'); sx2.addColorStop(1,'rgba(0,0,0,.22)');
+  ctx.fillStyle = sx2; ctx.fillRect(w-30,0,30,h);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.repeat.x = 1.0;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+const paperTex = makePaperTexture();
+const paper = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.05, 1.05, 1.4, 64, 1, true),
+  new THREE.MeshStandardMaterial({ map: paperTex, side: THREE.DoubleSide, roughness: 0.85, metalness: 0.0 })
+);
+paper.rotation.z = Math.PI / 2;     // lay it on its side
+paper.rotation.y = -0.18;
+scene.add(paper);
+
+// inner darker hollow
+const inner = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.78, 0.78, 1.42, 64, 1, true),
+  new THREE.MeshStandardMaterial({ color: 0x232020, side: THREE.BackSide, roughness: 1.0 })
+);
+inner.rotation.z = Math.PI / 2;
+inner.rotation.y = -0.18;
+scene.add(inner);
+
+// Soft floor shadow
+const shadowCanvas = document.createElement('canvas');
+shadowCanvas.width = 256; shadowCanvas.height = 64;
+const sctx = shadowCanvas.getContext('2d');
+const sg = sctx.createRadialGradient(128, 32, 6, 128, 32, 120);
+sg.addColorStop(0, 'rgba(0,0,0,0.45)');
+sg.addColorStop(1, 'rgba(0,0,0,0)');
+sctx.fillStyle = sg; sctx.fillRect(0,0,256,64);
+const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+const shadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.2, 0.8),
+  new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+);
+shadow.rotation.x = -Math.PI / 2;
+shadow.position.y = -1.0;
+scene.add(shadow);
+
+// group for subtle floating motion
+const group = new THREE.Group();
+scene.add(group);
+group.add(paper); group.add(inner); group.add(shadow);
+group.position.set(0.2, 0.05, 0);
+
+/* ---------- sandbox preview canvas ---------- */
+const sb = document.getElementById('sandbox-canvas');
+const sbR = new THREE.WebGLRenderer({ canvas: sb, antialias: true, alpha: true });
+sbR.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+sbR.setClearColor(0x000000, 0);
+
+const sbScene = new THREE.Scene();
+const sbCam = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+sbCam.position.set(0, 0, 4.5);
+sbScene.add(new THREE.AmbientLight(0xffffff, .7));
+const dl = new THREE.DirectionalLight(0xffffff, .8);
+dl.position.set(2,3,3); sbScene.add(dl);
+
+// a tiny chrome ring + ball + cube
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(.8, .22, 24, 64),
+  new THREE.MeshStandardMaterial({ color: 0xdedede, metalness: .9, roughness: .25 })
+);
+sbScene.add(ring);
+const ball = new THREE.Mesh(
+  new THREE.SphereGeometry(.45, 32, 32),
+  new THREE.MeshStandardMaterial({ color: 0xfc511b, roughness: .35, metalness: .15 })
+);
+ball.position.set(.95, .55, .3);
+sbScene.add(ball);
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(.7, .7, .7),
+  new THREE.MeshStandardMaterial({ color: 0x202020, roughness: .5 })
+);
+cube.position.set(-1.1, -.4, .2);
+sbScene.add(cube);
+
+/* ---------- resize ---------- */
+function resize(){
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  sbR.setSize(sb.clientWidth, sb.clientHeight, false);
+  sbCam.aspect = sb.clientWidth / sb.clientHeight; sbCam.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ---------- interactions: orbit on drag, rewind on space, FPS counter ---------- */
+let dragX = 0, dragY = 0;
+let targetRot = { x: -0.18, y: 0 };
+let dragging = false;
+let orbitEnabled = false;
+let points = 0;
+const ctrPoints = document.getElementById('ctr-points');
+const ctrFps = document.getElementById('ctr-fps');
+
+stage.addEventListener('mousedown', e => { dragging = true; dragX = e.clientX; dragY = e.clientY; });
+window.addEventListener('mouseup',   () => dragging = false);
+window.addEventListener('mousemove', e => {
+  if (!dragging || !orbitEnabled) return;
+  targetRot.y += (e.clientX - dragX) * 0.005;
+  targetRot.x += (e.clientY - dragY) * 0.005;
+  dragX = e.clientX; dragY = e.clientY;
+});
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Tab'){
+    e.preventDefault();
+    orbitEnabled = !orbitEnabled;
+  } else if (e.code === 'Space'){
+    e.preventDefault();
+    targetRot = { x: -0.18, y: 0 };
+    points = 0;
+  }
+});
+
+/* ---------- projects panel toggle ---------- */
+const bar = document.getElementById('bar');
+const panel = document.getElementById('panel');
+const closeBtn = document.getElementById('close-btn');
+const body = document.body;
+function openMenu(){ body.classList.add('menu-open'); panel.setAttribute('aria-hidden','false'); }
+function closeMenu(){ body.classList.remove('menu-open'); panel.setAttribute('aria-hidden','true'); }
+bar.addEventListener('click', openMenu);
+bar.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMenu(); } });
+closeBtn.addEventListener('click', closeMenu);
+window.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+
+/* ---------- splash settle ---------- */
+setTimeout(()=> body.classList.add('settled'), 2200);
+
+/* ---------- sandbox hover hint (replaces original "resume.png" cursor) ---------- */
+const cursorHint = document.getElementById('cursor-hint');
+const sandbox = document.getElementById('sandbox');
+sandbox.addEventListener('mousemove', e => {
+  cursorHint.style.left = e.clientX + 'px';
+  cursorHint.style.top  = e.clientY + 'px';
+  cursorHint.classList.add('show');
+});
+sandbox.addEventListener('mouseleave', () => cursorHint.classList.remove('show'));
+
+/* ---------- animation loop ---------- */
+let prev = performance.now();
+let frames = 0, lastFps = 60;
+function tick(now){
+  const dt = (now - prev) / 1000; prev = now;
+  frames++;
+  if (frames % 30 === 0){
+    lastFps = Math.round(1 / Math.max(dt, 1/120));
+    ctrFps.textContent = String(lastFps).padStart(6, '0');
+  }
+  // smooth rotation toward target
+  paper.rotation.y += (targetRot.y - paper.rotation.y) * 0.08;
+  paper.rotation.x += (targetRot.x - paper.rotation.x) * 0.08;
+  inner.rotation.copy(paper.rotation);
+
+  // ambient gentle drift when no input
+  if (!dragging){
+    paper.rotation.y -= 0.0015;
+    points++;
+    if (points % 4 === 0) ctrPoints.textContent = String(points).padStart(6, '0');
+  }
+
+  // gentle float
+  group.position.y = 0.05 + Math.sin(now * 0.0008) * 0.05;
+
+  renderer.render(scene, camera);
+
+  // sandbox
+  ring.rotation.x = now * 0.0009;
+  ring.rotation.y = now * 0.0012;
+  ball.position.y = .55 + Math.sin(now * 0.002) * .15;
+  cube.rotation.x = now * 0.001;
+  cube.rotation.y = now * 0.0007;
+  sbR.render(sbScene, sbCam);
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

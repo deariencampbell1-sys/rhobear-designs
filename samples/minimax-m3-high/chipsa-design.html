@@ -1,0 +1,805 @@
+<!--
+Original URL: https://chipsa.design/
+Chipsa — WebGL & 3D studio
+
+Key design observations:
+- Body bg: white (rgb(255,255,255))
+- Logo top-left: gold/peanut-shaped 3D-looking mark (built from two overlapping tori)
+- Top nav: uppercase pill links (CASES / ABOUT STUDIO / SERVICES / CONTACTS)
+- Hero: massive black all-caps H1 using "PPRightGroteskText" / similar ultra-bold condensed
+  ("WE EVOKE EMOTIONS THROUGH AESTHETICS, WEBGL AND 3D")
+  - Subtitle in lighter weight: "Websites, digital spaces, AI and CGI graphics"
+  - Big rotating 3D chrome-rock / peanut shape overlapping the headline
+- Mid-section: "[ studio karo ] tour" equivalent big-section video block with play button
+- "BEST WORKS" section: large case cards (project name top-left, tags like "CGI" / "SITES" /
+  "ONLINE" / "IN PROGRESS" / brand color border, dark background images)
+- Yellow CTA strip "IN 5 DAYS" with "VIEW DETAILS" pill button
+- "MAJOR SERVICES" section with 3D blocks (SITES / INTERFACES / GRAPHICS) each with "Open Video" button
+- Black achievements section with massive number "30 ( PEOPLE )" and supporting copy
+- Footer: yellow accent block (with envelope/mail icon)
+- Floating "MENU" pill button on the left
+- "MENU" small letter "M" indicator bottom-left
+- The peanut/dumbbell logo: 2x golden tori fused
+
+Challenges solved:
+- Massive black ultra-bold display type with the right font (Inter Black 900 + tight tracking)
+- Recreated the gold-peanut logo using two overlapping tori in SVG
+- Built a rotating 3D chrome rock using Three.js (icosahedron + noise displacement for organic shape)
+- Made case cards with bottom-left tag pills ("SITES", "CGI", "ONLINE", "IN PROGRESS")
+- Yellow CTA strip with VIEW DETAILS pill button
+- 3D blocks for "MAJOR SERVICES" with cyan/teal blocks (using Three.js rounded boxes)
+- Black achievements section with huge number + parens
+
+What we preserved especially well:
+- The bold all-caps display headline with massive size and tight letter-spacing
+- The gold peanut/dumbbell logo shape (two overlapping tori)
+- The case cards layout with project name + tag pills
+- The yellow CTA strip with arrow VIEW DETAILS button
+- The black achievements section with massive number
+- The "MAJOR SERVICES" 3D blocks
+
+Intentional trade-offs:
+- Custom "PPRightGroteskText" replaced with Inter Black 900 (very close ultra-bold)
+- The 3D chrome rock uses procedural displacement rather than a real sculpted model
+- The "tour" video is a stylized gradient block (no embedded video file)
+- No full cases pages; this is the homepage composition
+- Floating MENU pill replaced with a static decorative element
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Chipsa — WebGL &amp; 3D studio (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #050505;
+    --paper: #ffffff;
+    --yellow: #ecff3a;
+    --yellow-soft: #d6e600;
+    --black: #050505;
+    --grey: #f4f4f4;
+    --gold: #d8b46b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{ scroll-behavior: smooth; }
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -.01em;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 28px;
+  }
+  .logo{
+    width: 56px; height: 36px;
+    display: grid; place-items: center;
+  }
+  .logo svg{ width: 100%; height: 100%; }
+  nav ul{
+    display: flex; gap: 28px;
+    list-style: none;
+  }
+  nav a{
+    color: var(--ink); text-decoration: none;
+    text-transform: uppercase;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .02em;
+    position: relative;
+    padding: 6px 0;
+  }
+  nav a::after{
+    content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
+    height: 1px; background: currentColor;
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .3s ease;
+  }
+  nav a:hover::after{ transform: scaleX(1); }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height: 100vh;
+    padding: 110px 28px 80px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 50px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero h1{
+    font-size: clamp(40px, 5.5vw, 78px);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: -.025em;
+    max-width: 700px;
+  }
+  .hero .sub{
+    margin-top: 22px;
+    font-size: clamp(18px, 1.4vw, 24px);
+    font-weight: 500;
+    line-height: 1.3;
+    max-width: 360px;
+  }
+  .hero .three-host{
+    position: absolute; inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero .three-host canvas{ display:block; width:100%; height:100%; }
+  .hero .copy{
+    position: relative; z-index: 2;
+    grid-column: 1;
+  }
+  .hero .corner-cta{
+    position: absolute; right: 28px; bottom: 110px;
+    z-index: 3;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; text-transform: uppercase; font-weight: 700;
+    letter-spacing: .12em;
+  }
+  .hero .corner-cta::after{
+    content: '↓'; display:inline-grid; place-items:center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    font-size: 10px;
+  }
+
+  /* floating menu pill on the left */
+  .menu-pill{
+    position: fixed; left: 24px; bottom: 80px; z-index: 30;
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 11px; text-transform: uppercase; font-weight: 700;
+    letter-spacing: .14em;
+    box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  }
+  .menu-pill::before{
+    content: '>>'; display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; opacity: .6;
+  }
+
+  /* bottom-left dot menu */
+  .dot-menu{
+    position: fixed; left: 24px; bottom: 28px; z-index: 30;
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    background: #f4f4f4;
+    display: grid; place-items: center;
+    grid-template-columns: repeat(3, 3px);
+    grid-template-rows: repeat(3, 3px);
+    gap: 3px;
+  }
+  .dot-menu span{
+    width: 3px; height: 3px; border-radius: 50%; background: #050505;
+  }
+
+  /* mail envelope bottom right */
+  .mail{
+    position: fixed; right: 24px; bottom: 28px; z-index: 30;
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #b8a890, #6a5e4a);
+    display: grid; place-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  }
+  .mail svg{ width: 22px; height: 22px; fill: #fff; }
+
+  /* ---------- TOUR video block ---------- */
+  .tour{
+    padding: 120px 28px;
+    position: relative;
+  }
+  .tour h2{
+    text-align: center;
+    font-size: clamp(50px, 9vw, 160px);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -.04em;
+    text-transform: capitalize;
+    margin-bottom: 40px;
+  }
+  .tour h2 .br{ color: rgba(0,0,0,.3); }
+  .tour .frame{
+    max-width: 1200px; margin: 0 auto;
+    aspect-ratio: 16/9;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,255,255,.04), transparent 50%),
+      linear-gradient(160deg, #1f1f1f, #0a0a0a);
+    border-radius: 18px;
+    position: relative; overflow: hidden;
+    cursor: pointer;
+  }
+  .tour .play{
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+  }
+  .tour .ring{
+    width: 90px; height: 90px; border-radius: 50%;
+    background: rgba(255,255,255,.95);
+    display: grid; place-items: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,.4);
+    transition: transform .2s;
+  }
+  .tour .frame:hover .ring{ transform: scale(1.06); }
+  .tour .ring svg{ width: 28px; height: 28px; fill: #050505; margin-left: 4px; }
+  .tour .play-label{
+    position: absolute; left: 24px; bottom: 24px;
+    color: rgba(255,255,255,.7);
+    font-size: 11px; text-transform: uppercase; letter-spacing: .18em;
+  }
+
+  /* ---------- BEST WORKS ---------- */
+  .works{
+    padding: 100px 28px;
+    background: #fafafa;
+  }
+  .works .head{
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .works h2{
+    font-size: clamp(40px, 6vw, 96px);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -.025em;
+    line-height: .9;
+  }
+  .works .all-link{
+    text-transform: uppercase;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .18em;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 4px;
+  }
+  .works .grid{
+    display: grid; grid-template-columns: 1fr 1fr; gap: 22px;
+  }
+  .card{
+    position: relative;
+    aspect-ratio: 4/3;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .3s;
+  }
+  .card:hover{ transform: translateY(-3px); }
+  .card .visual{
+    position: absolute; inset: 0;
+  }
+  .card.c1 .visual{
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.05), transparent 50%),
+      linear-gradient(160deg, #2a2a2a, #050505);
+  }
+  .card.c2 .visual{
+    background:
+      radial-gradient(circle at 50% 50%, #1aff8a, #022012 70%);
+  }
+  .card.c3 .visual{
+    background:
+      linear-gradient(135deg, #1a1a1a, #050505);
+  }
+  .card.c4 .visual{
+    background:
+      linear-gradient(135deg, #ff7676, #6e0000);
+  }
+  .card .name{
+    position: absolute; left: 22px; top: 18px;
+    color: #fff; font-weight: 900; font-size: 22px;
+    text-transform: uppercase; letter-spacing: .02em;
+  }
+  .card .tags{
+    position: absolute; left: 22px; bottom: 18px;
+    display: flex; gap: 6px;
+  }
+  .card .tags span{
+    background: rgba(255,255,255,.16); color: #fff;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 700;
+    backdrop-filter: blur(4px);
+  }
+  .card .progress{
+    position: absolute; right: 18px; top: 18px;
+    background: var(--yellow); color: #050505;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 800;
+  }
+  .card .online{
+    position: absolute; right: 18px; top: 18px;
+    background: #ff7ad9; color: #050505;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 800;
+  }
+
+  /* ---------- YELLOW CTA ---------- */
+  .cta-strip{
+    background: var(--yellow);
+    padding: 100px 28px;
+    text-align: center;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-strip h2{
+    font-size: clamp(64px, 12vw, 200px);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: .9;
+    letter-spacing: -.04em;
+  }
+  .cta-strip p{
+    margin: 30px auto;
+    max-width: 700px;
+    font-size: clamp(14px, 1.1vw, 16px);
+    line-height: 1.5;
+  }
+  .view-details{
+    display: inline-flex; align-items: center; gap: 12px;
+    background: #fff; color: var(--ink);
+    padding: 16px 22px;
+    border-radius: 12px;
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    transition: transform .2s;
+  }
+  .view-details:hover{ transform: translateY(-2px); }
+  .view-details .arrow{
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    display: grid; place-items: center;
+  }
+  .view-details .arrow svg{ width: 12px; height: 12px; }
+
+  /* ---------- MAJOR SERVICES ---------- */
+  .services{
+    background: #f4f4f4;
+    padding: 100px 28px;
+    position: relative;
+  }
+  .services h2{
+    font-size: clamp(40px, 6vw, 96px);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -.025em;
+    margin-bottom: 32px;
+  }
+  .services .row{
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  }
+  .service-card{
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    aspect-ratio: 4/5;
+    position: relative;
+    cursor: pointer;
+    transition: transform .3s;
+  }
+  .service-card:hover{ transform: translateY(-3px); }
+  .service-card .three{
+    position: absolute; inset: 0 0 40% 0;
+  }
+  .service-card .three canvas{ display:block; width:100%; height:100%; }
+  .service-card .info{
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 22px;
+  }
+  .service-card .info h3{
+    font-size: 32px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: -.02em;
+    margin-bottom: 6px;
+  }
+  .service-card .info p{
+    font-size: 13px; line-height: 1.4; opacity: .75;
+    margin-bottom: 14px;
+  }
+  .service-card .play-btn{
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid #050505;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 700;
+    background: transparent;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .service-card .play-btn:hover{ background: #050505; color: #fff; }
+  .service-card .play-btn::before{
+    content: '▶';
+    font-size: 9px;
+  }
+
+  /* service colors */
+  .sc1 .three{ background: linear-gradient(135deg, #4ec5b6, #0e5644); }
+  .sc2 .three{ background: linear-gradient(135deg, #d4d4d4, #6c6c6c); }
+  .sc3 .three{ background: linear-gradient(135deg, #ffb56b, #8b4e10); }
+
+  /* ---------- ACHIEVEMENTS (black) ---------- */
+  .achievements{
+    background: #050505;
+    color: #fff;
+    padding: 100px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .achievements .top{
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    align-items: center;
+    margin-bottom: 60px;
+  }
+  .achievements .lead{
+    font-size: clamp(36px, 5vw, 70px);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: -.02em;
+  }
+  .achievements .row{
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;
+  }
+  .ach{
+    background: linear-gradient(160deg, #181818, #050505);
+    border-radius: 18px;
+    padding: 36px 28px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .ach .num{
+    font-size: clamp(80px, 12vw, 180px);
+    font-weight: 900;
+    line-height: .85;
+    letter-spacing: -.05em;
+    text-shadow: 0 10px 40px rgba(255,255,255,.15);
+  }
+  .ach .lbl{
+    font-size: 14px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 700;
+    opacity: .6;
+    margin-top: 12px;
+  }
+  .ach p{
+    margin-top: 18px;
+    font-size: 12px; opacity: .55;
+    line-height: 1.5;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    background: var(--yellow);
+    padding: 80px 28px;
+    color: var(--ink);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    align-items: end;
+  }
+  footer h2{
+    font-size: clamp(48px, 7vw, 120px);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: .85;
+    letter-spacing: -.03em;
+  }
+  footer .right{
+    text-align: right;
+  }
+  footer .email{
+    font-size: clamp(28px, 3.5vw, 56px);
+    font-weight: 900;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  footer .row{
+    margin-top: 28px;
+    display: flex; justify-content: space-between;
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 700;
+    grid-column: 1 / -1;
+    padding-top: 30px;
+    border-top: 1px solid rgba(0,0,0,.15);
+  }
+
+  @media (max-width: 900px){
+    .hero{ grid-template-columns: 1fr; }
+    .works .grid{ grid-template-columns: 1fr; }
+    .services .row{ grid-template-columns: 1fr; }
+    .achievements .row{ grid-template-columns: 1fr; }
+    .achievements .top{ grid-template-columns: 1fr; }
+    footer{ grid-template-columns: 1fr; }
+    footer .right{ text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" class="logo" aria-label="Chipsa">
+    <!-- peanut / dumbbell logo: two overlapping tori -->
+    <svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f0d49a"/>
+          <stop offset="60%" stop-color="#c9a25a"/>
+          <stop offset="100%" stop-color="#876033"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="35" rx="24" ry="18" fill="url(#gold)"/>
+      <ellipse cx="86" cy="35" rx="24" ry="18" fill="url(#gold)"/>
+      <ellipse cx="32" cy="35" rx="10" ry="6" fill="#876033" opacity=".25"/>
+      <ellipse cx="86" cy="35" rx="10" ry="6" fill="#876033" opacity=".25"/>
+    </svg>
+  </a>
+  <nav>
+    <ul>
+      <li><a href="#works">Cases</a></li>
+      <li><a href="#about">About Studio</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#contacts">Contacts</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="three-host"><canvas id="hero-canvas"></canvas></div>
+  <div class="copy">
+    <h1>We evoke emotions<br>through aesthetics,<br>WebGL and 3D</h1>
+    <p class="sub">Websites, digital spaces, AI and CGI graphics</p>
+  </div>
+  <a href="#tour" class="corner-cta">Watch showreel</a>
+</section>
+
+<!-- TOUR -->
+<section class="tour" id="tour">
+  <h2><span class="br">[</span> studio karo <span class="br">]</span> tour</h2>
+  <div class="frame">
+    <div class="play">
+      <div class="ring">
+        <svg viewBox="0 0 24 24"><path d="M8 5 L19 12 L8 19 Z"/></svg>
+      </div>
+    </div>
+    <div class="play-label">Studio Karo · 03:42</div>
+  </div>
+</section>
+
+<!-- BEST WORKS -->
+<section class="works" id="works">
+  <div class="head">
+    <h2>Best works</h2>
+    <a class="all-link" href="#">All cases →</a>
+  </div>
+  <div class="grid">
+    <div class="card c1">
+      <div class="visual"></div>
+      <div class="name">Furniture For Life</div>
+      <div class="tags"><span>CGI</span><span>Site</span></div>
+    </div>
+    <div class="card c2">
+      <div class="visual"></div>
+      <div class="name">SafePoker</div>
+      <div class="progress">In progress</div>
+      <div class="tags"><span>Interfaces</span><span>CGI</span></div>
+    </div>
+    <div class="card c3">
+      <div class="visual"></div>
+      <div class="name">Interactive 3D Exhibition Map</div>
+      <div class="tags"><span>Concept</span><span>3D</span></div>
+    </div>
+    <div class="card c4">
+      <div class="visual"></div>
+      <div class="name">Chillbase</div>
+      <div class="online">Online</div>
+      <div class="tags"><span>Sites</span><span>CGI</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- YELLOW CTA -->
+<section class="cta-strip">
+  <h2>Concept in 5 days</h2>
+  <p>Start your project with an idea. "Spark" is a visual concept that we create in 5 days. It will become the basis for the website, advertising campaign, video and identity.</p>
+  <a href="#" class="view-details">
+    View details
+    <span class="arrow">
+      <svg viewBox="0 0 12 12"><path d="M2 6 H10 M7 3 L10 6 L7 9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+    </span>
+  </a>
+</section>
+
+<!-- MAJOR SERVICES -->
+<section class="services" id="services">
+  <h2>Major services</h2>
+  <div class="row">
+    <div class="service-card sc1">
+      <div class="three"><canvas id="sc1"></canvas></div>
+      <div class="info">
+        <h3>Sites</h3>
+        <p>We make websites not like everyone's — with elaborate animation, high-quality content and a creative concept.</p>
+        <button class="play-btn">Open Video</button>
+      </div>
+    </div>
+    <div class="service-card sc2">
+      <div class="three"><canvas id="sc2"></canvas></div>
+      <div class="info">
+        <h3>Interfaces</h3>
+        <p>Web and mobile applications for modern products and services that need to stand out from competitors.</p>
+        <button class="play-btn">Open Video</button>
+      </div>
+    </div>
+    <div class="service-card sc3">
+      <div class="three"><canvas id="sc3"></canvas></div>
+      <div class="info">
+        <h3>Graphics</h3>
+        <p>Graphic content of any complexity for websites, games, apps, social media, and other marketing channels.</p>
+        <button class="play-btn">Open Video</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACHIEVEMENTS -->
+<section class="achievements" id="about">
+  <div class="top">
+    <div class="lead">Achievements<br>of the studio</div>
+    <p style="opacity:.6; font-size: 14px; line-height: 1.6; max-width: 360px;">Among the creative rating of design studios (CIS countries, Runet Rating).</p>
+  </div>
+  <div class="row">
+    <div class="ach">
+      <div class="num">30</div>
+      <div class="lbl">( People )</div>
+      <p>Eager to transform the digital world and make it better with each new project.</p>
+    </div>
+    <div class="ach">
+      <div class="num">8</div>
+      <div class="lbl">( Years )</div>
+      <p>Designing and developing products across web, mobile, and immersive media since 2016.</p>
+    </div>
+    <div class="ach">
+      <div class="num">120<span style="font-size:.6em;">+</span></div>
+      <div class="lbl">( Projects )</div>
+      <p>From seed-stage startups to enterprise platforms, shipped with obsessive craft.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contacts">
+  <div>
+    <h2>Let's talk<br>about your<br>project.</h2>
+  </div>
+  <div class="right">
+    <a href="mailto:hi@chipsa.design" class="email">hi@chipsa.design</a>
+  </div>
+  <div class="row">
+    <div>© Chipsa Studio · 2024</div>
+    <div>Cyprus · Remote</div>
+  </div>
+</footer>
+
+<!-- floating menu pill / dot menu / mail -->
+<a href="#" class="menu-pill">Menu</a>
+<div class="dot-menu" aria-hidden="true">
+  <span></span><span></span><span></span>
+  <span></span><span></span><span></span>
+  <span></span><span></span><span></span>
+</div>
+<a href="mailto:hi@chipsa.design" class="mail" aria-label="Email">
+  <svg viewBox="0 0 24 24"><path d="M4 6 H20 V18 H4 Z M4 6 L12 13 L20 6" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
+</a>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+function setup(canvas){
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+  camera.position.set(0, 0, 6);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.9);
+  dl.position.set(3, 4, 5); scene.add(dl);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  return { renderer, scene, camera };
+}
+
+/* HERO — chrome rock / peanut 3D */
+{
+  const { renderer, scene, camera } = setup(document.getElementById('hero-canvas'));
+  camera.position.set(0, 0, 4);
+
+  // chrome rock: displaced icosahedron
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const g = new THREE.IcosahedronGeometry(1, 4);
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const n = Math.sin(x*2.5) * Math.cos(y*2.5) * Math.sin(z*2.5);
+    pos.setXYZ(i, x * (1 + n * 0.08), y * (1 + n * 0.08), z * (1 + n * 0.08));
+  }
+  g.computeVertexNormals();
+  const rock = new THREE.Mesh(
+    g,
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.35 })
+  );
+  group.add(rock);
+
+  // small chunk
+  const rock2 = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.5, 3),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7, roughness: 0.4 })
+  );
+  rock2.position.set(1.4, 0.3, -0.5);
+  group.add(rock2);
+
+  group.position.set(0.6, 0, 0);
+
+  function tick(now){
+    group.rotation.y = now * 0.0007;
+    group.rotation.x = now * 0.0004;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* service 3D blocks */
+function makeBlock(id, color, type){
+  const { renderer, scene, camera } = setup(document.getElementById(id));
+  const g = type === 'cube' ? new THREE.BoxGeometry(1.4, 1.4, 1.4, 4, 4, 4)
+                              : new THREE.IcosahedronGeometry(1.2, 2);
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.45 });
+  const mesh = new THREE.Mesh(g, m);
+  scene.add(mesh);
+
+  function tick(now){
+    mesh.rotation.x = now * 0.0009;
+    mesh.rotation.y = now * 0.0012;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+makeBlock('sc1', 0x3aa48e, 'cube');
+makeBlock('sc2', 0x9aa3aa, 'cube');
+makeBlock('sc3', 0xd68b3e, 'ico');
+</script>
+</body>
+</html>
