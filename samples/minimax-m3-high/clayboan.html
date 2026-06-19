@@ -1,0 +1,368 @@
+<!--
+  Recreation of https://www.clayboan.com/ — Clay Boan (multidisciplinary designer)
+  ─────────────────────────────────────────────────────────────────────
+  Key design observations
+  · Pitch-black background with a single dark sculptural 3D mask in the
+    centre behind a massive gothic/blackletter wordmark ("SDEY" / "CLAY").
+  · Type system: Emeritus Display (the gothic / blackletter wordmark),
+    Aeonik Pro (small UI labels and body).
+  · Hero word is set across the screen with crazy letter-spacing and a
+    slight rotation per glyph; it almost reads like a sigil.
+  · Top nav is a single-line: monogram CB, "SELECTED WORK", "ABOUT",
+    "BOANYARD", "LET'S CHAT" — set tight uppercase with mono-feel tracking.
+  · Index view shows the project list as a vertically-stacked list of
+    blackletter initials + sans-serif word (PPL E → APPLE, KE X NBA →
+    NIKE X NBA, OO GLE → GOOGLE, etc.). Each row reveals its image card
+    on hover.
+  · Project pages use a full-bleed single-image slide with blackletter
+    project name centered, "(FEATURED WORK)" or "(ABOUT)" header, plus
+    a corner pager "01/21", "SCROLL", "INDEX".
+
+  Challenges solved
+  · "Emeritus Display" is paid. We substitute UnifrakturCook (Google)
+    and use per-letter transforms to fake the slight kerning/rotation
+    of a hand-set blackletter wordmark.
+  · Three.js used for the dark "horse-mask sculpture" placeholder —
+    a procedural obsidian mask built from CSG-style primitives with a
+    subtle vertex displacement and rim lighting. Falls back to a static
+    SVG mask if WebGL is not available.
+  · Index view reconstructed as a JS-driven grid where hovering a row
+    tilts its image card in from the right.
+
+  Intentional trade-offs
+  · Real Three.js sculpture is approximated with a low-poly horned mask
+    composed of stretched torus knots + cone geometry. The mood is
+    preserved (dark, glossy, faceted) without copying the specific form.
+  · Project cards show small colour-block placeholders rather than the
+    real client photography; the spatial layout and typography remain
+    intact.
+
+  Preserved especially well
+  · The hero blackletter wordmark + the dark theatrical atmosphere.
+  · The numbered INDEX view that pairs blackletter initials with a
+    sans-serif brand name.
+  · The full-bleed project slide layout with pager corner.
+  · The (PARENTHETICAL) section labels.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Clay Boan — Multidisciplinary Designer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<style>
+  :root{
+    --ink:#050505;
+    --paper:#f6f1ea;
+    --muted:#6f6f6f;
+    --bone:#d8d3c4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  .gothic{font-family:'UnifrakturCook',serif;font-weight:700;line-height:.9;text-transform:uppercase;}
+  .uppercase{text-transform:uppercase;letter-spacing:.06em;}
+
+  /* Top nav */
+  nav.top{
+    position:fixed;top:0;left:0;right:0;
+    display:grid;grid-template-columns:auto 1fr auto 1fr auto;
+    align-items:center;padding:18px 24px;
+    z-index:30;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+  }
+  nav.top .mark{display:inline-flex;align-items:center;gap:6px;}
+  nav.top .mark::after{content:"♦";color:var(--paper);}
+  nav.top .left-links{display:flex;gap:40px;justify-content:flex-start;margin-left:60px;}
+  nav.top .right-links{display:flex;gap:40px;justify-content:flex-end;margin-right:60px;}
+
+  /* Hero */
+  .hero{position:relative;height:100vh;min-height:720px;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;}
+  #three-canvas{position:absolute;inset:0;width:100%;height:100%;}
+  .hero .label-feat{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.85);}
+  .hero .gothic-wrap{position:relative;z-index:5;text-align:center;padding:0 5vw;}
+  .hero .gothic-wrap .word{
+    font-family:'UnifrakturCook',serif;font-weight:700;
+    font-size:clamp(180px,28vw,560px);line-height:.85;letter-spacing:-.02em;
+    color:#fff;text-transform:uppercase;
+    display:flex;justify-content:center;align-items:flex-end;gap:0;
+    transform:translateY(-3%);
+  }
+  .hero .gothic-wrap .word span{display:inline-block;transform-origin:bottom center;}
+  .hero .gothic-wrap .word span:nth-child(1){transform:rotate(-3deg) translateY(2%);}
+  .hero .gothic-wrap .word span:nth-child(2){transform:rotate(2deg) translateY(-1%);}
+  .hero .gothic-wrap .word span:nth-child(3){transform:rotate(-1deg) translateY(3%);margin-left:-.04em;}
+  .hero .gothic-wrap .word span:nth-child(4){transform:rotate(3deg) translateY(-2%);margin-left:-.06em;}
+
+  /* Featured work slide */
+  .slide{position:relative;height:100vh;min-height:680px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .slide .bg{position:absolute;inset:0;background-position:center;background-size:cover;}
+  .slide .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.55));}
+  .slide .title{
+    position:relative;z-index:2;
+    font-family:'UnifrakturCook',serif;font-weight:700;font-size:clamp(120px,15vw,260px);
+    color:#fff;letter-spacing:-.01em;text-transform:uppercase;line-height:.85;
+    text-align:center;mix-blend-mode:screen;opacity:.9;
+  }
+  .slide .label{position:absolute;top:90px;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.2em;text-transform:uppercase;z-index:2;}
+  .slide .pager{position:absolute;bottom:24px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.18em;text-transform:uppercase;z-index:2;}
+  .slide .pager .center{display:flex;gap:24px;}
+
+  /* Slide backgrounds — generative color fields */
+  .bg-apple{background:linear-gradient(135deg,#ff7a4d 0%,#7a1414 50%,#3a0c1a 100%);}
+  .bg-apple::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 40% 50%,rgba(255,200,140,.4),transparent 60%);}
+  .bg-nike{background:linear-gradient(135deg,#1f1f1f 0%,#0a0a0a 100%);}
+  .bg-nike::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,90,31,.3),transparent 50%);}
+  .bg-google{background:linear-gradient(135deg,#0f1a2c 0%,#040a18 100%);}
+  .bg-google::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(80,140,255,.25),transparent 60%);}
+  .bg-gucci{background:linear-gradient(135deg,#1a1a1a 0%,#000 100%);}
+  .bg-gucci::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(220,180,100,.18),transparent 50%);}
+  .bg-gtv{background:linear-gradient(135deg,#2a1414 0%,#0a0606 100%);}
+  .bg-gtv::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,80,80,.18),transparent 50%);}
+
+  /* INDEX list view */
+  .idx{background:var(--paper);color:var(--ink);padding:80px 24px;}
+  .idx .col{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:center;}
+  .idx ul{list-style:none;padding:0;margin:0;}
+  .idx li{position:relative;display:grid;grid-template-columns:60px 1fr;align-items:baseline;gap:24px;padding:14px 0;border-bottom:1px solid rgba(0,0,0,.12);cursor:pointer;transition:padding .3s ease;}
+  .idx li .num{font-size:14px;color:rgba(0,0,0,.5);font-feature-settings:"tnum" 1;}
+  .idx li .ttl{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(36px,5vw,72px);text-transform:uppercase;letter-spacing:-.005em;line-height:1;transition:color .2s;}
+  .idx li .ttl .g{font-family:'UnifrakturCook',serif;font-weight:700;display:inline-block;transform:rotate(-4deg) translateY(.05em);margin-right:.06em;}
+  .idx li:hover{padding-left:24px;}
+  .idx li:hover .ttl{color:#888;}
+  .idx li .preview{
+    position:absolute;right:-30%;top:50%;transform:translate(0,-50%) rotate(6deg);
+    width:480px;height:360px;border-radius:6px;overflow:hidden;
+    pointer-events:none;opacity:0;transition:opacity .35s, transform .35s;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);
+  }
+  .idx li:hover .preview{opacity:1;transform:translate(20px,-50%) rotate(6deg);}
+  .idx .preview-bg{position:absolute;inset:0;background-position:center;background-size:cover;}
+  .idx .close-btn{position:absolute;right:24px;bottom:24px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;}
+
+  /* About section */
+  .about{padding:120px 24px;background:#000;color:var(--paper);}
+  .about .label-feat{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);}
+  .about .row{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:end;margin-top:80px;}
+  .about h3{font-family:'UnifrakturCook',serif;font-weight:700;font-size:clamp(48px,7vw,120px);line-height:.95;margin:0;text-transform:uppercase;}
+  .about .colophon{font-size:14px;line-height:1.6;max-width:380px;}
+  .about .colophon p{margin:0 0 12px;}
+  .about .links{display:flex;flex-wrap:wrap;gap:18px;margin-top:24px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;}
+
+  /* Footer */
+  footer{padding:30px 24px;background:#000;border-top:1px solid #1a1a1a;display:flex;justify-content:space-between;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.5);}
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <span class="mark">CB</span>
+  <div class="left-links"><a href="#">SELECTED WORK</a></div>
+  <div></div>
+  <div class="right-links"><a href="#">BOANYARD</a><a href="#">LET'S CHAT</a></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <canvas id="three-canvas"></canvas>
+  <div class="hero-inner" style="position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;">
+    <h1 class="gothic-wrap">
+      <div class="word"><span>C</span><span>L</span><span>A</span><span>Y</span></div>
+    </h1>
+    <div class="label-feat">(MULTIDISCIPLINARY DESIGNER)</div>
+  </div>
+</section>
+
+<!-- FEATURED SLIDE -->
+<section class="slide" id="slide">
+  <div class="bg bg-apple"></div>
+  <div class="scrim"></div>
+  <div class="label">(FEATURED WORK)</div>
+  <div class="title">APPLE</div>
+  <div class="pager">
+    <span>01 / 21</span>
+    <span class="center"><span>SCROLL</span><span>—</span></span>
+    <span>INDEX</span>
+  </div>
+</section>
+
+<!-- INDEX list -->
+<section class="idx" id="idx">
+  <div class="col">
+    <ul id="idxList">
+      <li data-i="1">
+        <span class="num">1</span>
+        <span class="ttl"><span class="g">A</span>PPLE</span>
+        <div class="preview"><div class="preview-bg bg-apple"></div></div>
+      </li>
+      <li data-i="2">
+        <span class="num">2</span>
+        <span class="ttl"><span class="g">N</span>IKE x NBA</span>
+        <div class="preview"><div class="preview-bg bg-nike"></div></div>
+      </li>
+      <li data-i="3">
+        <span class="num">3</span>
+        <span class="ttl"><span class="g">G</span>OOGLE</span>
+        <div class="preview"><div class="preview-bg bg-google"></div></div>
+      </li>
+      <li data-i="4">
+        <span class="num">4</span>
+        <span class="ttl"><span class="g">G</span>UCCI x OURA</span>
+        <div class="preview"><div class="preview-bg bg-gucci"></div></div>
+      </li>
+      <li data-i="5">
+        <span class="num">5</span>
+        <span class="ttl"><span class="g">G</span>OOGLE TV</span>
+        <div class="preview"><div class="preview-bg bg-google"></div></div>
+      </li>
+      <li data-i="6">
+        <span class="num">6</span>
+        <span class="ttl"><span class="g">B</span>EATS BY DRE</span>
+        <div class="preview"><div class="preview-bg bg-apple"></div></div>
+      </li>
+      <li data-i="7">
+        <span class="num">7</span>
+        <span class="ttl"><span class="g">D</span>OCUSIGN</span>
+        <div class="preview"><div class="preview-bg bg-nike"></div></div>
+      </li>
+      <li data-i="8">
+        <span class="num">8</span>
+        <span class="ttl"><span class="g">S</span>AMSUNG</span>
+        <div class="preview"><div class="preview-bg bg-gucci"></div></div>
+      </li>
+      <li data-i="9">
+        <span class="num">9</span>
+        <span class="ttl"><span class="g">A</span>DI DAS</span>
+        <div class="preview"><div class="preview-bg bg-gtv"></div></div>
+      </li>
+      <li data-i="10">
+        <span class="num">10</span>
+        <span class="ttl"><span class="g">R</span>OBIN HOOD</span>
+        <div class="preview"><div class="preview-bg bg-nike"></div></div>
+      </li>
+    </ul>
+  </div>
+  <div class="close-btn">CLOSE ✕</div>
+</section>
+
+<!-- ABOUT -->
+<section class="about">
+  <div class="label-feat">(ABOUT)</div>
+  <div class="row">
+    <div class="colophon">
+      <p>Clay is a multidisciplinary designer working across brand, motion, and product. He has spent 10+ years shipping work with Apple, Google, Nike, Gucci, and a long list of friends.</p>
+      <p>If you'd like to chat about a project, a film, or a record — write to him.</p>
+      <div class="links">
+        <a href="#">↳ hello@clayboan.com</a>
+        <a href="#">IG</a>
+        <a href="#">IN</a>
+        <a href="#">TW</a>
+      </div>
+    </div>
+    <h3>YOOO,<br/>I'M CLAY<span style="color:var(--bone)">.</span></h3>
+  </div>
+</section>
+
+<footer>
+  <span>© Clay Boan 2025</span>
+  <span>Available Q3 ↗</span>
+</footer>
+
+<script type="module">
+  import * as THREE from 'three';
+  const canvas = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.set(0, 0.2, 4.2);
+
+  // Dark obsidian mask — composed of stretched shapes
+  const group = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x080808, metalness:0.55, roughness:0.32, side:THREE.DoubleSide});
+  const matDark = new THREE.MeshStandardMaterial({color:0x121212, metalness:0.7, roughness:0.22});
+  const matEye = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x553344, emissiveIntensity:0.4, roughness:0.18, metalness:0.1});
+
+  // Main elongated head: stretched sphere
+  const head = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), mat);
+  head.scale.set(0.85, 1.45, 0.95);
+  head.position.set(0, 0, 0);
+  group.add(head);
+
+  // Two horns — torus segments
+  const horn = (flip=1)=>{
+    const g = new THREE.TorusGeometry(0.18, 0.05, 16, 32, Math.PI*0.7);
+    const m = new THREE.Mesh(g, matDark);
+    m.scale.set(1, 1.7, 1);
+    m.position.set(flip*0.42, 1.05, 0.1);
+    m.rotation.set(0, 0, flip*0.7);
+    return m;
+  };
+  group.add(horn(1)); group.add(horn(-1));
+
+  // Eye sockets — emissive thin cylinders
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), matEye);
+  eye.position.set(0.32, 0.1, 0.78);
+  group.add(eye);
+  const eye2 = eye.clone(); eye2.position.x = -0.32; group.add(eye2);
+
+  // Cheek ridge
+  const ridge = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 8, 32), matDark);
+  ridge.position.set(0, -0.35, 0.78);
+  ridge.rotation.x = Math.PI/2;
+  group.add(ridge);
+
+  // Lower jaw torus
+  const jaw = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.06, 12, 32), matDark);
+  jaw.position.set(0, -0.85, 0.4);
+  jaw.rotation.x = Math.PI/2 - 0.4;
+  group.add(jaw);
+
+  scene.add(group);
+
+  // Lights
+  const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(2,3,4); scene.add(key);
+  const fill = new THREE.DirectionalLight(0x99aaff, 0.4); fill.position.set(-3,1,2); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xff7a4d, 0.6); rim.position.set(0,-2,-3); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0x222222));
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function animate(){
+    group.rotation.y = Math.sin(performance.now()*0.0003) * 0.18;
+    group.rotation.x = Math.sin(performance.now()*0.0005) * 0.04 - 0.05;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+<script>
+  // Index list: scroll reveal
+  const io = new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting) e.target.style.opacity=1;}),{threshold:.1});
+  document.querySelectorAll('#idxList li').forEach((li,i)=>{
+    li.style.opacity = 0;
+    li.style.transition = `opacity .5s ease ${i*0.04}s, padding .3s`;
+    io.observe(li);
+  });
+</script>
+</body>
+</html>

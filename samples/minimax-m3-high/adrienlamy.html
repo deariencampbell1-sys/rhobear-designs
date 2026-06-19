@@ -1,0 +1,320 @@
+<!--
+  Recreation of https://adrienlamy.fr/ — Adrien Lamy :D
+  ─────────────────────────────────────────────────────────────────────
+  Key design observations
+  · Single full-viewport experience: red (#ff0b36) background, hand-drawn
+    comic aesthetic, custom cartoon mascot floating in the middle.
+  · Type uses a comic-book hand-drawn font (Comic CAT in original). The site
+    is a portfolio for a "Creative Developer Mercenary" based in Paris.
+  · Pages are pinned full-viewport; the mascot is positioned in the centre
+    with surrounding "WHO AM I?" speech bubble and side illustrations.
+  · Tiny "ME →", "DRAG", "GRAB", "PULL?" labels hint at playful interactions.
+  · Side panel slides in from the right for projects with their own
+    card stack. Drag the hand illustration to pull the panel in.
+  · The whole site uses a fixed WebGL noise gradient backdrop + draggable
+    illustrations; we recreate the *feel* with CSS layers + draggable SVG.
+
+  Challenges solved
+  · Hand-drawn illustrations built inline as sketchy SVGs (single-stroke
+    paths with wobble) instead of bitmap assets.
+  · Draggable mini-illustrations with pointer events (the cartoon hand,
+    the "PULL?" stick figure) that snap back when released past threshold.
+  · Side panel slides in on drag-release to the right; GSAP-free, all CSS
+    + vanilla JS for transitions.
+  · Comic-style wobble text-shadow used everywhere instead of the real
+    Comic CAT font (which is paid).
+
+  Intentional trade-offs
+  · Comic CAT font replaced with "Comic Neue" (open source) + custom
+    letter-spacing/wobble shadows for a hand-drawn feel.
+  · WebGL particle backdrop simplified to layered CSS radial gradients
+    (no per-pixel animation). Preserves the "noise + warmth" look.
+  · Project panels reduced to tasteful dark cards rather than the real
+    full video case studies, but the side-panel reveal mechanism is preserved.
+
+  Preserved especially well
+  · The red & black comic-strip colour palette.
+  · The "WHO AM I? ADRIEN LAMY" hand-lettered header treatment.
+  · Draggable "PULL?" hand and "ME →" arrow with the mascot.
+  · The dark side panel that slides in to reveal projects.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Adrien Lamy :D</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#ff0b36;
+    --red-deep:#d80028;
+    --ink:#0a0a0a;
+    --paper:#fff5e8;
+    --grey:#343434;
+    --grey-light:#c9c9c9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--red);color:var(--ink);font-family:'Comic Neue','Kalam',sans-serif;overflow:hidden;height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,255,255,.04) 0%, transparent 70%),
+      repeating-linear-gradient(45deg, rgba(0,0,0,.025) 0 1px, transparent 1px 6px),
+      var(--red);
+  }
+
+  .stage{position:fixed;inset:0;overflow:hidden;}
+
+  /* Floating side panel — slides in when hand is dragged to right */
+  .side{
+    position:fixed;top:0;right:0;height:100%;width:min(560px,90vw);
+    background:var(--ink);color:var(--paper);
+    transform:translateX(105%);transition:transform .55s cubic-bezier(.6,.05,.3,1);
+    padding:50px 36px 36px;z-index:30;
+    box-shadow:-30px 0 60px rgba(0,0,0,.4);
+    font-family:'Kalam',cursive;
+  }
+  .side.open{transform:translateX(0);}
+  .side .close{position:absolute;top:18px;right:22px;background:var(--red);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-family:'Comic Neue';font-size:18px;cursor:pointer;}
+  .side h2{font-family:'Caveat',cursive;font-size:38px;margin:0 0 16px;}
+  .side .cards{display:grid;gap:18px;}
+  .side .card{background:#1a1a1a;border:2px solid var(--paper);border-radius:8px;padding:14px;display:flex;gap:14px;align-items:center;}
+  .side .card .thumb{flex:0 0 80px;height:80px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;}
+  .side .card h3{margin:0;font-size:20px;color:var(--paper);}
+  .side .card p{margin:4px 0 0;color:var(--grey-light);font-size:14px;}
+
+  /* Title */
+  .who{position:absolute;top:11vh;left:50%;transform:translateX(-50%);text-align:center;line-height:.95;color:var(--ink);}
+  .who .a{font-family:'Caveat',cursive;font-size:clamp(36px,5vw,72px);font-weight:700;transform:rotate(-3deg);display:inline-block;}
+  .who .b{font-family:'Caveat',cursive;font-size:clamp(64px,10vw,148px);font-weight:700;letter-spacing:.02em;display:inline-block;text-shadow:4px 4px 0 #00000022;transform:rotate(-2deg);}
+  .who .c{font-family:'Caveat',cursive;font-size:clamp(36px,5vw,72px);font-weight:700;transform:rotate(2deg);display:inline-block;}
+
+  /* Mascot face */
+  .mascot{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:260px;height:240px;z-index:2;}
+  .mascot svg{width:100%;height:100%;}
+
+  /* Tiny labels */
+  .label-me{position:absolute;left:30vw;top:54%;transform:rotate(-5deg);font-family:'Caveat',cursive;font-size:30px;color:var(--ink);}
+  .label-drag{position:absolute;left:46vw;bottom:22vh;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Caveat',cursive;color:var(--ink);}
+  .label-grab{position:absolute;left:54vw;bottom:22vh;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Caveat',cursive;color:var(--ink);}
+  .label-grab .stick{font-size:26px;}
+
+  /* Draggable hand on right side */
+  .hand-zone{position:absolute;right:6vw;top:46%;width:200px;height:220px;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;z-index:20;}
+  .hand-zone.grabbing{cursor:grabbing;}
+  .pull-hint{position:absolute;left:-78px;top:40px;font-family:'Caveat',cursive;font-size:22px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink);}
+  .pull-hint .stick{font-size:36px;}
+
+  /* Top bar */
+  .topbar{position:absolute;top:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 22px;align-items:center;z-index:25;}
+  .topbar a{color:var(--ink);text-decoration:none;font-family:'Caveat',cursive;font-size:22px;font-weight:700;}
+  .topbar .right{display:flex;gap:24px;}
+
+  /* Bottom sheet — about + projects preview */
+  .bottom{position:fixed;left:0;right:0;bottom:0;height:24vh;min-height:140px;background:#000;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-family:'Kalam',cursive;}
+  .bottom .name{font-size:24px;}
+  .bottom .role{opacity:.6;font-size:18px;}
+  .bottom .contact{display:flex;gap:14px;}
+  .bottom .contact a{background:var(--red);color:#fff;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:14px;font-family:'Comic Neue';font-weight:700;}
+
+  /* Hand drawn arrow */
+  .arrow-svg{width:80px;height:60px;}
+
+  /* Dragged ghost */
+  .hand-ghost{position:fixed;pointer-events:none;width:200px;height:220px;z-index:99;display:none;}
+
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .mascot svg{animation:bounce 4s ease-in-out infinite;transform-origin:50% 90%;}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a href="#">Adrien Lamy :D</a>
+    <div class="right">
+      <a href="#">→ Portfolio</a>
+      <a href="#">→ Linkedin</a>
+      <a href="#">Let's chat ↗</a>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="who">
+    <div class="a">WHO AM I ?</div><br/>
+    <div class="b">ADRIEN</div><br/>
+    <div class="c">LAMY</div>
+  </div>
+
+  <!-- MASCOT -->
+  <div class="mascot">
+    <svg viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <filter id="rough">
+          <feTurbulence baseFrequency="0.05" numOctaves="2" seed="3"/>
+          <feDisplacementMap in="SourceGraphic" scale="2"/>
+        </filter>
+      </defs>
+      <!-- Hair (cloud-like) -->
+      <g filter="url(#rough)" fill="#0a0a0a">
+        <path d="M30,90 q-10,-30 10,-50 q15,-30 50,-25 q20,-25 60,-15 q35,-15 60,15 q35,5 30,40 q15,30 -10,50 q5,30 -25,40 q-20,20 -55,15 q-25,15 -55,0 q-30,-5 -45,-25 q-25,-15 -20,-45z"/>
+      </g>
+      <!-- Face white -->
+      <g filter="url(#rough)" fill="#fff">
+        <ellipse cx="135" cy="150" rx="80" ry="65"/>
+      </g>
+      <!-- Eyes -->
+      <g fill="#0a0a0a">
+        <ellipse cx="105" cy="140" rx="9" ry="11"/>
+        <ellipse cx="170" cy="140" rx="9" ry="11"/>
+        <circle cx="107" cy="135" r="2.5" fill="#fff"/>
+        <circle cx="172" cy="135" r="2.5" fill="#fff"/>
+      </g>
+      <!-- Eyebrows (angry) -->
+      <g stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" fill="none">
+        <path d="M90,118 q15,-6 30,-2"/>
+        <path d="M155,116 q15,-4 30,2"/>
+      </g>
+      <!-- Grin (big toothy smile) -->
+      <g stroke="#0a0a0a" stroke-width="4" stroke-linecap="round" fill="#fff">
+        <path d="M88,170 q50,55 100,0" fill="#fff"/>
+      </g>
+      <g stroke="#0a0a0a" stroke-width="2.5">
+        <line x1="108" y1="170" x2="108" y2="206"/>
+        <line x1="128" y1="178" x2="128" y2="218"/>
+        <line x1="148" y1="178" x2="148" y2="218"/>
+        <line x1="168" y1="170" x2="168" y2="206"/>
+      </g>
+      <!-- Nose -->
+      <g stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <path d="M134,150 q-4,15 6,18"/>
+      </g>
+      <!-- Outline face (sketchy) -->
+      <g stroke="#0a0a0a" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M55,150 q0,-80 80,-80 q80,0 80,80 q0,80 -80,80 q-80,0 -80,-80z"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ME → label -->
+  <div class="label-me">
+    ME
+    <svg class="arrow-svg" viewBox="0 0 80 60"><path d="M5,40 q15,-15 30,-15 M5,40 q15,15 30,15" stroke="#0a0a0a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30,30 l25,-5 l-5,15" stroke="#0a0a0a" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+  </div>
+
+  <!-- DRAG -->
+  <div class="label-drag">
+    <svg width="46" height="56" viewBox="0 0 46 56" fill="none"><circle cx="23" cy="14" r="9" stroke="#0a0a0a" stroke-width="2.5"/><path d="M23,23 q-4,15 -10,18 q5,2 10,2 q5,0 10,-2 q-6,-3 -10,-18z" stroke="#0a0a0a" stroke-width="2.5" fill="#fff"/><path d="M14,38 q-3,8 -8,12" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M32,38 q3,8 8,12" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    <span>DRAG</span>
+  </div>
+
+  <!-- GRAB -->
+  <div class="label-grab">
+    <svg width="60" height="56" viewBox="0 0 60 56" fill="none">
+      <circle cx="30" cy="20" r="11" stroke="#0a0a0a" stroke-width="2.5"/>
+      <path d="M22,32 q-2,8 -8,12" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M38,32 q2,8 8,12" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M28,30 q-4,2 -8,4 q-2,2 0,4 q3,2 8,2" stroke="#0a0a0a" stroke-width="2" fill="#fff"/>
+    </svg>
+    <span class="stick">GRAB</span>
+  </div>
+
+  <!-- Draggable hand + PULL? -->
+  <div class="hand-zone" id="hand">
+    <div class="pull-hint">
+      <svg width="60" height="50" viewBox="0 0 60 50" fill="none">
+        <circle cx="30" cy="14" r="9" stroke="#0a0a0a" stroke-width="2.5"/>
+        <path d="M30,23 q-2,12 -10,16" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M30,23 q2,12 10,16" stroke="#0a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <text x="30" y="11" text-anchor="middle" font-family="Caveat" font-size="14" fill="#0a0a0a">?</text>
+      </svg>
+      <span>PULL?</span>
+    </div>
+    <svg viewBox="0 0 200 220" width="200" height="220" aria-hidden="true">
+      <g stroke="#0a0a0a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="#fff">
+        <!-- wrist -->
+        <path d="M30,220 q-2,-30 5,-50 l30,-30 q15,-15 30,-5 q15,-15 30,-5 q15,-15 30,-5 q15,-15 30,5 q15,30 10,60 z" />
+        <!-- finger lines -->
+        <path d="M48,140 l-2,-40" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+        <path d="M76,128 l-3,-50" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+        <path d="M104,128 l-2,-55" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+        <path d="M132,128 l-1,-50" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+        <path d="M160,135 l3,-40" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Side panel -->
+  <aside class="side" id="side">
+    <button class="close" id="closeSide">×</button>
+    <h2>Sup, I'm Adrien,<br/>Creative Dev ✦ Paris</h2>
+    <p style="opacity:.7;font-size:16px;">Freelance Creative Developer with a love for animation, storytelling, and coffee. Some recent things ↓</p>
+    <div class="cards" style="margin-top:24px;">
+      <div class="card"><div class="thumb">✦</div><div><h3>TENNIS DE TABLE</h3><p>Interactive scoreboard for live matches → Visit</p></div></div>
+      <div class="card"><div class="thumb">♪</div><div><h3>HOT WHEELS</h3><p>Product microsite for the new loop set → Case</p></div></div>
+      <div class="card"><div class="thumb">◇</div><div><h3>SKETCHBOOK</h3><p>Generative drawing tool, p5.js → Case</p></div></div>
+      <div class="card"><div class="thumb">☼</div><div><h3>SUMMER VIBES</h3><p>Music-reactive landing page → Visit</p></div></div>
+      <div class="card"><div class="thumb">✿</div><div><h3>BLOOM</h3><p>Procedural flower field in WebGL → Case</p></div></div>
+      <div class="card"><div class="thumb">⌬</div><div><h3>GRIDS</h3><p>A research playground for typographic grids → Case</p></div></div>
+    </div>
+  </aside>
+
+  <!-- Bottom info -->
+  <div class="bottom">
+    <div>
+      <div class="name">Adrien Lamy :D</div>
+      <div class="role">Creative Dev Mercenary · Paris</div>
+    </div>
+    <div class="contact">
+      <a href="#">hey@adrienlamy.fr</a>
+      <a href="#">+33 6 12 34 56 78</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const hand = document.getElementById('hand');
+  const side = document.getElementById('side');
+  const closeBtn = document.getElementById('closeSide');
+  let startX=0, startY=0, dx=0, dy=0, dragging=false, dragDist=0;
+
+  function startDrag(e){
+    dragging=true;
+    hand.classList.add('grabbing');
+    const t = e.touches?e.touches[0]:e;
+    startX=t.clientX; startY=t.clientY; dx=0; dy=0; dragDist=0;
+    e.preventDefault();
+  }
+  function moveDrag(e){
+    if(!dragging) return;
+    const t = e.touches?e.touches[0]:e;
+    dx = t.clientX - startX;
+    dy = t.clientY - startY;
+    dragDist = Math.hypot(dx,dy);
+    hand.style.transform = `translate(${dx}px,${dy}px) rotate(${dx/40}deg)`;
+    if(dragDist > 110) hand.style.opacity = '0';
+    e.preventDefault();
+  }
+  function endDrag(){
+    if(!dragging) return;
+    dragging=false;
+    hand.classList.remove('grabbing');
+    if(dragDist > 130){
+      side.classList.add('open');
+      hand.style.opacity='0';
+    } else {
+      hand.style.transform = 'translate(0,0) rotate(0)';
+      hand.style.opacity = '1';
+    }
+  }
+  hand.addEventListener('pointerdown', startDrag);
+  window.addEventListener('pointermove', moveDrag);
+  window.addEventListener('pointerup', endDrag);
+  closeBtn.addEventListener('click', ()=>{ side.classList.remove('open'); hand.style.opacity='1'; hand.style.transform='translate(0,0)'; });
+</script>
+</body>
+</html>

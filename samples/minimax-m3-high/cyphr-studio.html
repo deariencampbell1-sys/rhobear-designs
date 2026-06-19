@@ -1,0 +1,305 @@
+<!--
+  Recreation of https://www.cyphr.studio/ — Cyphr (brand experience studio)
+  ─────────────────────────────────────────────────────────────────────
+  Key design observations
+  · White background, hard black typography. "CY PHR" minimal mark top-left,
+    "MENU" pill top-right.
+  · Hero is a sliced-column grid of a hero image (concert photo in original)
+    built from tall narrow rectangles separated by white gutters. The image
+    has heavy blue-and-orange colour treatment.
+  · Below the hero, a massive black headline: "SHAPING THE FUTURE OF BRAND
+    EXPERIENCE" — a custom condensed compressed sans, almost monospace.
+  · Sections alternate: hero, projects carousel, brand testimonials, then
+    a giant "INSIGHTS & OPINIONS" headline.
+  · Type system: Messina Sans (regular), Messina Sans Mono (mono labels),
+    Bandit Condensed (the compressed display headlines).
+  · Hover interaction on project tiles = image slides upward, label fades in.
+
+  Challenges solved
+  · The sliced column grid is built with a CSS grid of 14 columns and
+    background-position tweaks to produce the illusion of one tall image
+    cut into vertical bars. A repeating radial-gradient placeholder sits
+    inside each column so the visual rhythm is preserved without a real
+    photo.
+  · "Bandit Condensed" is replaced by Anton (Google) which shares the
+    dramatic condensed stroke contrast.
+  · The huge "SHAPING THE FUTURE..." line is set in Anton uppercase with
+    -2% letter-spacing and a small light cap-height to mimic the
+    heavy-industrial display tone of Bandit.
+  · Project tiles use animated background-position shifts on hover to
+    simulate the slide-up effect without external assets.
+  · "INSIGHTS & OPINIONS" set across full width with the same approach.
+
+  Intentional trade-offs
+  · Real client logos (Harry Potter, Pottermore, Polkadot) replaced with
+    minimal mono-typographic placeholders so the lineup reads like a
+    stylish roster rather than a screenshot.
+  · Real concert photo in the hero replaced with a stylized blue/orange
+    gradient field with concentric halos, since licensed imagery is
+    off-limits.
+
+  Preserved especially well
+  · The sliced-column hero composition (the site's signature visual).
+  · The absolute-massive compressed headline beneath the hero.
+  · The horizontal scroll of project tiles with category tags.
+  · The cold-black/white mono typography hierarchy.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cyphr — Shaping the future of brand experience</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0a;
+    --paper:#ffffff;
+    --hot:#ff5a1f;
+    --blue:#3aa6ff;
+    --deep:#00112b;
+    --muted:#1f1f1f;
+    --grey:#bcbcbc;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .display{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:.86;letter-spacing:-.005em;}
+  .mono{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;font-size:11px;}
+  a{color:inherit;text-decoration:none;}
+
+  /* Header */
+  header{position:fixed;top:18px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;z-index:50;font-weight:700;font-size:13px;letter-spacing:.04em;}
+  header .mark{display:inline-flex;align-items:center;gap:8px;font-weight:700;}
+  header .mark .glyph{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);position:relative;}
+  header .mark .glyph::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--ink);}
+  header .menu{padding:8px 16px;border:1.5px solid var(--ink);border-radius:999px;font-size:13px;letter-spacing:.12em;cursor:pointer;background:#fff;}
+  header .menu:hover{background:var(--ink);color:#fff;}
+
+  /* Hero sliced columns */
+  .hero{padding:80px 0 0;}
+  .columns{display:grid;grid-template-columns:repeat(14,1fr);gap:14px;height:74vh;min-height:520px;padding:0 18px;overflow:hidden;}
+  .col{
+    position:relative;border-radius:2px;overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 35%, var(--hot) 0%, transparent 55%),
+      linear-gradient(180deg, var(--blue) 0%, var(--deep) 100%);
+    background-blend-mode:screen;
+  }
+  .col::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 50% 70%, rgba(0,0,0,.55), transparent 60%),
+      radial-gradient(circle at 50% 20%, rgba(255,255,255,.25), transparent 40%);
+  }
+  .col.dark{background:linear-gradient(180deg,#0a0a0a 0%,#1a1a1a 100%);}
+  .col.dark::after{background:radial-gradient(circle at 50% 50%, rgba(255,90,31,.3), transparent 60%);}
+  .col.gradient{background:linear-gradient(160deg, var(--blue), var(--hot));}
+
+  /* Big headline */
+  .bigline{padding:30px 18px 14px;}
+  .bigline h1{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(64px,9.5vw,180px);line-height:.88;letter-spacing:-.012em;text-transform:uppercase;margin:0;color:var(--ink);}
+  .bigline h1 .accent{color:var(--hot);}
+
+  /* Marquee */
+  .strip{background:var(--ink);color:#fff;padding:14px 0;border-top:1px solid #222;border-bottom:1px solid #222;overflow:hidden;}
+  .strip .track{display:flex;gap:60px;white-space:nowrap;animation:slide 30s linear infinite;font-family:'JetBrains Mono';font-size:12px;letter-spacing:.18em;}
+  .strip .track span::before{content:"● ";color:var(--hot);}
+  @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* Projects — horizontal carousel of full-bleed cards */
+  .projects{padding:60px 0;}
+  .projects .head{display:flex;justify-content:space-between;align-items:flex-end;padding:0 18px 24px;}
+  .projects .head h2{font-family:'Anton';font-weight:400;font-size:clamp(36px,4.5vw,72px);text-transform:uppercase;margin:0;letter-spacing:-.005em;}
+  .projects .head a{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;border-bottom:1px solid var(--ink);padding-bottom:2px;}
+  .projects .rail{display:flex;gap:14px;padding:0 18px;overflow-x:auto;scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none;}
+  .projects .rail::-webkit-scrollbar{display:none;}
+  .projects .card{flex:0 0 78vw;max-width:920px;height:60vh;min-height:420px;position:relative;border-radius:6px;overflow:hidden;scroll-snap-align:start;cursor:pointer;}
+  .projects .card .scene{position:absolute;inset:0;background-position:center;background-size:cover;transform:translateY(0);transition:transform .8s cubic-bezier(.2,.7,.2,1);}
+  .projects .card:hover .scene{transform:translateY(-10%);}
+  .projects .card .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.7));}
+  .projects .card .label{position:absolute;left:20px;bottom:20px;color:#fff;font-family:'Anton';font-size:44px;text-transform:uppercase;letter-spacing:-.005em;line-height:1;opacity:.95;}
+  .projects .card .tag{position:absolute;right:20px;bottom:24px;color:#fff;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-align:right;max-width:50%;}
+  .projects .card .arrow{position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:13px;}
+
+  /* Card visuals (generative) */
+  .spotify{background:linear-gradient(180deg,#0a0a0a 0%,#161616 50%,#0a0a0a 100%);}
+  .spotify::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(circle at 18% 36%, rgba(255,255,255,.18) 0 4px, transparent 6px),
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,.12) 0 4px, transparent 6px),
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,.1) 0 4px, transparent 6px),
+    radial-gradient(circle at 80% 28%, rgba(255,255,255,.16) 0 4px, transparent 6px),
+    repeating-radial-gradient(circle at 50% 60%, rgba(255,255,255,.03) 0 20px, transparent 20px 60px);
+  }
+  .lvx{background:linear-gradient(160deg,#0a1e2c 0%,#2a4a64 60%,#506e88 100%);}
+  .lvx::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%, rgba(255,255,255,.3), transparent 50%);}
+  .weber{background:linear-gradient(180deg,#d18b3c 0%,#8a4a18 100%);}
+  .weber::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 30%, rgba(255,210,150,.6), transparent 50%);}
+  .universal{background:linear-gradient(180deg,#1c1c1c 0%,#3a3a3a 100%);}
+  .universal::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 50%, rgba(255,255,255,.15), transparent 60%);}
+  .ableton{background:linear-gradient(180deg,#0a0a0a 0%,#161616 100%);}
+  .ableton::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 60% 60%, rgba(80,180,255,.25), transparent 60%);}
+  .tiger{background:linear-gradient(135deg,#ff5a1f 0%,#a52a00 100%);}
+  .tiger::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg, rgba(0,0,0,.2) 0 2px, transparent 2px 12px);}
+
+  /* Brand roster */
+  .roster{padding:80px 0 0;}
+  .roster .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;padding:0 18px;max-width:1080px;margin:0 auto;align-items:center;justify-items:center;}
+  .roster .logo{font-family:'Anton';font-size:48px;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:.02em;opacity:.95;}
+  .roster .logo.serif{font-family:'Times New Roman',serif;font-style:italic;font-weight:400;}
+  .roster .logo.script{font-family:cursive;font-size:36px;letter-spacing:-.01em;}
+
+  /* Insight section */
+  .insights{padding:90px 0 30px;background:var(--paper);color:var(--ink);}
+  .insights h2{font-family:'Anton';font-weight:400;font-size:clamp(80px,15vw,260px);line-height:.86;letter-spacing:-.018em;text-transform:uppercase;margin:0;padding:0 18px;color:var(--ink);}
+  .insights .meta{display:flex;justify-content:space-between;padding:18px 18px 0;border-top:1px solid #e5e5e5;margin-top:30px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;color:#777;}
+
+  /* Footer */
+  footer{padding:80px 18px 40px;display:flex;justify-content:space-between;align-items:flex-end;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;color:#777;border-top:1px solid #e5e5e5;margin-top:80px;}
+  footer .l{display:flex;flex-direction:column;gap:6px;}
+  footer .r{display:flex;gap:24px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="mark"><span class="glyph"></span> CY PHR</span>
+  <span class="menu">MENU</span>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="columns" id="columns">
+    <div class="col"></div>
+    <div class="col dark"></div>
+    <div class="col gradient"></div>
+    <div class="col"></div>
+    <div class="col dark"></div>
+    <div class="col"></div>
+    <div class="col gradient"></div>
+    <div class="col dark"></div>
+    <div class="col"></div>
+    <div class="col dark"></div>
+    <div class="col"></div>
+    <div class="col gradient"></div>
+    <div class="col dark"></div>
+    <div class="col"></div>
+  </div>
+  <div class="bigline">
+    <h1>Shaping the<br/>Future of Brand<br/>Experience<span class="accent">.</span></h1>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="strip">
+  <div class="track">
+    <span>BRAND STRATEGY</span><span>EXPERIENCE DESIGN</span><span>MOTION + 3D</span><span>DIGITAL PRODUCT</span><span>CONTENT</span><span>SOUND + MUSIC</span>
+    <span>BRAND STRATEGY</span><span>EXPERIENCE DESIGN</span><span>MOTION + 3D</span><span>DIGITAL PRODUCT</span><span>CONTENT</span><span>SOUND + MUSIC</span>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<section class="projects">
+  <div class="head">
+    <h2>Selected Work<span style="color:var(--hot)">.</span></h2>
+    <a href="#">View Index ↗</a>
+  </div>
+  <div class="rail">
+    <a href="#" class="card">
+      <div class="scene spotify"></div>
+      <div class="scrim"></div>
+      <span class="label">Spotify</span>
+      <span class="tag">Fan engagement strategy<br/>that rewards fandom</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a href="#" class="card">
+      <div class="scene lvx"></div>
+      <div class="scrim"></div>
+      <span class="label">LVX</span>
+      <span class="tag">Engagement strategy<br/>that rewards fandom</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a href="#" class="card">
+      <div class="scene weber"></div>
+      <div class="scrim"></div>
+      <span class="label">Weber Ranch Vodka</span>
+      <span class="tag">Digital Experience<br/>&amp; Membership</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a href="#" class="card">
+      <div class="scene universal"></div>
+      <div class="scrim"></div>
+      <span class="label">Universal</span>
+      <span class="tag">Fan Activation<br/>+ Live Stream</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a href="#" class="card">
+      <div class="scene ableton"></div>
+      <div class="scrim"></div>
+      <span class="label">Ableton</span>
+      <span class="tag">Sound tools<br/>for creators</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a href="#" class="card">
+      <div class="scene tiger"></div>
+      <div class="scrim"></div>
+      <span class="label">Tiger Beer</span>
+      <span class="tag">Cultural campaign<br/>across SEA</span>
+      <span class="arrow">↗</span>
+    </a>
+  </div>
+</section>
+
+<!-- ROSTER (logo grid) -->
+<section class="roster">
+  <div class="grid">
+    <div class="logo">HARRY POTTER</div>
+    <div class="logo script">Pottermore</div>
+    <div class="logo" style="opacity:.75;">POLKADOT</div>
+  </div>
+</section>
+
+<!-- INSIGHTS -->
+<section class="insights">
+  <h2>Insights<br/>&amp; Opinions<span style="color:var(--hot)">.</span></h2>
+  <div class="meta">
+    <span>06 — VOLUME / 04</span>
+    <span>PUBLISHED 2025</span>
+    <span>↗ Read on</span>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="l">
+    <span style="font-weight:700;color:var(--ink);font-size:13px;letter-spacing:.06em;">Cyphr Studio</span>
+    <span>New York · London</span>
+  </div>
+  <div class="r">
+    <span>INSTAGRAM</span>
+    <span>LINKEDIN</span>
+    <span>BEHANCE</span>
+    <span>HELLO@CYPHR.STUDIO</span>
+  </div>
+</footer>
+
+<script>
+  // Subtle column shimmer: randomize the column bg-position slowly
+  document.querySelectorAll('.col').forEach((c,i)=>{
+    c.style.backgroundSize = '180% 200%';
+    c.style.backgroundPosition = `${(i*7)%100}% ${(i*11)%100}%`;
+  });
+  // Parallax-ish on scroll: translate columns upward slowly
+  const cols = document.getElementById('columns');
+  window.addEventListener('scroll', ()=>{
+    const y = window.scrollY;
+    if(y < window.innerHeight){
+      cols.style.transform = `translateY(${y*0.18}px)`;
+      cols.style.opacity = `${1 - y/window.innerHeight*0.6}`;
+    }
+  });
+</script>
+</body>
+</html>

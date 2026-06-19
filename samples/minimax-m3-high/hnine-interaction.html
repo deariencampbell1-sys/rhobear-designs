@@ -1,0 +1,459 @@
+<!--
+  Recreation of https://interaction.hnine.com/ — Hnine Interaction
+  ─────────────────────────────────────────────────────────────────────
+  Key design observations
+  · Light, airy palette: paper-blue background (#fdfeff, #e1e9f6) with
+    accent blues (#3d6be3) and a soft green (#6ac899).
+  · Pretendard (Korean / Latin variable sans) is the workhorse type.
+  · Hero is a wide viewport of "100" counter (top-left) + a colourful
+    geometric grid on the right (arches, half-circles, pie-charts,
+    stripes in blue + orange gradients).
+  · Below the hero, a "h, Interaction" serif title (Playfair-style)
+    with a slightly italicised comma. A 3D island / toy factory scene
+    sits underneath as the visual showcase.
+  · Navigation is a pill on the left ("ABOUT / WORK / CONTACT") and
+    minimal links on the right ("BGM / ENG / PROFILE ↓").
+  · FWA "Site of the Day" yellow ribbon pinned to the bottom-right
+    corner of the viewport at all times.
+
+  Challenges solved
+  · 3D island / factory scene reproduced with Three.js — a stylised
+    toy-factory world with low-poly buildings, a central track, a
+    hot-air balloon, and scattered crystals. Lighting is soft and
+    diffuse to keep the playful mood.
+  · The geometric grid on the right is composed of CSS gradients on
+    tiles — each tile has a distinct motif (pie, arch, stripes, half
+    disc, square, gradient ball, etc.) — laid out as a hex-like
+    composition.
+  · Animated ribbon badge counter ticks from 0 → 100 with a requestAnimationFrame
+    ease-out for the site-of-the-day number.
+
+  Intentional trade-offs
+  · Real island model replaced with a procedural composition built
+    from low-poly geometries; the cute toy-factory vibe is preserved.
+  · "100" badge uses the exact same Pretendard variable font via the
+    official CDN; numerals are sized at the same proportion as original.
+
+  Preserved especially well
+  · The paper-blue palette and the light airy mood.
+  · The right-side colorful geometric grid (signature compositional
+    move of the site).
+  · The big serif "h, Interaction" hero title with italicised comma.
+  · The fixed yellow FWA ribbon pinned to the corner.
+  · The pretzel-navigation pill on the left (ABOUT / WORK / CONTACT).
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hnine Interaction</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#fdfeff;
+    --bg-2:#e1e9f6;
+    --blue:#3d6be3;
+    --blue-soft:#a6bff5;
+    --orange:#ff9a3c;
+    --orange-soft:#ffd6a8;
+    --green:#6ac899;
+    --yellow:#ffd400;
+    --ink:#0a0a0a;
+    --ink-soft:#343434;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard Variable','Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  body{overflow-x:hidden;}
+
+  /* Top nav */
+  .nav{display:flex;justify-content:space-between;align-items:center;padding:20px 28px;}
+  .nav .pill-left{display:flex;align-items:center;background:#fff;border-radius:999px;padding:6px 8px;gap:0;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 28px rgba(50,80,160,.06);}
+  .nav .pill-left a{padding:8px 18px;border-radius:999px;font-size:13px;letter-spacing:.04em;color:var(--ink-soft);text-decoration:none;font-weight:500;transition:background .2s, color .2s;}
+  .nav .pill-left a.on{background:var(--ink);color:#fff;}
+  .nav .pill-left a:hover{color:var(--ink);}
+  .nav .right{display:flex;gap:24px;align-items:center;font-size:13px;font-weight:500;}
+  .nav .right a{color:var(--ink-soft);text-decoration:none;}
+  .nav .right .profile{background:#fff;border-radius:999px;padding:8px 16px;border:1px solid #e0e0e0;display:inline-flex;align-items:center;gap:6px;}
+  .nav .right .profile::after{content:"↓";}
+
+  /* Hero */
+  .hero{position:relative;display:grid;grid-template-columns:0.9fr 1.2fr;gap:24px;align-items:start;min-height:auto;padding:30px 28px 50px;}
+  .hero .left{position:relative;}
+  .hero .num{font-size:clamp(80px,12vw,160px);font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--ink);font-family:'Pretendard Variable',sans-serif;margin-bottom:10px;}
+  .hero .right{position:relative;}
+  @media (max-width:880px){.hero{grid-template-columns:1fr;}}
+
+  /* Geometric grid — array of gradient tiles arranged in a hex-like layout */
+  .grid-tiles{display:grid;grid-template-columns:repeat(11,1fr);gap:10px;}
+  .tile{aspect-ratio:1/1.6;border-radius:6px;overflow:hidden;position:relative;}
+  .tile::before{content:"";position:absolute;inset:0;background:var(--c1);}
+  .tile::after{content:"";position:absolute;inset:0;background:var(--c2);mix-blend-mode:multiply;}
+  .t-1{--c1:linear-gradient(180deg,#cfe0ff 0%,#5a8aef 100%);--c2:radial-gradient(circle at 30% 40%,#fff8 0%,transparent 50%);}
+  .t-2{--c1:linear-gradient(180deg,#ffd6a8 0%,#ff7a3c 100%);--c2:linear-gradient(90deg,transparent 50%,#fff 50%);mix-blend-mode:overlay;}
+  .t-3{--c1:radial-gradient(circle at 50% 50%,#fff 0%,#a6bff5 60%,#3d6be3 100%);--c2:none;}
+  .t-4{--c1:linear-gradient(180deg,#3d6be3 0%,#1a3a8a 100%);--c2:radial-gradient(ellipse at 50% 30%,#ffffff66,transparent 60%);}
+  .t-5{--c1:linear-gradient(180deg,#ffe0c0 0%,#ff7a3c 100%);--c2:radial-gradient(circle at 30% 80%,#ffffff88,transparent 50%);}
+  .t-6{--c1:linear-gradient(180deg,#9bb8f5 0%,#3d6be3 100%);--c2:radial-gradient(circle at 70% 60%,#ffffff66,transparent 50%);}
+  .t-7{--c1:linear-gradient(180deg,#ffd6a8 0%,#ff9a3c 100%);--c2:conic-gradient(from 180deg at 50% 50%,#fff,transparent 30%,#fff,transparent 70%);}
+  .t-8{--c1:linear-gradient(180deg,#3d6be3 0%,#1a3a8a 100%);--c2:radial-gradient(circle at 50% 100%,#fff3,transparent 60%);}
+  .t-9{--c1:linear-gradient(180deg,#c8d8f5 0%,#7896d4 100%);--c2:radial-gradient(circle at 30% 40%,#ffffff99,transparent 50%);}
+  .t-10{--c1:linear-gradient(180deg,#ffe0c0 0%,#ff7a3c 100%);--c2:radial-gradient(circle at 50% 30%,#fffc,transparent 50%);}
+  .t-11{--c1:linear-gradient(180deg,#9bb8f5 0%,#3d6be3 100%);--c2:radial-gradient(circle at 50% 100%,#ffffff66,transparent 60%);}
+  .t-12{--c1:linear-gradient(180deg,#ffd6a8 0%,#ff7a3c 100%);--c2:radial-gradient(circle at 70% 40%,#fff9,transparent 50%);}
+
+  /* Sub-motifs inside tiles (svg overlays) */
+  .tile svg{position:absolute;inset:0;width:100%;height:100%;}
+
+  /* Hero copy */
+  .hero .h-title{font-family:'Playfair Display',serif;font-weight:500;font-size:clamp(64px,9vw,140px);line-height:.95;color:var(--ink);margin:0;letter-spacing:-.02em;}
+  .hero .h-title .comma{font-style:italic;color:var(--ink-soft);}
+  .hero .sub{max-width:520px;color:var(--ink-soft);font-size:13px;line-height:1.55;margin-top:20px;}
+  .hero .copy-link{display:inline-block;margin-top:14px;background:var(--ink);color:#fff;padding:8px 16px;border-radius:999px;font-size:12px;letter-spacing:.04em;text-decoration:none;}
+
+  /* 3D island showcase */
+  .showcase{position:relative;padding:60px 28px 80px;background:linear-gradient(180deg,var(--bg) 0%,#e1e9f6 100%);}
+  .showcase canvas{width:100%;height:60vh;min-height:480px;display:block;border-radius:24px;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#fff 0%,#dde6f5 70%,#aebfd9 100%);box-shadow:0 20px 60px rgba(40,60,120,.12);}
+  .showcase .label{position:absolute;top:80px;right:48px;font-size:12px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;}
+  .showcase .meta-row{display:flex;justify-content:space-between;padding-top:20px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);}
+
+  /* FWA ribbon */
+  .fwa{position:fixed;bottom:0;right:0;width:160px;height:160px;pointer-events:none;z-index:50;}
+  .fwa .ribbon{position:absolute;bottom:30px;right:-40px;transform:rotate(-45deg);background:var(--yellow);color:var(--ink);padding:10px 60px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06);}
+  .fwa .day{display:block;font-size:9px;letter-spacing:.16em;font-weight:400;margin-top:2px;}
+
+  /* Section */
+  .info{padding:80px 28px;}
+  .info .row{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;align-items:start;}
+  .info .row h3{font-family:'Playfair Display',serif;font-weight:500;font-size:clamp(40px,5.5vw,84px);line-height:1;margin:0;color:var(--ink);}
+  .info .row p{font-size:14px;line-height:1.65;color:var(--ink-soft);margin:0 0 14px;}
+  .info .row .tag{display:inline-block;background:#fff;border:1px solid #d6dde9;border-radius:999px;padding:6px 14px;font-size:12px;margin:6px 6px 0 0;color:var(--ink-soft);}
+
+  /* Skills section */
+  .skills{padding:60px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:30px;}
+  .skills .skill{background:#fff;border-radius:18px;padding:24px;box-shadow:0 6px 18px rgba(40,60,120,.05);}
+  .skills .skill h4{margin:0 0 6px;font-size:14px;letter-spacing:.04em;color:var(--ink);}
+  .skills .skill p{margin:0;font-size:12px;color:var(--ink-soft);line-height:1.5;}
+
+  /* Footer */
+  footer{padding:30px 28px 50px;display:flex;justify-content:space-between;align-items:end;font-size:12px;letter-spacing:.04em;color:var(--ink-soft);}
+
+  /* Animations */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .fade-up{animation:fadeUp 1s ease forwards;opacity:0;}
+  .delay-1{animation-delay:.2s;}
+  .delay-2{animation-delay:.4s;}
+  .delay-3{animation-delay:.6s;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="pill-left">
+    <a href="#" class="on">ABOUT</a>
+    <a href="#">WORK</a>
+    <a href="#">CONTACT</a>
+  </div>
+  <div class="right">
+    <a href="#">BGM</a>
+    <a href="#">ENG</a>
+    <a href="#" class="profile">PROFILE</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="left fade-up">
+    <div class="num" id="counter">0</div>
+    <h1 class="h-title fade-up delay-1">h<span class="comma">,</span>Interaction</h1>
+    <p class="sub fade-up delay-2">We design and build interactive experiences, brand systems, and the websites that hold them together. Below is a quick look at our favourite projects.</p>
+    <a href="#" class="copy-link fade-up delay-3">Copy Link</a>
+  </div>
+  <div class="right fade-up delay-2">
+    <div class="grid-tiles">
+      <!-- 11-column hex-ish composition. Tiles use CSS gradients + svg overlays -->
+      <!-- Row 1 -->
+      <div class="tile t-1"><svg viewBox="0 0 50 80"><rect x="6" y="6" width="38" height="68" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/></svg></div>
+      <div class="tile t-2"><svg viewBox="0 0 50 80"><path d="M0,40 a40,40 0 0 1 80,0 z" fill="#fff" opacity=".7"/></svg></div>
+      <div class="tile t-3"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="#fff" opacity=".5"/><path d="M25,26 a14,14 0 0 1 0,28 z" fill="#1a3a8a" opacity=".7"/></svg></div>
+      <div class="tile t-4"><svg viewBox="0 0 50 80"><rect x="0" y="20" width="50" height="40" fill="#fff" opacity=".18"/><rect x="0" y="40" width="50" height="20" fill="#fff" opacity=".3"/></svg></div>
+      <div class="tile t-5"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="#fff" opacity=".55"/><path d="M25,26 a14,14 0 0 0 0,28" stroke="#ff5a1f" stroke-width="2" fill="none"/></svg></div>
+      <div class="tile t-6"><svg viewBox="0 0 50 80"><rect x="10" y="10" width="30" height="30" fill="#fff" opacity=".55" rx="2"/></svg></div>
+      <div class="tile t-7"><svg viewBox="0 0 50 80"><path d="M25,8 a32,32 0 0 1 0,64 z" fill="#fff" opacity=".55"/><path d="M25,8 a32,32 0 0 0 0,64" fill="#ff5a1f" opacity=".7"/></svg></div>
+      <div class="tile t-8"><svg viewBox="0 0 50 80"><path d="M0,40 a40,40 0 0 0 80,0 z" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-9"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="12" fill="#fff" opacity=".55"/><circle cx="25" cy="40" r="12" fill="none" stroke="#3d6be3" stroke-width="2"/></svg></div>
+      <div class="tile t-10"><svg viewBox="0 0 50 80"><rect x="14" y="14" width="22" height="22" fill="#fff" opacity=".6" rx="1"/><line x1="25" y1="14" x2="25" y2="80" stroke="#fff" stroke-width="1" opacity=".4"/></svg></div>
+      <div class="tile t-11"><svg viewBox="0 0 50 80"><path d="M0,40 a25,25 0 0 0 50,0 z" fill="#fff" opacity=".55"/></svg></div>
+
+      <!-- Row 2 -->
+      <div class="tile t-12"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="#fff" opacity=".45"/></svg></div>
+      <div class="tile t-1"><svg viewBox="0 0 50 80"><path d="M0,0 h50 v40 a40,40 0 0 1 -40,40 h-10z" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-2"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="10" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-3"><svg viewBox="0 0 50 80"><path d="M10,10 h30 v30 h-30z" fill="#fff" opacity=".45"/></svg></div>
+      <div class="tile t-4"><svg viewBox="0 0 50 80"><path d="M0,40 a25,25 0 0 1 50,0 v40 h-50z" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-5"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="12" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/></svg></div>
+      <div class="tile t-6"><svg viewBox="0 0 50 80"><path d="M10,40 l15,-20 l15,20 z" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-7"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-8"><svg viewBox="0 0 50 80"><path d="M10,70 l15,-50 l15,50z" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-9"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="10" fill="#fff" opacity=".4"/></svg></div>
+      <div class="tile t-10"><svg viewBox="0 0 50 80"><rect x="14" y="14" width="22" height="52" fill="none" stroke="#fff" stroke-width="1" opacity=".5"/></svg></div>
+
+      <!-- Row 3 -->
+      <div class="tile t-11"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="12" fill="#fff" opacity=".55"/><path d="M25,28 v24" stroke="#1a3a8a" stroke-width="1.5"/></svg></div>
+      <div class="tile t-12"><svg viewBox="0 0 50 80"><path d="M10,10 h30 v50 h-30z" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-1"><svg viewBox="0 0 50 80"><path d="M0,40 a25,25 0 0 1 50,0z" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-2"><svg viewBox="0 0 50 80"><rect x="6" y="6" width="38" height="68" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/></svg></div>
+      <div class="tile t-3"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="none" stroke="#fff" stroke-width="1.5" opacity=".5"/><path d="M25,26 v28" stroke="#fff" stroke-width="1.5" opacity=".5"/></svg></div>
+      <div class="tile t-4"><svg viewBox="0 0 50 80"><path d="M10,10 l30,30 l-30,30 z" fill="#fff" opacity=".5"/></svg></div>
+      <div class="tile t-5"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="#fff" opacity=".6"/></svg></div>
+      <div class="tile t-6"><svg viewBox="0 0 50 80"><path d="M0,40 a40,40 0 0 1 40,40 h-40z" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-7"><svg viewBox="0 0 50 80"><path d="M10,40 a15,15 0 0 1 30,0 v20 h-30z" fill="#fff" opacity=".55"/></svg></div>
+      <div class="tile t-8"><svg viewBox="0 0 50 80"><circle cx="25" cy="40" r="14" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/></svg></div>
+      <div class="tile t-9"><svg viewBox="0 0 50 80"><rect x="10" y="10" width="30" height="30" fill="#fff" opacity=".5"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D island showcase -->
+<section class="showcase">
+  <div class="label">CASE 04 · TOY FACTORY</div>
+  <canvas id="scene"></canvas>
+  <div class="meta-row">
+    <span>PROJECTS · 100</span>
+    <span>PLAY ↻</span>
+  </div>
+</section>
+
+<!-- Info section -->
+<section class="info">
+  <div class="row">
+    <h3>Reasoning.<br/>We approach problems<br/>with logic,<br/>empathy &amp; curiosity.</h3>
+    <div>
+      <p>Onboarding, kick-off, ideation, research and craft — every engagement starts with listening. We map the question, propose directions, and ship small and often until the system feels inevitable.</p>
+      <p>Our team has worked with studios and brands across Korea, Japan, and the US, building interactive websites, brand systems, and the tiny tools that make them feel alive.</p>
+      <div>
+        <span class="tag">RESEARCH</span>
+        <span class="tag">SYSTEMS</span>
+        <span class="tag">MOTION</span>
+        <span class="tag">SOUND</span>
+        <span class="tag">WEBGL</span>
+        <span class="tag">BRAND</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="skills">
+  <div class="skill"><h4>WEB DESIGN</h4><p>Layouts, type, motion, and the small craft decisions that make a page feel inevitable.</p></div>
+  <div class="skill"><h4>WEBGL + 3D</h4><p>Three.js, shaders, particle systems, generative systems for interactive scenes.</p></div>
+  <div class="skill"><h4>BRAND SYSTEMS</h4><p>Type, palette, motion language, and the rules that keep it all coherent.</p></div>
+  <div class="skill"><h4>SOUND + MUSIC</h4><p>Composed beds, generative ambient, foley, and small interactive audio toys.</p></div>
+</section>
+
+<footer>
+  <span>© hnine interaction · Seoul, KR</span>
+  <span>hello@hnine.com</span>
+</footer>
+
+<!-- FWA ribbon -->
+<div class="fwa"><div class="ribbon">FWA<span class="day">SITE OF THE DAY</span></div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+  import * as THREE from 'three';
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(6, 5.5, 7.5);
+  camera.lookAt(0, 0, 0);
+
+  // Big soft floor disc
+  const floor = new THREE.Mesh(
+    new THREE.CylinderGeometry(5.2, 5.2, 0.5, 64),
+    new THREE.MeshStandardMaterial({color:0xe1e9f6, roughness:.85, metalness:0})
+  );
+  floor.position.y = -0.25;
+  scene.add(floor);
+
+  // Inner ring platform
+  const ring2 = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.6, 3.6, 0.2, 64),
+    new THREE.MeshStandardMaterial({color:0xc8d8f5, roughness:.7})
+  );
+  ring2.position.y = -0.1;
+  scene.add(ring2);
+
+  // Helpers
+  const box = (x,z,w,h,d,color)=>{
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color, roughness:.55, metalness:.15}));
+    m.position.set(x, h/2, z);
+    return m;
+  };
+  const cyl = (x,z,r,h,color)=>{
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24), new THREE.MeshStandardMaterial({color, roughness:.5, metalness:.2}));
+    m.position.set(x, h/2, z);
+    return m;
+  };
+  const cone = (x,y,z,h,r,color)=>{
+    const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,24), new THREE.MeshStandardMaterial({color, roughness:.5}));
+    m.position.set(x,y,z);
+    return m;
+  };
+  const torus = (x,y,z,r,tub,color)=>{
+    const m = new THREE.Mesh(new THREE.TorusGeometry(r,tub,12,48), new THREE.MeshStandardMaterial({color, metalness:.5, roughness:.25}));
+    m.position.set(x,y,z);
+    return m;
+  };
+
+  // CENTRAL PLATFORM with circular track
+  scene.add(box(0,0,1.4,1.0,1.4, 0xffe0c0));
+  scene.add(cone(0,1.0,0,0.5,0.9, 0xff9a3c));
+  scene.add(torus(0, 1.55, 0, 0.55, 0.06, 0xffffff));
+
+  // Orbit track on lower ring
+  scene.add(torus(0, 0.05, 0, 2.8, 0.04, 0xffffff));
+  // Small train cars on track
+  const car = (a, color)=>{
+    const c = box(Math.cos(a)*2.8, Math.sin(a)*2.8, 0.3, 0.2, 0.2, color);
+    return c;
+  };
+  const cars = [];
+  cars.push(car(0, 0xff5a1f));
+  cars.push(car(1.0, 0x3d6be3));
+  cars.push(car(2.0, 0xffd400));
+  cars.push(car(3.0, 0x6ac899));
+  cars.push(car(4.0, 0xff9a3c));
+  cars.push(car(5.0, 0x9bb8f5));
+  cars.forEach(c=>scene.add(c));
+
+  // TALL TOWER (right)
+  scene.add(box(1.7, -1.3, 0.6, 1.8, 0.6, 0xc8d8f5));
+  scene.add(cone(1.7, 1.8, -1.3, 0.5, 0.5, 0xff5a1f));
+  // bridge from tower
+  scene.add(box(1.7, -0.6, 0.3, 0.1, 0.7, 0xffffff));
+
+  // ORANGE building (left back)
+  scene.add(box(-1.6, 1.2, 0.9, 0.9, 0.9, 0xff9a3c));
+  scene.add(cone(-1.6, 0.9, 1.2, 0.4, 0.6, 0x3d6be3));
+
+  // BLUE building (left front)
+  scene.add(box(-2.0, -0.8, 1.1, 0.7, 1.1, 0x6a96f0));
+  scene.add(cyl(-2.0, -0.8, 0.25, 0.6, 0xffffff));
+
+  // Front yellow workshop
+  scene.add(box(0.0, 1.9, 1.4, 0.6, 0.7, 0xffd180));
+  scene.add(cone(0, 0.6, 1.9, 0.4, 0.9, 0x3d6be3));
+
+  // Smaller buildings around
+  scene.add(box(2.4, 0.6, 0.5, 0.4, 0.5, 0xffffff));
+  scene.add(box(2.0, 1.8, 0.4, 0.6, 0.4, 0xff9a3c));
+  scene.add(box(-2.6, 0.0, 0.4, 0.5, 0.4, 0x6ac899));
+
+  // Hot air balloon
+  const bal = new THREE.Group();
+  const balSph = new THREE.Mesh(
+    new THREE.SphereGeometry(0.32, 24, 16),
+    new THREE.MeshStandardMaterial({color:0xff7a3c, roughness:.5})
+  );
+  balSph.scale.set(1, 1.3, 1);
+  balSph.position.y = 0.5;
+  bal.add(balSph);
+  const balStripe = new THREE.Mesh(
+    new THREE.TorusGeometry(0.32, 0.05, 8, 24),
+    new THREE.MeshStandardMaterial({color:0xffd400})
+  );
+  balStripe.position.y = 0.5;
+  balStripe.scale.set(1, 1.3, 1);
+  balStripe.rotation.x = Math.PI/2;
+  bal.add(balStripe);
+  const balBasket = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18,0.12,0.18),
+    new THREE.MeshStandardMaterial({color:0x8a4a18, roughness:.9})
+  );
+  balBasket.position.y = -0.05;
+  bal.add(balBasket);
+  bal.position.set(3.5, 0.6, 2.0);
+  scene.add(bal);
+
+  // Crystals on the floor
+  const crystal = (x,z,color,scale=1)=>{
+    const g = new THREE.ConeGeometry(0.13*scale, 0.28*scale, 6);
+    const m = new THREE.MeshStandardMaterial({color, roughness:.2, metalness:.4, emissive:color, emissiveIntensity:.15});
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set(x, 0.14*scale, z);
+    return mesh;
+  };
+  scene.add(crystal(3.7, -2.4, 0x6ac899));
+  scene.add(crystal(4.0, -2.0, 0x3d6be3, 1.3));
+  scene.add(crystal(-3.4, 2.5, 0xff9a3c));
+  scene.add(crystal(-3.8, 2.1, 0x6ac899, .8));
+  scene.add(crystal(3.2, 2.8, 0xffd400, .7));
+
+  // Cone trees
+  const tree = (x,z,color)=>{
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.2,8), new THREE.MeshStandardMaterial({color:0x6a4a18, roughness:.9}));
+    trunk.position.set(x,0.1,z);
+    scene.add(trunk);
+    const top = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.5, 12), new THREE.MeshStandardMaterial({color, roughness:.7}));
+    top.position.set(x, 0.45, z);
+    scene.add(top);
+  };
+  tree(-3.4, -1.4, 0x4a8030);
+  tree(-3.0, -1.8, 0x4a8030);
+  tree(3.6, 1.4, 0x4a8030);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(5, 8, 6); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xa6bff5, 0.55); fill.position.set(-4, 4, -3); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xff9a3c, 0.4); rim.position.set(-2, 2, 4); scene.add(rim);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  function animate(){
+    const t = performance.now()*0.001;
+    scene.rotation.y = Math.sin(t*0.3) * 0.15;
+    bal.position.y = 0.6 + Math.sin(t*2)*0.08;
+    // Orbit cars
+    cars.forEach((c,i)=>{
+      const a = t*0.6 + i*1.05;
+      c.position.x = Math.cos(a)*2.8;
+      c.position.z = Math.sin(a)*2.8;
+    });
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+<script>
+  // Counter 0 → 100
+  const el = document.getElementById('counter');
+  let n=0;
+  const tick = ()=>{
+    n += 1;
+    el.textContent = n;
+    if(n < 100) setTimeout(tick, 16 + (n*1.2));
+  };
+  setTimeout(tick, 400);
+</script>
+</body>
+</html>
