@@ -1,0 +1,329 @@
+<!doctype html>
+<!--
+Original: https://www.supersolid.agency/
+Notes / challenges solved:
+  * Sydney creative agency. Body bg rgb(28,28,28) — near-black with subtle film-grain noise.
+    Accent text rgb(234,249,251) — slightly cyan-tinted off-white.  Font stack: Montserrat.
+  * The hero is essentially the wordmark "SUPERSOLID" filling the viewport horizontally —
+    negative letter-spacing, weight 700, white. We approximate this by rendering with the
+    closest free font (Archivo) and explicitly nuke spacing so letters touch.
+  * Sticky thin header with "SUPERSOLID" logotype + tagline + 3 nav + Contact link.
+  * Work section is a series of large case-study cards (full-bleed image + label).  We rebuild
+    with gradient placeholders sized to the same aspect, with name + sector overlay.
+  * "ROIdeas®" page is a light cream panel rgb(234,249,251) with massive black serif title and
+    body copy beside a black playback card — recreated.
+  * Footer uses a large blurred nav list with a "quantum state" tagline and address + social
+    links — preserved.
+  * Page has horizontal grain noise overlay (svg turbulence). Implemented.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Supersolid — Creative Agency (study)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#1c1c1c;
+    --ink:#eaf9fb;
+    --mute:rgba(234,249,251,.6);
+    --hair:rgba(234,249,251,.16);
+    --cream:#eaf9fb;
+    --dark:#1c1c1c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Montserrat",Arial,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--ink);color:var(--bg)}
+
+  /* film grain overlay */
+  .grain{position:relative}
+  .grain::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");mix-blend-mode:overlay;opacity:.7}
+
+  /* nav */
+  header{position:fixed;top:0;left:0;right:0;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:18px 36px;z-index:50;font-size:14px}
+  header .logo{font-family:"Archivo",sans-serif;font-weight:900;letter-spacing:-0.02em;font-size:18px;color:var(--ink)}
+  header .tagline{text-align:center;color:var(--mute);font-size:13px}
+  header .menu{display:flex;justify-content:flex-end;align-items:center;gap:24px;color:var(--ink);font-size:14px}
+  header .menu .pill{padding:6px 14px;border:1px solid var(--ink);border-radius:999px}
+
+  /* hero wordmark */
+  .hero{position:relative;min-height:100vh;padding-top:140px;padding-bottom:80px;display:flex;flex-direction:column;justify-content:space-between}
+  .hero .top-line{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;padding:0 36px;align-items:flex-end}
+  .hero .top-line h1{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(26px,2.2vw,32px);letter-spacing:-0.03em;line-height:1.05;margin:0;max-width:480px}
+  .hero .cta{display:inline-flex;align-items:center;gap:14px;background:rgba(234,249,251,.08);border:1px solid rgba(234,249,251,.18);padding:14px 20px;border-radius:10px;font-size:14px;width:fit-content}
+  .hero .cta .arrow{font-size:11px;opacity:.7}
+
+  .wordmark{font-family:"Archivo",sans-serif;font-weight:900;font-size:clamp(180px,23vw,360px);line-height:.85;letter-spacing:-0.055em;color:var(--ink);text-transform:uppercase;margin:0 0 -2vw 0;width:100%;text-align:center;display:block;white-space:nowrap;overflow:hidden}
+
+  .hero .bottom-line{display:flex;justify-content:space-between;align-items:center;padding:0 36px;color:var(--mute);font-size:13px}
+  .hero .bottom-line .dot{width:6px;height:6px;border-radius:50%;background:var(--ink)}
+
+  /* works */
+  .works{padding:120px 0 60px}
+  .works-head{display:flex;justify-content:space-between;align-items:flex-end;padding:0 36px;margin-bottom:36px}
+  .works-head h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(36px,3.6vw,52px);letter-spacing:-0.04em;line-height:.95;margin:0;max-width:640px}
+  .work-card{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 36px;margin-bottom:6px}
+  .work-card .meta{padding:16px 0;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+  .work-card .meta .name{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(28px,3.4vw,52px);letter-spacing:-0.03em}
+  .work-card .meta .sector{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:var(--mute)}
+  .work-card .cover{position:relative;aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:#0d0d0d;grid-column:1/-1;margin-bottom:14px}
+  .work-card .cover .ph{position:absolute;inset:0}
+  .ph-1{background:radial-gradient(60% 60% at 30% 30%,#3a4a5a,#0c1014 80%)}
+  .ph-2{background:radial-gradient(60% 60% at 70% 50%,#5a2a18,#1a0a06 80%)}
+  .ph-3{background:radial-gradient(60% 60% at 50% 50%,#1d2a3a,#080c10 80%)}
+  .ph-4{background:linear-gradient(135deg,#3a3a2a,#0c0c08)}
+  .ph-5{background:radial-gradient(60% 60% at 30% 60%,#2a3a3a,#080c0c 80%)}
+  .ph-6{background:radial-gradient(60% 60% at 50% 30%,#5a3a18,#1a0e06 80%)}
+  .ph-7{background:radial-gradient(60% 60% at 60% 60%,#1a2a3a,#06080c 80%)}
+
+  /* about cream panel */
+  .about-cream{background:var(--cream);color:var(--dark);padding:120px 0;position:relative;overflow:hidden}
+  .about-cream .roideas{font-family:"Archivo",sans-serif;font-weight:900;font-size:clamp(160px,21vw,320px);letter-spacing:-0.06em;line-height:.85;color:var(--dark);margin:0 0 60px 0;padding-left:36px}
+  .about-cream .roideas sup{font-size:.4em;vertical-align:super;font-weight:400;margin-left:-10px}
+  .about-cream .grid{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;padding:0 36px;align-items:start}
+  .about-cream .playcard{aspect-ratio:16/10;background:var(--dark);border-radius:14px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .about-cream .playcard .play{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+  .about-cream .playcard .play::before{content:"";width:0;height:0;border-left:18px solid #000;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
+  .about-cream h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(28px,3vw,46px);line-height:1.05;letter-spacing:-0.03em;margin:0 0 24px 0}
+  .about-cream p{font-size:16px;line-height:1.55;color:var(--dark);max-width:520px}
+
+  /* testimonials */
+  .testimonials{padding:120px 0;background:var(--bg)}
+  .testimonials h3{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);padding:0 36px;margin-bottom:36px;font-weight:500}
+  .testimonials .case{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;padding:0 36px;align-items:center}
+  .testimonials .quote{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(22px,2.6vw,38px);line-height:1.15;letter-spacing:-0.02em;margin:0 0 24px 0}
+  .testimonials .quote::before{content:"\201C";color:var(--mute);margin-right:6px}
+  .testimonials .author{font-size:14px;color:var(--mute)}
+  .testimonials .photo{aspect-ratio:16/10;border-radius:14px;overflow:hidden;position:relative}
+  .testimonials .photo .ph{position:absolute;inset:0}
+  .testimonials .nav{display:flex;justify-content:space-between;align-items:center;padding:36px 36px 0;margin-top:36px;border-top:1px solid var(--hair)}
+  .testimonials .nav .counter{font-family:"Archivo",sans-serif;font-weight:700;font-size:36px;letter-spacing:-0.02em}
+  .testimonials .nav .arrows{display:flex;gap:12px}
+  .testimonials .nav .arrows button{width:46px;height:46px;border:1px solid var(--hair);border-radius:50%;background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .25s}
+  .testimonials .nav .arrows button:hover{background:var(--ink);color:var(--bg)}
+
+  /* cta strip */
+  .cta-strip{padding:80px 36px;background:var(--bg)}
+  .cta-strip .pill{display:inline-flex;align-items:center;gap:14px;border:1px solid var(--ink);padding:18px 24px;border-radius:999px;font-size:14px;margin:0 auto}
+  .cta-strip{display:flex;justify-content:center}
+
+  /* footer */
+  footer{background:var(--bg);padding:120px 36px 60px;border-top:1px solid var(--hair)}
+  footer .grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:60px;align-items:start}
+  footer h4{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:0 0 18px;font-weight:500}
+  footer .tagline{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(20px,1.8vw,26px);letter-spacing:-0.02em;line-height:1.2;max-width:380px}
+  footer .nav-big a{display:block;font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(34px,4vw,56px);letter-spacing:-0.03em;line-height:1.15;position:relative}
+  footer .nav-big a.dim{opacity:.25;filter:blur(2px)}
+  footer .contact-row a{display:block;font-size:14px;color:var(--mute);margin-top:6px}
+  footer .contact-row .label{color:var(--ink);font-size:14px;font-weight:500}
+  footer .socials a{display:flex;align-items:center;gap:8px;padding:10px 0;font-size:16px}
+  footer .socials a::after{content:"↗";font-size:12px;color:var(--mute)}
+  footer .meta{margin-top:80px;padding-top:30px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+  /* reveals */
+  .fade{opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s cubic-bezier(.1,.48,0,.99)}
+  .fade.in{opacity:1;transform:none}
+
+  @media (max-width:820px){
+    .work-card{grid-template-columns:1fr}
+    .about-cream .grid{grid-template-columns:1fr}
+    .testimonials .case{grid-template-columns:1fr}
+    footer .grid{grid-template-columns:1fr}
+    header .tagline{display:none}
+  }
+</style>
+</head>
+<body class="grain">
+<header>
+  <a href="#" class="logo">SUPERSOLID</a>
+  <div class="tagline">We create Super × Solid outcomes for brands</div>
+  <nav class="menu">
+    <a href="#work">Work</a>
+    <a href="#about">About</a>
+    <a href="#">Careers</a>
+    <a href="#" class="pill">Contact <span style="font-size:11px">↗</span></a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div></div>
+  <div class="top-line">
+    <h1 class="fade">We're a creative-owned agency that specialises in Super × Solid outcomes.</h1>
+    <div></div>
+    <a href="#work" class="cta fade"><span>See how we create outcomes</span><span class="arrow">↗</span></a>
+  </div>
+  <div class="wordmark" id="wordmark">SUPERSOLID</div>
+  <div class="bottom-line">
+    <span class="dot"></span>
+    <span class="fade">Scroll to explore</span>
+    <span class="dot"></span>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work" class="works">
+  <div class="works-head">
+    <h2 class="fade">We work with some of the world's biggest brands and next big things.</h2>
+    <a href="#" class="cta fade"><span>View all work</span><span class="arrow">↗</span></a>
+  </div>
+
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-1"></div></div>
+    <div class="meta"><span class="name">Now You Know</span><span class="sector">TikTok · Storytelling</span></div>
+  </article>
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-2"></div></div>
+    <div class="meta"><span class="name">Meat Is What You Make It</span><span class="sector">Impossible · Brand campaign</span></div>
+  </article>
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-3"></div></div>
+    <div class="meta"><span class="name">Caption by Hyatt</span><span class="sector">Hospitality · UX/UI</span></div>
+  </article>
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-4"></div></div>
+    <div class="meta"><span class="name">Club Rugby League</span><span class="sector">Sport · Identity</span></div>
+  </article>
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-5"></div></div>
+    <div class="meta"><span class="name">myID</span><span class="sector">Gov-tech · Product</span></div>
+  </article>
+  <article class="work-card fade">
+    <div class="cover"><div class="ph ph-6"></div></div>
+    <div class="meta"><span class="name">Strength to Give</span><span class="sector">Not-for-profit · Storytelling</span></div>
+  </article>
+</section>
+
+<!-- ABOUT cream -->
+<section id="about" class="about-cream grain">
+  <h2 class="roideas">ROIdeas<sup>®</sup></h2>
+  <div class="grid">
+    <div class="playcard">
+      <div class="play"></div>
+    </div>
+    <div>
+      <h2>Supersolid's registered trademark is the unrivalled Return On Ideas we deliver for our clients.</h2>
+      <p>We believe creativity is the most powerful lever in business. Our seamless agency structure and a highly experienced senior team mean every brief lands with the people who'll actually do the work — no layers, no layers of account managers between the idea and the execution.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <h3>Testimonials</h3>
+  <div class="case">
+    <div>
+      <p class="quote fade">Working with Supersolid has been transformational. The team brings a level of craft and care that you simply don't find at this scale.</p>
+      <p class="author fade">— Head of Brand, Impossible Foods</p>
+    </div>
+    <div class="photo"><div class="ph ph-2"></div></div>
+  </div>
+  <div class="nav">
+    <div class="counter fade">01 — 02</div>
+    <div class="arrows">
+      <button aria-label="prev">←</button>
+      <button aria-label="next">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-strip">
+  <a href="#" class="pill fade"><span>Tell us about your challenge</span><span style="font-size:11px">↗</span></a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="grid">
+    <div>
+      <h4>Studio</h4>
+      <p class="tagline fade">A supersolid is a special quantum state of matter that's both solid and fluid at the same time.</p>
+      <div class="contact-row" style="margin-top:30px">
+        <a href="#" class="label">↘ Contact</a>
+        <a href="#">inbox@supersolid.example</a>
+        <a href="#">1 / 60 Albion Street</a>
+        <a href="#">Surry Hills NSW 2010</a>
+        <a href="#">Sydney, Australia</a>
+      </div>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="nav-big">
+        <a href="#" class="fade">Home</a>
+        <a href="#work" class="fade">Work</a>
+        <a href="#about" class="fade">About</a>
+        <a href="#" class="fade">Careers</a>
+        <a href="#" class="fade dim">Systems</a>
+        <a href="#" class="fade dim">Contact</a>
+      </div>
+    </div>
+    <div>
+      <h4>Connect</h4>
+      <div class="socials">
+        <a href="#" class="fade">Instagram</a>
+        <a href="#" class="fade">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+  <div class="meta">
+    <span>© 2026 — Supersolid Pty Ltd</span>
+    <span>Sydney · Australia</span>
+  </div>
+</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// reveals
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});
+document.querySelectorAll('.fade').forEach(el=>io.observe(el));
+
+// wordmark subtle drift on scroll
+gsap.to('#wordmark',{
+  yPercent:-8,
+  ease:'none',
+  scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}
+});
+
+// testimonials carousel
+const quotes=[
+  {q:"Working with Supersolid has been transformational. The team brings a level of craft and care that you simply don't find at this scale.",a:"— Head of Brand, Impossible Foods"},
+  {q:"They took a vague brief and turned it into a brand system our team uses every day. Genuinely best-in-class.",a:"— VP Marketing, Caption by Hyatt"},
+  {q:"Fast, opinionated, and refreshingly free of agency BS. The kind of partner you actually want to call.",a:"— Founder, myID"}
+];
+let qi=0;
+const qEl=document.querySelector('.testimonials .quote');
+const aEl=document.querySelector('.testimonials .author');
+const counter=document.querySelector('.testimonials .counter');
+const [prev,next]=document.querySelectorAll('.testimonials .nav .arrows button');
+function show(i){
+  qi=(i+quotes.length)%quotes.length;
+  qEl.style.opacity=0;aEl.style.opacity=0;
+  setTimeout(()=>{
+    qEl.textContent=quotes[qi].q;
+    aEl.textContent=quotes[qi].a;
+    qEl.style.opacity=1;aEl.style.opacity=1;
+    counter.textContent=`0${qi+1} — 0${quotes.length}`;
+  },250);
+}
+prev.onclick=()=>show(qi-1);
+next.onclick=()=>show(qi+1);
+</script>
+
+<!-- Preserved especially well: the full-bleed "SUPERSOLID" wordmark in the hero (Archivo 900 with
+     negative -0.055em letter-spacing so the letters touch), the cream-panel "ROIdeas®" section
+     with the giant 900-weight black headline and the dark playback card, the testimonial counter
+     "01 — 02" with circular arrow buttons, and the footer big-nav with the bottom rows dimmed +
+     blurred for the "infinite scroll" effect.  Trade-offs: Montserrat is preserved as the body
+     face; the film-grain noise is generated via inline SVG turbulence (one tile across the
+     viewport) instead of a raster overlay; original case-study photography replaced with
+     gradient placeholders sized to the same aspect. -->
+</body>
+</html>
