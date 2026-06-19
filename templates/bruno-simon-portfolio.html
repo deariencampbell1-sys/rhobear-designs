@@ -1,0 +1,878 @@
+<!--
+  Original URL: https://bruno-simon.com/
+  
+  Key observations about what makes the design strong:
+  - Legendary 3D interactive portfolio where you drive a car through his work
+  - Low-poly stylized aesthetic with warm, saturated colors
+  - Physics-based car movement (acceleration, deceleration, steering with momentum)
+  - The environment tells his story — buildings = projects you visit
+  - Minimalist HUD with control hints, doesn't distract from the experience
+  - Smooth camera follow with slight lag for cinematic feel
+  - Playful yet professional — shows technical mastery while being memorable
+  
+  Notable challenges solved:
+  - Created physics-based car controls with momentum, steering angle, and friction
+  - Implemented camera follow system with smooth interpolation
+  - Built a stylized low-poly world with project "buildings"
+  - Recreated the warm color palette and lighting mood
+  - Added ambient sound design feeling through visual polish
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bruno Simon — Creative Developer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+    
+    :root {
+      /* Bruno Simon Color Palette */
+      --bg-dark: #1a1a1a;
+      --ground: #2d2d2d;
+      --road: #404040;
+      --road-line: #f5f5f5;
+      --car-body: #e63946;
+      --car-dark: #9d0208;
+      --building-1: #f4a261;
+      --building-2: #2a9d8f;
+      --building-3: #264653;
+      --building-4: #e9c46a;
+      --building-5: #a8dadc;
+      --sky-top: #1d3557;
+      --sky-bottom: #457b9d;
+      --sun: #f1faee;
+      --text: #f1faee;
+      --text-dim: rgba(241, 250, 238, 0.6);
+      --hud-bg: rgba(0, 0, 0, 0.4);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      overflow: hidden;
+      background: var(--bg-dark);
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: crosshair;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    canvas {
+      display: block;
+    }
+    
+    /* Loading Screen */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease-out;
+    }
+    
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    #loading h1 {
+      color: var(--text);
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+    
+    #loading p {
+      color: var(--text-dim);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .loading-bar {
+      width: 200px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--car-body);
+      border-radius: 2px;
+      animation: loading 2s ease-out forwards;
+    }
+    
+    @keyframes loading {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+    
+    /* HUD */
+    #hud {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 40px;
+      padding: 16px 32px;
+      background: var(--hud-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.5s ease-out 2s;
+    }
+    
+    #hud.visible {
+      opacity: 1;
+    }
+    
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 0.7rem;
+    }
+    
+    .key.wide {
+      width: 60px;
+    }
+    
+    /* Speed Display */
+    #speed {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      color: var(--text);
+      font-size: 4rem;
+      font-weight: 700;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.5s ease-out 2s;
+      z-index: 100;
+    }
+    
+    #speed.visible {
+      opacity: 1;
+    }
+    
+    #speed span {
+      font-size: 1rem;
+      font-weight: 400;
+      opacity: 0.6;
+    }
+    
+    /* Title */
+    #title {
+      position: fixed;
+      top: 40px;
+      left: 40px;
+      color: var(--text);
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.8s ease-out 2.5s;
+    }
+    
+    #title.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    #title h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    
+    #title p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    
+    /* Instructions overlay */
+    #instructions {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: var(--text);
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+    
+    #instructions.visible {
+      opacity: 1;
+    }
+    
+    #instructions h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    
+    #instructions p {
+      color: var(--text-dim);
+      font-size: 1rem;
+    }
+    
+    /* Project labels in 3D space */
+    .project-label {
+      position: absolute;
+      padding: 8px 16px;
+      background: var(--hud-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      color: var(--text);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .project-label.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading">
+    <h1>BRUNO SIMON</h1>
+    <p>Creative Developer</p>
+    <div class="loading-bar">
+      <div class="loading-bar-fill"></div>
+    </div>
+  </div>
+  
+  <!-- Canvas -->
+  <div id="canvas-container"></div>
+  
+  <!-- HUD -->
+  <div id="title">
+    <h1>BRUNO SIMON</h1>
+    <p>Creative Developer</p>
+  </div>
+  
+  <div id="hud">
+    <div class="hud-item">
+      <span class="key">↑</span>
+      <span>Accelerate</span>
+    </div>
+    <div class="hud-item">
+      <span class="key">↓</span>
+      <span>Brake</span>
+    </div>
+    <div class="hud-item">
+      <span class="key">←</span>
+      <span class="key">→</span>
+      <span>Steer</span>
+    </div>
+    <div class="hud-item">
+      <span class="key wide">SPACE</span>
+      <span>Handbrake</span>
+    </div>
+  </div>
+  
+  <div id="speed">
+    0 <span>km/h</span>
+  </div>
+  
+  <div id="instructions">
+    <h2>Use arrow keys to drive</h2>
+    <p>Explore the portfolio</p>
+  </div>
+  
+  <!-- Project Labels -->
+  <div id="label-hello" class="project-label">Hello World</div>
+  <div id="label-portfolio" class="project-label">Portfolio 2019</div>
+  <div id="label-sonic" class="project-label">Sonic Robot</div>
+  <div id="label-los" class="project-label">Los Siete</div>
+  <div id="label-milan" class="project-label">Milan Guide</div>
+  <div id="label-bsx" class="project-label">BS×</div>
+  <div id="label-holu" class="project-label">Holu</div>
+  <div id="label-experiment" class="project-label">Experiment</div>
+
+  <script>
+    // ============================================
+    // BRUNO SIMON PORTFOLIO — 3D CAR EXPERIENCE
+    // ============================================
+    
+    // Scene Setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1d3557);
+    scene.fog = new THREE.Fog(0x1d3557, 50, 200);
+    
+    // Camera
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 8, 15);
+    
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    
+    // ============================================
+    // LIGHTING
+    // ============================================
+    
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+    
+    // Directional light (sun)
+    const sunLight = new THREE.DirectionalLight(0xfff4e6, 1.2);
+    sunLight.position.set(50, 100, 50);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 500;
+    sunLight.shadow.camera.left = -100;
+    sunLight.shadow.camera.right = 100;
+    sunLight.shadow.camera.top = 100;
+    sunLight.shadow.camera.bottom = -100;
+    scene.add(sunLight);
+    
+    // Hemisphere light for sky/ground color bleeding
+    const hemiLight = new THREE.HemisphereLight(0x457b9d, 0x2d2d2d, 0.6);
+    scene.add(hemiLight);
+    
+    // ============================================
+    // GROUND & ROADS
+    // ============================================
+    
+    // Main ground
+    const groundGeometry = new THREE.PlaneGeometry(500, 500);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x3d5a3d,
+      roughness: 0.9,
+      metalness: 0.1
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    
+    // Road material
+    const roadMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x404040,
+      roughness: 0.8
+    });
+    
+    // Create road segments
+    function createRoad(x, z, width, length, rotation = 0) {
+      const roadGeo = new THREE.PlaneGeometry(width, length);
+      const road = new THREE.Mesh(roadGeo, roadMaterial);
+      road.rotation.x = -Math.PI / 2;
+      road.rotation.z = rotation;
+      road.position.set(x, 0.01, z);
+      road.receiveShadow = true;
+      scene.add(road);
+      
+      // Road lines
+      const lineGeo = new THREE.PlaneGeometry(0.3, length * 0.9);
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0xf5f5f5 });
+      const line = new THREE.Mesh(lineGeo, lineMat);
+      line.rotation.x = -Math.PI / 2;
+      line.rotation.z = rotation;
+      line.position.set(x, 0.02, z);
+      scene.add(line);
+      
+      return road;
+    }
+    
+    // Main cross roads
+    createRoad(0, 0, 12, 300, 0);           // North-South
+    createRoad(0, 0, 12, 300, Math.PI / 2); // East-West
+    
+    // Additional roads
+    createRoad(30, 30, 10, 100);
+    createRoad(-30, -30, 10, 100);
+    createRoad(50, -20, 10, 80, Math.PI / 2);
+    createRoad(-50, 20, 10, 80, Math.PI / 2);
+    
+    // ============================================
+    // BUILDINGS / PROJECT BLOCKS
+    // ============================================
+    
+    const buildings = [];
+    
+    function createBuilding(x, z, width, height, depth, color, labelId) {
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const material = new THREE.MeshStandardMaterial({ 
+        color: color,
+        roughness: 0.7,
+        metalness: 0.2
+      });
+      const building = new THREE.Mesh(geometry, material);
+      building.position.set(x, height / 2, z);
+      building.castShadow = true;
+      building.receiveShadow = true;
+      scene.add(building);
+      
+      // Store position for label
+      buildings.push({
+        mesh: building,
+        labelId: labelId,
+        x: x,
+        z: z
+      });
+      
+      return building;
+    }
+    
+    // Project buildings (placed around the world like in original)
+    createBuilding(20, 20, 8, 15, 8, 0xf4a261, 'label-hello');      // Hello World
+    createBuilding(-20, 20, 10, 20, 10, 0x2a9d8f, 'label-portfolio'); // Portfolio 2019
+    createBuilding(20, -20, 7, 12, 7, 0x264653, 'label-sonic');      // Sonic Robot
+    createBuilding(-20, -20, 9, 18, 9, 0xe9c46a, 'label-los');       // Los Siete
+    createBuilding(40, 15, 6, 10, 6, 0xa8dadc, 'label-milan');      // Milan Guide
+    createBuilding(-40, -15, 8, 14, 8, 0xe63946, 'label-bsx');     // BS×
+    createBuilding(15, 40, 7, 11, 7, 0x2a9d8f, 'label-holu');       // Holu
+    createBuilding(-15, -40, 9, 16, 9, 0x264653, 'label-experiment'); // Experiment
+    
+    // Additional decorative buildings
+    createBuilding(60, 40, 5, 8, 5, 0x6d597a, null);
+    createBuilding(-60, 40, 6, 10, 6, 0x355070, null);
+    createBuilding(60, -40, 7, 12, 7, 0xb56576, null);
+    createBuilding(-60, -40, 5, 9, 5, 0x7d5a50, null);
+    createBuilding(35, -35, 6, 10, 6, 0x4a7c59, null);
+    createBuilding(-35, 35, 8, 15, 8, 0x5e548e, null);
+    
+    // ============================================
+    // CAR
+    // ============================================
+    
+    const car = new THREE.Group();
+    
+    // Car body (main)
+    const bodyGeometry = new THREE.BoxGeometry(2, 0.8, 4);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xe63946,
+      roughness: 0.3,
+      metalness: 0.6
+    });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = 0.6;
+    body.castShadow = true;
+    car.add(body);
+    
+    // Car cabin
+    const cabinGeometry = new THREE.BoxGeometry(1.8, 0.7, 2);
+    const cabinMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x9d0208,
+      roughness: 0.3,
+      metalness: 0.6
+    });
+    const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+    cabin.position.set(0, 1.15, -0.3);
+    cabin.castShadow = true;
+    car.add(cabin);
+    
+    // Windows
+    const windowMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x1d3557,
+      roughness: 0.1,
+      metalness: 0.9
+    });
+    
+    // Front window
+    const frontWindowGeo = new THREE.BoxGeometry(1.6, 0.5, 0.1);
+    const frontWindow = new THREE.Mesh(frontWindowGeo, windowMaterial);
+    frontWindow.position.set(0, 1.1, 0.65);
+    frontWindow.rotation.x = 0.3;
+    car.add(frontWindow);
+    
+    // Wheels
+    const wheelGeometry = new THREE.CylinderGeometry(0.35, 0.35, 0.3, 16);
+    const wheelMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x1a1a1a,
+      roughness: 0.8
+    });
+    
+    const wheelPositions = [
+      { x: -1, y: 0.35, z: 1.2 },
+      { x: 1, y: 0.35, z: 1.2 },
+      { x: -1, y: 0.35, z: -1.2 },
+      { x: 1, y: 0.35, z: -1.2 }
+    ];
+    
+    wheelPositions.forEach(pos => {
+      const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+      wheel.position.set(pos.x, pos.y, pos.z);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.castShadow = true;
+      car.add(wheel);
+    });
+    
+    // Headlights
+    const headlightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+    const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+    
+    const leftHeadlight = new THREE.Mesh(headlightGeo, headlightMat);
+    leftHeadlight.position.set(-0.6, 0.5, 2);
+    car.add(leftHeadlight);
+    
+    const rightHeadlight = new THREE.Mesh(headlightGeo, headlightMat);
+    rightHeadlight.position.set(0.6, 0.5, 2);
+    car.add(rightHeadlight);
+    
+    // Taillights
+    const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+    
+    const leftTaillight = new THREE.Mesh(headlightGeo, taillightMat);
+    leftTaillight.position.set(-0.6, 0.5, -2);
+    car.add(leftTaillight);
+    
+    const rightTaillight = new THREE.Mesh(headlightGeo, taillightMat);
+    rightTaillight.position.set(0.6, 0.5, -2);
+    car.add(rightTaillight);
+    
+    car.position.y = 0;
+    scene.add(car);
+    
+    // ============================================
+    // DECORATIVE ELEMENTS
+    // ============================================
+    
+    // Trees (simple low-poly style)
+    function createTree(x, z, scale = 1) {
+      const tree = new THREE.Group();
+      
+      // Trunk
+      const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2 * scale, 8);
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = scale;
+      trunk.castShadow = true;
+      tree.add(trunk);
+      
+      // Foliage
+      const foliageGeo = new THREE.ConeGeometry(1.5 * scale, 3 * scale, 8);
+      const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 0.8 });
+      const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+      foliage.position.y = 3 * scale;
+      foliage.castShadow = true;
+      tree.add(foliage);
+      
+      tree.position.set(x, 0, z);
+      scene.add(tree);
+      return tree;
+    }
+    
+    // Place trees around
+    for (let i = 0; i < 80; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 60;
+      const x = Math.cos(angle) * distance;
+      const z = Math.sin(angle) * distance;
+      createTree(x, z, 0.8 + Math.random() * 0.6);
+    }
+    
+    // ============================================
+    // CAR PHYSICS & CONTROLS
+    // ============================================
+    
+    const carState = {
+      position: new THREE.Vector3(0, 0, 5),
+      rotation: 0,
+      velocity: 0,
+      steeringAngle: 0,
+      maxSpeed: 80,
+      acceleration: 40,
+      braking: 60,
+      friction: 15,
+      steeringSpeed: 2.5,
+      maxSteering: 0.6
+    };
+    
+    const keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      brake: false
+    };
+    
+    document.addEventListener('keydown', (e) => {
+      switch(e.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+          keys.forward = true;
+          break;
+        case 'ArrowDown':
+        case 'KeyS':
+          keys.backward = true;
+          break;
+        case 'ArrowLeft':
+        case 'KeyA':
+          keys.left = true;
+          break;
+        case 'ArrowRight':
+        case 'KeyD':
+          keys.right = true;
+          break;
+        case 'Space':
+          keys.brake = true;
+          break;
+      }
+    });
+    
+    document.addEventListener('keyup', (e) => {
+      switch(e.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+          keys.forward = false;
+          break;
+        case 'ArrowDown':
+        case 'KeyS':
+          keys.backward = false;
+          break;
+        case 'ArrowLeft':
+        case 'KeyA':
+          keys.left = false;
+          break;
+        case 'ArrowRight':
+        case 'KeyD':
+          keys.right = false;
+          break;
+        case 'Space':
+          keys.brake = false;
+          break;
+      }
+    });
+    
+    // ============================================
+    // CAMERA
+    // ============================================
+    
+    const cameraState = {
+      offset: new THREE.Vector3(0, 6, -12),
+      lookOffset: new THREE.Vector3(0, 2, 5),
+      smoothness: 0.05
+    };
+    
+    // ============================================
+    // UI UPDATES
+    // ============================================
+    
+    const speedDisplay = document.getElementById('speed');
+    const instructions = document.getElementById('instructions');
+    const hud = document.getElementById('hud');
+    const titleEl = document.getElementById('title');
+    
+    function updateSpeedDisplay() {
+      const displaySpeed = Math.abs(Math.round(carState.velocity * 3.6)); // Convert to km/h
+      speedDisplay.innerHTML = `${displaySpeed} <span>km/h</span>`;
+    }
+    
+    function updateLabels() {
+      buildings.forEach(b => {
+        const label = document.getElementById(b.labelId);
+        if (label) {
+          const pos = b.mesh.position.clone();
+          pos.y += 12;
+          pos.project(camera);
+          
+          const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+          
+          // Check if in view
+          const inView = pos.z < 1 && Math.abs(pos.x) < 1.2 && Math.abs(pos.y) < 1.2;
+          
+          if (inView) {
+            label.style.left = x + 'px';
+            label.style.top = y + 'px';
+            label.classList.add('visible');
+          } else {
+            label.classList.remove('visible');
+          }
+        }
+      });
+    }
+    
+    // ============================================
+    // ANIMATION LOOP
+    // ============================================
+    
+    let hasInteracted = false;
+    let time = 0;
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+      
+      // Update car physics
+      if (keys.forward) {
+        carState.velocity += carState.acceleration * 0.016;
+      }
+      if (keys.backward) {
+        carState.velocity -= carState.acceleration * 0.016;
+      }
+      if (keys.brake) {
+        if (carState.velocity > 0) {
+          carState.velocity -= carState.braking * 0.016;
+        } else if (carState.velocity < 0) {
+          carState.velocity += carState.braking * 0.016;
+        }
+      }
+      
+      // Apply friction
+      if (!keys.forward && !keys.backward && !keys.brake) {
+        if (carState.velocity > 0) {
+          carState.velocity -= carState.friction * 0.016;
+          if (carState.velocity < 0) carState.velocity = 0;
+        } else if (carState.velocity < 0) {
+          carState.velocity += carState.friction * 0.016;
+          if (carState.velocity > 0) carState.velocity = 0;
+        }
+      }
+      
+      // Clamp velocity
+      carState.velocity = Math.max(-carState.maxSpeed * 0.5, Math.min(carState.maxSpeed, carState.velocity));
+      
+      // Steering
+      if (Math.abs(carState.velocity) > 0.5) {
+        const steerFactor = carState.velocity > 0 ? 1 : -1;
+        if (keys.left) {
+          carState.steeringAngle = Math.min(carState.steeringAngle + carState.steeringSpeed * 0.016, carState.maxSteering) * steerFactor;
+        } else if (keys.right) {
+          carState.steeringAngle = Math.max(carState.steeringAngle - carState.steeringSpeed * 0.016, -carState.maxSteering) * steerFactor;
+        } else {
+          carState.steeringAngle *= 0.9;
+        }
+      }
+      
+      // Update car rotation
+      carState.rotation += carState.steeringAngle * (carState.velocity / carState.maxSpeed) * 0.05;
+      
+      // Update car position
+      carState.position.x += Math.sin(carState.rotation) * carState.velocity * 0.016;
+      carState.position.z += Math.cos(carState.rotation) * carState.velocity * 0.016;
+      
+      // Keep car on ground (with slight tilt based on movement)
+      carState.position.y = 0;
+      
+      // Apply to car mesh
+      car.position.copy(carState.position);
+      car.rotation.y = carState.rotation;
+      
+      // Tilt car based on steering and velocity
+      car.rotation.z = -carState.steeringAngle * (carState.velocity / carState.maxSpeed) * 0.3;
+      car.rotation.x = (keys.forward ? -0.05 : keys.backward ? 0.05 : 0) * Math.abs(carState.velocity / carState.maxSpeed);
+      
+      // Camera follow
+      const targetCameraPos = new THREE.Vector3(
+        carState.position.x - Math.sin(carState.rotation) * 12,
+        carState.position.y + 6,
+        carState.position.z - Math.cos(carState.rotation) * 12
+      );
+      
+      camera.position.lerp(targetCameraPos, cameraState.smoothness);
+      
+      const lookTarget = new THREE.Vector3(
+        carState.position.x + Math.sin(carState.rotation) * 5,
+        carState.position.y + 2,
+        carState.position.z + Math.cos(carState.rotation) * 5
+      );
+      camera.lookAt(lookTarget);
+      
+      // Update UI
+      updateSpeedDisplay();
+      updateLabels();
+      
+      // Show instructions initially
+      if (!hasInteracted && Math.abs(carState.velocity) < 1) {
+        instructions.classList.add('visible');
+      } else {
+        instructions.classList.remove('visible');
+        hasInteracted = true;
+      }
+      
+      renderer.render(scene, camera);
+    }
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    function init() {
+      // Position camera initially
+      camera.position.set(0, 15, 25);
+      camera.lookAt(0, 0, 0);
+      
+      // Start animation loop
+      animate();
+      
+      // Hide loading screen after delay
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+        hud.classList.add('visible');
+        speedDisplay.classList.add('visible');
+        titleEl.classList.add('visible');
+      }, 2500);
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+    // Start
+    init();
+  </script>
+</body>
+</html>
