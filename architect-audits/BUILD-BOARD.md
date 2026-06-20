@@ -16,7 +16,7 @@ vendored GrapesJS. Shared owned headless core (doc model / command bus / seriali
   - [ ] iframe live-render (scripts/CSS/fonts intact)
   - [ ] overlay picker + postMessage bridge + inline-text
   - [ ] style-override injector + diff serializer
-- [~] **Wave 3 — functions round-out** (DISPATCHED 22:52Z; wave-watch armed; LAST swarm wave)
+- [x] **Wave 3 — functions round-out** ✅ merged (PRs #8/#9/#10); verify: ci=ok build=ok core=ok engine=ok fidelity=ok (HEAD 900d4e1)
   - [ ] GrapesJS-as-ModeB behind shell
   - [ ] import/folder/asset + embed hardening
   - [ ] export HTML/ZIP + round-trip fidelity tests (51 samples)
