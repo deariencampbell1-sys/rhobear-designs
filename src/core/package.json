@@ -1,0 +1,18 @@
+{
+  "name": "@rhobear/editor-core",
+  "version": "0.0.0",
+  "description": "Headless editor core — document model, undo/redo command bus, and HTML/CSS serializer shared by both editor modes and the future AI phase.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "document-model.js",
+    "command-bus.js",
+    "serializer.js"
+  ]
+}
