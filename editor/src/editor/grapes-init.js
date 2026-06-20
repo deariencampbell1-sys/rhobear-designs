@@ -2,12 +2,12 @@
  * GrapesJS initialization — MIT core (grapesjs) + preset plugins.
  */
 
-import grapesjs from 'grapesjs';
-import 'grapesjs/dist/css/grapes.min.css';
-import gjsPresetWebpage from 'grapesjs-preset-webpage';
-import gjsBlocksBasic from 'grapesjs-blocks-basic';
-import gjsPluginForms from 'grapesjs-plugin-forms';
-import gjsCustomCode from 'grapesjs-custom-code';
+import grapesjs from '../vendor/grapesjs/grapesjs/dist/grapes.mjs';
+import '../vendor/grapesjs/grapesjs/dist/css/grapes.min.css';
+import gjsPresetWebpage from '../vendor/grapesjs/grapesjs-preset-webpage/dist/index.js';
+import gjsBlocksBasic from '../vendor/grapesjs/grapesjs-blocks-basic/dist/index.js';
+import gjsPluginForms from '../vendor/grapesjs/grapesjs-plugin-forms/dist/index.js';
+import gjsCustomCode from '../vendor/grapesjs/grapesjs-custom-code/dist/index.js';
 
 const BLANK_PAGE = `
 <section style="padding: 60px 24px; text-align: center; font-family: system-ui, sans-serif;">
