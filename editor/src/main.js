@@ -1,13 +1,6 @@
-import { createEditor } from './editor/grapes-init.js';
-import { wireToolbar } from './editor/toolbar.js';
-import { FileIO } from './lib/file-io.js';
+import { bootShell } from './app/shell.js';
 
-const editor = createEditor();
-const fileIO = new FileIO(editor);
-wireToolbar(editor, fileIO);
+const shell = bootShell();
 
-window.__RB_EDITOR__ = { editor, fileIO };
-
-editor.on('load', () => {
-  fileIO.setStatus('Editor ready — open an HTML file or start editing');
-});
+// Test/automation handle.
+window.__RB_EDITOR__ = { shell, ready: true };

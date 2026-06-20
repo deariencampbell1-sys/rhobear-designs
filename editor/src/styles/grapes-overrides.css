@@ -1,123 +1,78 @@
-/* GrapesJS canvas + panels skinned to RHOBEAR */
+/* GrapesJS (Build mode) skinned to RHOBEAR Designs — Aurora Teal */
 
-.gjs-one-bg {
-  background-color: #161618 !important;
-}
+.gjs-one-bg { background-color: var(--rb-panel) !important; }
+.gjs-two-color { color: var(--rb-text) !important; }
+.gjs-three-bg { background-color: var(--rb-panel-2) !important; color: var(--rb-text-muted) !important; }
+.gjs-four-color, .gjs-four-color-h:hover { color: var(--rb-brand-soft) !important; }
 
-.gjs-two-color {
-  color: #e6e6e8 !important;
-}
+.gjs-editor { height: 100% !important; }
+.gjs-cv-canvas { background: var(--rb-canvas-bd) !important; width: 100% !important; height: 100% !important; top: 0 !important; }
+.gjs-pn-panel { display: none !important; }
 
-.gjs-three-bg {
-  background-color: #1a1a1f !important;
-  color: #9a9aa2 !important;
-}
-
-.gjs-four-color,
-.gjs-four-color-h:hover {
-  color: #9a82ff !important;
-}
-
-.gjs-editor {
-  height: 100% !important;
-}
-
-.gjs-cv-canvas {
-  background: #0f0f12 !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-}
-
-.gjs-pn-panel {
-  display: none !important;
-}
-
+/* Blocks (left rail) */
+.gjs-blocks-c { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .gjs-block {
-  border-radius: 8px !important;
-  border: 1px solid rgba(124, 92, 255, 0.18) !important;
-  background: #1a1a1f !important;
-  color: #e6e6e8 !important;
-  min-height: 48px !important;
-  transition: border-color 0.15s, background 0.15s !important;
-}
-
-.gjs-block:hover {
-  border-color: #7c5cff !important;
-  background: rgba(124, 92, 255, 0.12) !important;
-}
-
-.gjs-block__media {
-  color: #7c5cff !important;
-}
-
-.gjs-layer {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 0.75rem !important;
-}
-
-.gjs-layer.gjs-selected {
-  background: rgba(124, 92, 255, 0.15) !important;
-}
-
-.gjs-sm-sector .gjs-sm-title {
-  background: #1a1a1f !important;
-  border-color: rgba(124, 92, 255, 0.18) !important;
-  font-family: 'JetBrains Mono', monospace !important;
+  width: auto !important; min-height: 64px !important; margin: 0 !important;
+  border-radius: var(--rb-radius-sm) !important;
+  border: 1px solid var(--rb-border-soft) !important;
+  background: var(--rb-panel-2) !important; color: var(--rb-text) !important;
   font-size: 0.7rem !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
+  transition: border-color .15s, background .15s, transform .05s !important;
 }
+.gjs-block:hover { border-color: var(--rb-brand) !important; background: var(--rb-brand-faint) !important; transform: translateY(-1px); }
+.gjs-block__media { color: var(--rb-brand-soft) !important; }
+.gjs-block-label { font-family: var(--rb-font) !important; }
 
+/* Layers */
+.gjs-layer { font-family: var(--rb-mono) !important; font-size: 0.74rem !important; }
+.gjs-layer-title { background: transparent !important; }
+.gjs-layer.gjs-selected > .gjs-layer-title { background: var(--rb-brand-faint) !important; }
+.gjs-layer-count { color: var(--rb-text-faint) !important; }
+
+/* Style manager — folded into intent groups via sector config */
+.gjs-sm-sectors { background: transparent !important; }
+.gjs-sm-sector { border: 0 !important; }
+.gjs-sm-sector-title, .gjs-sm-sector .gjs-sm-title {
+  background: var(--rb-panel-2) !important;
+  border-color: var(--rb-border-soft) !important;
+  font-family: var(--rb-font) !important; font-size: 0.74rem !important; font-weight: 600 !important;
+  letter-spacing: 0.02em !important; text-transform: none !important;
+  color: var(--rb-text) !important;
+}
+.gjs-sm-properties { background: transparent !important; }
+.gjs-sm-label, .gjs-sm-property .gjs-sm-label { color: var(--rb-text-muted) !important; font-size: 0.68rem !important; }
+
+/* Fields */
 .gjs-field {
-  background: #08080a !important;
-  border-color: rgba(124, 92, 255, 0.22) !important;
-  color: #e6e6e8 !important;
-  border-radius: 6px !important;
+  background: var(--rb-bg) !important; border-color: var(--rb-border-soft) !important;
+  color: var(--rb-text) !important; border-radius: 6px !important;
 }
+.gjs-field input, .gjs-field select { color: var(--rb-text) !important; }
+.gjs-field:focus, .gjs-field-focus { border-color: var(--rb-brand) !important; box-shadow: 0 0 0 3px var(--rb-brand-faint) !important; }
+.gjs-field-color-picker { border-radius: 5px !important; }
+.gjs-sm-stack #gjs-sm-add, .gjs-clm-tags #gjs-clm-new { color: var(--rb-brand-soft) !important; }
 
-.gjs-field:focus {
-  border-color: #7c5cff !important;
-  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25) !important;
-}
+/* Traits */
+.gjs-trt-trait { color: var(--rb-text-muted) !important; }
+.gjs-label { font-family: var(--rb-font) !important; }
 
-.gjs-btn-prim {
-  background: #7c5cff !important;
-  border-color: #7c5cff !important;
-}
+/* Buttons / primary */
+.gjs-btn-prim { background: var(--rb-brand) !important; border-color: var(--rb-brand) !important; color: #04110f !important; }
 
-.gjs-toolbar-item {
-  color: #7c5cff !important;
-}
+/* On-canvas chrome — teal */
+.gjs-toolbar { background: var(--rb-brand) !important; border-radius: 6px !important; }
+.gjs-toolbar-item { color: #04110f !important; }
+.gjs-highlighter, .gjs-highlighter-sel { outline-color: var(--rb-brand) !important; }
+.gjs-badge { background: var(--rb-brand) !important; color: #04110f !important; }
+.gjs-resizer-h { border-color: var(--rb-brand) !important; background: var(--rb-brand-soft) !important; }
+.gjs-placeholder { border-color: var(--rb-brand) !important; }
+.gjs-placeholder-int { background: var(--rb-brand) !important; }
 
-.gjs-highlighter,
-.gjs-highlighter-sel {
-  outline-color: #7c5cff !important;
-}
-
-.gjs-resizer-h {
-  border-color: #7c5cff !important;
-}
-
-.gjs-badge {
-  background: #7c5cff !important;
-}
-
+/* Modals (GrapesJS import etc.) */
 .gjs-mdl-dialog {
-  background: #161618 !important;
-  color: #e6e6e8 !important;
-  border: 1px solid rgba(124, 92, 255, 0.22) !important;
-  border-radius: 12px !important;
+  background: var(--rb-panel) !important; color: var(--rb-text) !important;
+  border: 1px solid var(--rb-border) !important; border-radius: var(--rb-radius-lg) !important;
+  box-shadow: var(--rb-shadow-lg) !important;
 }
-
-.gjs-mdl-title {
-  color: #e6e6e8 !important;
-}
-
-.gjs-am-assets-cont {
-  background: #161618 !important;
-}
-
-.gjs-clm-tags #gjs-clm-new {
-  color: #7c5cff !important;
-}
+.gjs-mdl-title { color: var(--rb-text) !important; }
+.gjs-am-assets-cont, .gjs-am-file-uploader { background: var(--rb-panel) !important; }

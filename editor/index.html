@@ -15,83 +15,139 @@
   </head>
   <body>
     <div id="app" class="rb-app">
-      <!-- Top toolbar -->
+      <!-- ───────────── Toolbar ───────────── -->
       <header class="rb-toolbar" data-testid="toolbar">
-        <div class="rb-toolbar__brand">
-          <span class="rb-logo" aria-hidden="true">◆</span>
-          <div>
-            <strong class="rb-toolbar__title">RHOBEAR Designs</strong>
-            <span class="rb-toolbar__subtitle" id="doc-title" data-testid="doc-title">Untitled page</span>
+        <div class="rb-brand">
+          <span class="rb-logo" aria-hidden="true">◭</span>
+          <span class="rb-brand__text">
+            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
+          </span>
+        </div>
+
+        <div class="rb-group">
+          <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" data-action="toggle-rail" data-testid="btn-toggle-rail" title="Toggle panel" aria-label="Toggle panel">▤</button>
+          <div class="rb-modeswitch" role="tablist" aria-label="Edit mode">
+            <button type="button" class="rb-modeswitch__btn is-active" data-action="mode-live" data-testid="btn-mode-live" role="tab">Edit Live Site</button>
+            <button type="button" class="rb-modeswitch__btn" data-action="mode-build" data-testid="btn-mode-build" role="tab">Build from scratch</button>
           </div>
         </div>
 
-        <div class="rb-toolbar__group" role="group" aria-label="File">
-          <button type="button" class="rb-btn" data-action="new" data-testid="btn-new" title="New blank page">New</button>
-          <button type="button" class="rb-btn" data-action="open-html" data-testid="btn-open-html" title="Open HTML file">Open HTML</button>
-          <button type="button" class="rb-btn" data-action="open-folder" data-testid="btn-open-folder" title="Open folder of assets">Open Folder</button>
-          <button type="button" class="rb-btn rb-btn--primary" data-action="save-html" data-testid="btn-save-html" title="Download HTML">Save HTML</button>
-          <button type="button" class="rb-btn" data-action="export-zip" data-testid="btn-export-zip" title="Export HTML + CSS as ZIP">Export ZIP</button>
-        </div>
+        <div class="rb-toolbar__spacer"></div>
 
-        <div class="rb-toolbar__group" role="group" aria-label="Edit">
+        <div class="rb-group" role="group" aria-label="Edit">
           <button type="button" class="rb-btn rb-btn--icon" data-action="undo" data-testid="btn-undo" title="Undo" aria-label="Undo">↶</button>
           <button type="button" class="rb-btn rb-btn--icon" data-action="redo" data-testid="btn-redo" title="Redo" aria-label="Redo">↷</button>
-          <button type="button" class="rb-btn" data-action="delete" data-testid="btn-delete" title="Delete selected">Delete</button>
-          <button type="button" class="rb-btn" data-action="duplicate" data-testid="btn-duplicate" title="Duplicate selected">Duplicate</button>
         </div>
 
-        <div class="rb-toolbar__group" role="group" aria-label="Insert">
-          <button type="button" class="rb-btn" data-action="add-section" data-testid="btn-add-section">Section</button>
-          <button type="button" class="rb-btn" data-action="add-text" data-testid="btn-add-text">Text</button>
-          <button type="button" class="rb-btn" data-action="add-image" data-testid="btn-add-image">Image</button>
-          <button type="button" class="rb-btn" data-action="embed" data-testid="btn-embed">Embed</button>
-        </div>
-
-        <div class="rb-toolbar__group" role="group" aria-label="View">
-          <button type="button" class="rb-btn rb-btn--icon rb-btn--active" data-action="device-desktop" data-testid="btn-device-desktop" title="Desktop" aria-label="Desktop">🖥</button>
-          <button type="button" class="rb-btn rb-btn--icon" data-action="device-tablet" data-testid="btn-device-tablet" title="Tablet" aria-label="Tablet">📱</button>
-          <button type="button" class="rb-btn rb-btn--icon" data-action="device-mobile" data-testid="btn-device-mobile" title="Mobile" aria-label="Mobile">📲</button>
+        <div class="rb-group" role="group" aria-label="Device">
+          <button type="button" class="rb-btn rb-btn--icon is-active" data-action="device-desktop" data-testid="btn-device-desktop" title="Desktop" aria-label="Desktop">🖥</button>
+          <button type="button" class="rb-btn rb-btn--icon" data-action="device-tablet" data-testid="btn-device-tablet" title="Tablet" aria-label="Tablet">▭</button>
+          <button type="button" class="rb-btn rb-btn--icon" data-action="device-mobile" data-testid="btn-device-mobile" title="Mobile" aria-label="Mobile">▯</button>
           <button type="button" class="rb-btn" data-action="preview" data-testid="btn-preview">Preview</button>
         </div>
 
-        <div class="rb-toolbar__group" role="group" aria-label="Panels">
-          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-blocks" data-testid="btn-toggle-blocks" data-panel="blocks">Blocks</button>
-          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-layers" data-testid="btn-toggle-layers" data-panel="layers">Layers</button>
-          <button type="button" class="rb-btn rb-btn--toggle rb-btn--active" data-action="toggle-styles" data-testid="btn-toggle-styles" data-panel="styles">Styles</button>
+        <div class="rb-group" role="group" aria-label="File">
+          <button type="button" class="rb-btn" data-action="new" data-testid="btn-new" title="New blank page">New</button>
+          <button type="button" class="rb-btn" data-action="open-html" data-testid="btn-open-html" title="Open an HTML file">Open</button>
+          <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="open-folder" data-testid="btn-open-folder" title="Open a folder of assets" aria-label="Open folder">🗀</button>
+          <button type="button" class="rb-btn" data-action="export-zip" data-testid="btn-export-zip" title="Export HTML + CSS as ZIP">Export</button>
+          <button type="button" class="rb-btn rb-btn--primary" data-action="save-html" data-testid="btn-save-html" title="Download HTML">Save</button>
         </div>
       </header>
 
-      <!-- Main workspace -->
+      <!-- ───────────── Workspace ───────────── -->
       <div class="rb-workspace">
-        <aside class="rb-sidebar rb-sidebar--left" id="panel-blocks" data-testid="panel-blocks">
-          <div class="rb-panel__header">Blocks</div>
-          <div id="gjs-blocks" class="rb-panel__body"></div>
+        <!-- Left rail -->
+        <aside class="rb-rail" id="rail" data-testid="rail">
+          <div class="rb-rail__tabs">
+            <button type="button" class="rb-rail__tab is-active" data-rail-tab="add" data-testid="rail-tab-add">Add</button>
+            <button type="button" class="rb-rail__tab" data-rail-tab="layers" data-testid="rail-tab-layers">Layers</button>
+          </div>
+          <div class="rb-rail__body rb-scroll">
+            <div class="rb-rail__pane is-active" data-rail-pane="add" data-testid="rail-pane-add">
+              <!-- Build mode: GrapesJS blocks -->
+              <div id="gjs-blocks" data-build-only></div>
+              <!-- Live mode: quick add hint -->
+              <div data-live-only class="is-gone">
+                <p class="rb-modal__hint" style="padding:6px 2px">Editing a live page. Click any element on the canvas to select it, then edit text inline or restyle it in the inspector.</p>
+                <button type="button" class="rb-btn" data-action="open-html" style="width:100%">Open a different page…</button>
+              </div>
+            </div>
+            <div class="rb-rail__pane" data-rail-pane="layers" data-testid="rail-pane-layers">
+              <div id="gjs-layers"></div>
+            </div>
+          </div>
         </aside>
 
+        <!-- Canvas -->
         <main class="rb-canvas-wrap" data-testid="canvas-wrap">
-          <div id="gjs" class="rb-canvas"></div>
+          <div class="rb-canvas">
+            <!-- Build mode canvas -->
+            <div id="gjs" data-build-only></div>
+            <!-- Live mode host -->
+            <div class="rb-live-host" id="live-host" data-live-only data-testid="live-host">
+              <iframe class="rb-live-frame" id="live-frame" title="Live site" data-testid="live-frame"></iframe>
+              <div class="rb-live-overlay" id="live-overlay"></div>
+            </div>
+          </div>
+
+          <!-- Onboarding / empty -->
+          <div class="rb-empty" id="empty-state" data-testid="empty-state">
+            <div class="rb-empty__mark">◭</div>
+            <h1 class="rb-empty__title">Edit any website like it's a canvas</h1>
+            <p class="rb-empty__sub">Open a stood-up page and edit it live — it keeps its look and its functions. Or start a blank build from scratch. No AI required.</p>
+            <div class="rb-empty__actions">
+              <button type="button" class="rb-btn rb-btn--primary" data-action="open-html" data-testid="empty-open">Open a page</button>
+              <button type="button" class="rb-btn" data-action="mode-build" data-testid="empty-build">Build from scratch</button>
+            </div>
+          </div>
+
+          <!-- Floating select bar (live mode) -->
+          <div class="rb-floatbar" id="floatbar" data-testid="floatbar">
+            <button type="button" class="rb-btn rb-btn--icon" data-action="duplicate" data-testid="float-duplicate" title="Duplicate">⧉</button>
+            <button type="button" class="rb-btn rb-btn--icon" data-action="delete" data-testid="float-delete" title="Delete">🗑</button>
+          </div>
+
+          <!-- AI chat bubble (reserved seam — next phase) -->
+          <button type="button" class="rb-ai-fab" data-action="ai-toggle" data-testid="ai-fab" title="AI assist" aria-label="AI assist">✦</button>
+          <section class="rb-ai-panel" id="ai-panel" data-testid="ai-panel">
+            <div class="rb-ai-panel__head">
+              <span class="rb-logo">◭</span> AI assist <span class="rb-pill">bring your own</span>
+            </div>
+            <div class="rb-ai-panel__body">
+              The editor works fully without AI. Connect your own LLM to let it make edits from your prompts and annotations — it drives the same tools you do, so changes paint right onto the canvas.
+              <div class="rb-ai-panel__cta">
+                <button type="button" class="rb-btn rb-btn--primary" data-action="open-settings" data-testid="ai-connect" style="width:100%">Connect an LLM…</button>
+              </div>
+            </div>
+          </section>
         </main>
 
-        <aside class="rb-sidebar rb-sidebar--right">
-          <section class="rb-panel" id="panel-layers" data-testid="panel-layers">
-            <div class="rb-panel__header">Layers</div>
-            <div id="gjs-layers" class="rb-panel__body"></div>
-          </section>
-          <section class="rb-panel" id="panel-styles" data-testid="panel-styles">
-            <div class="rb-panel__header">Styles</div>
-            <div id="gjs-styles" class="rb-panel__body"></div>
-          </section>
-          <section class="rb-panel" id="panel-traits" data-testid="panel-traits">
-            <div class="rb-panel__header">Settings</div>
-            <div id="gjs-traits" class="rb-panel__body"></div>
-          </section>
+        <!-- Inspector (hidden until selection) -->
+        <aside class="rb-inspector is-hidden" id="inspector" data-testid="inspector">
+          <div class="rb-inspector__head">
+            <span class="rb-inspector__title">Inspector</span>
+            <span class="rb-inspector__tag" id="inspector-tag" data-testid="inspector-tag">—</span>
+          </div>
+          <div class="rb-inspector__body rb-scroll">
+            <!-- Build mode: GrapesJS style + traits -->
+            <div id="inspector-build" data-build-only>
+              <div id="gjs-styles"></div>
+              <div id="gjs-traits"></div>
+            </div>
+            <!-- Live mode: intent inspector -->
+            <div id="inspector-live" data-live-only class="is-gone" data-testid="inspector-live"></div>
+          </div>
         </aside>
       </div>
 
-      <!-- Status bar -->
+      <!-- Status -->
       <footer class="rb-status" data-testid="status-bar">
+        <span class="rb-status__dot">●</span>
         <span id="status-message" data-testid="status-message">Ready</span>
-        <span id="status-selection" data-testid="status-selection">No selection</span>
+        <span class="rb-status__spacer"></span>
+        <span class="rb-status__sel" id="status-selection" data-testid="status-selection">No selection</span>
       </footer>
     </div>
 
@@ -105,17 +161,40 @@
       <form method="dialog" class="rb-modal__content" id="embed-form">
         <h2>Embed HTML / iframe</h2>
         <p class="rb-modal__hint">Paste raw HTML, a script tag, or an iframe embed code.</p>
-        <textarea
-          id="embed-code"
-          rows="8"
-          placeholder='<iframe src="..." ...></iframe>'
-          data-testid="embed-code-input"
-        ></textarea>
+        <textarea id="embed-code" rows="8" placeholder='<iframe src="..."></iframe>' data-testid="embed-code-input"></textarea>
         <div class="rb-modal__actions">
           <button type="button" class="rb-btn" data-action="embed-cancel" data-testid="btn-embed-cancel">Cancel</button>
           <button type="submit" class="rb-btn rb-btn--primary" data-testid="btn-embed-insert">Insert</button>
         </div>
       </form>
+    </dialog>
+
+    <!-- Settings modal (BYO-LLM — UI shell; AI logic is next phase) -->
+    <dialog id="settings-modal" class="rb-modal" data-testid="settings-modal">
+      <div class="rb-modal__content">
+        <div class="rb-modal__actions--top rb-modal__actions">
+          <strong>Connect an LLM</strong>
+          <button type="button" class="rb-btn rb-btn--ghost rb-btn--icon" data-action="settings-close" data-testid="btn-settings-close" aria-label="Close">✕</button>
+        </div>
+        <p class="rb-modal__hint">RHOBEAR Designs never supplies the AI — you bring your own. Keys are stored locally in your browser, never sent to us.</p>
+        <div class="rb-setting">
+          <span class="rb-setting__label">Provider</span>
+          <select class="rb-input" id="ai-provider" data-testid="ai-provider">
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI</option>
+            <option value="google">Google (Gemini)</option>
+          </select>
+        </div>
+        <div class="rb-setting">
+          <span class="rb-setting__label">API key</span>
+          <input type="password" class="rb-input" id="ai-key" placeholder="sk-…" data-testid="ai-key" />
+          <span class="rb-setting__hint">Or use OAuth where the provider supports it (coming with the AI release).</span>
+        </div>
+        <div class="rb-modal__actions">
+          <button type="button" class="rb-btn" data-action="settings-close">Cancel</button>
+          <button type="button" class="rb-btn rb-btn--primary" data-action="settings-save" data-testid="btn-settings-save">Save locally</button>
+        </div>
+      </div>
     </dialog>
 
     <!-- Preview modal -->

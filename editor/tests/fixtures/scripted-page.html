@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>scripted-page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 40px; background: #f0f0f5; }
+    h1 { color: #2dd4bf; }
+    .card { background: #fff; padding: 24px; border-radius: 12px; max-width: 480px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>RHOBEAR Scripted Page</h1>
+    <p id="p1">This fixture has a script that must still run after import.</p>
+    <a href="#">Learn more</a>
+  </div>
+  <script>
+    // Proof-of-life: if this runs in the live canvas, functions are preserved.
+    document.documentElement.setAttribute('data-script-ran', 'yes');
+    document.getElementById('p1').setAttribute('data-touched', '1');
+  </script>
+</body>
+</html>
