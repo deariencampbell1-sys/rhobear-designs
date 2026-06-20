@@ -1,0 +1,15 @@
+{
+  "name": "@rhobear/editor-engine",
+  "version": "0.0.0",
+  "description": "Headless live-render pipeline — iframe-friendly HTML document assembly, asset URL rewriting, and dependency-free HTML part extraction. Shared by the canvas renderer and the future 'Edit Live Site' overlay.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./live-render.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "live-render.js"
+  ]
+}
