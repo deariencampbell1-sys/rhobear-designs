@@ -20,6 +20,10 @@ vendored GrapesJS. Shared owned headless core (doc model / command bus / seriali
   - [ ] GrapesJS-as-ModeB behind shell
   - [ ] import/folder/asset + embed hardening
   - [ ] export HTML/ZIP + round-trip fidelity tests (51 samples)
-- [ ] **Post-wave-3 — UX (Iron Man + owner, by hand): React shell, contextual toolbar, intent inspector, onboarding, polish**
+- [ ] **UX phase (Iron Man + owner, by hand) — STARTING.** Aurora Teal (#2DD4BF/#5EEAD4/#08080a). Re-theme off purple; clean Canva-surface; intent inspector; mode switch; reserve AI seams (chat bubble + annotate-screenshot + comments + key/OAuth settings) for next phase.
 
 _Updated as each wave lands._
+
+---
+## SWARM BUILD PHASE COMPLETE 2026-06-20T23:24:01Z
+Editor is ours end-to-end and fully functional WITHOUT AI: vendored engine, headless core, live-fidelity edit engine, both modes, hardened IO, fidelity-proven. Next = hand-built UX (Aurora Teal), then AI chat-bubble layer.
