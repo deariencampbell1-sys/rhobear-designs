@@ -12,11 +12,11 @@ vendored GrapesJS. Shared owned headless core (doc model / command bus / seriali
 - [x] **Wave 1 — make-it-ours** ✅ merged + build-verified (HEAD dd5d2bd)
   - [ ] g1-vendor-grapes — vendor GrapesJS+plugins into src/vendor, NOTICES, build off vendored
   - [x] core1-doc-model — relocated to editor/src/core; node --test green (PR #3 merged)
-- [~] **Wave 2 — live-fidelity engine** (DISPATCHED 22:10Z; wave-watch armed)
+- [x] **Wave 2 — live-fidelity engine** ✅ merged + verified (PRs #5/#6/#7; build+tests green; HEAD 51e99b6)
   - [ ] iframe live-render (scripts/CSS/fonts intact)
   - [ ] overlay picker + postMessage bridge + inline-text
   - [ ] style-override injector + diff serializer
-- [ ] **Wave 3 — functions round-out** (queued)
+- [~] **Wave 3 — functions round-out** (DISPATCHED 22:52Z; wave-watch armed; LAST swarm wave)
   - [ ] GrapesJS-as-ModeB behind shell
   - [ ] import/folder/asset + embed hardening
   - [ ] export HTML/ZIP + round-trip fidelity tests (51 samples)
