@@ -18,3 +18,9 @@
 
 import './live-render.test.js';
 import './mode-b.test.js';
+import './style-overrides.test.js';
+import './diff-serializer.test.js';
+import './iframe-bridge.test.js';
+import './inline-edit.test.js';
+import './overlay.test.js';
+import './io.test.js';
