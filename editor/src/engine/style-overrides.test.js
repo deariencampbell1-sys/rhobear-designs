@@ -257,6 +257,23 @@ test('store: setStyle rejects invalid inputs', () => {
   assert.equal(s.size(), 0);
 });
 
+test('store: setStyle rejects prototype-pollution selector keys', () => {
+  // Defense-in-depth: the store round-trips through toJSON() which
+  // builds a plain object. Blocking these keys prevents an attacker
+  // (or accidental input) from mutating Object.prototype on the
+  // returned snapshot.
+  const s = createOverrideStore();
+  assert.equal(s.setStyle('__proto__',  'color', 'red'), false);
+  assert.equal(s.setStyle('constructor','color', 'red'), false);
+  assert.equal(s.setStyle('prototype',  'color', 'red'), false);
+  assert.equal(s.size(), 0);
+  // And the same keys are rejected on the JSON input path.
+  assert.equal(s.fromJSON({ '__proto__': { color: 'red' } }), 0);
+  assert.equal(s.fromJSON({ 'constructor': { color: 'red' } }), 0);
+  assert.equal(s.fromJSON({ 'prototype': { color: 'red' } }), 0);
+  assert.equal(s.size(), 0);
+});
+
 test('store: setStyles batch applies multiple props', () => {
   const s = createOverrideStore();
   const applied = s.setStyles('#header', {

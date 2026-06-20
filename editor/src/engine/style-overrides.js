@@ -303,7 +303,15 @@ export function createOverrideStore() {
   }
 
   function isOkSelector(selector) {
-    return typeof selector === 'string' && selector.length > 0;
+    if (typeof selector !== 'string' || selector.length === 0) return false;
+    // Defense-in-depth: block keys that, if used as a selector, would
+    // mutate Object.prototype when the store is later round-tripped
+    // through toJSON() (which builds a plain `{}` and assigns by key).
+    if (selector === '__proto__' || selector === 'constructor' ||
+        selector === 'prototype') {
+      return false;
+    }
+    return true;
   }
 
   /**
