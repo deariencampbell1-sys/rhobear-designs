@@ -17,3 +17,4 @@
  */
 
 import './live-render.test.js';
+import './mode-b.test.js';
