@@ -1,0 +1,8 @@
+{
+  "name": "@rhobear/editor-tests-fidelity",
+  "version": "0.0.0",
+  "description": "Headless fidelity suite — proves the W2 engine preserves look + functions end-to-end on real sample sites (samples/minimax-m3-high/).",
+  "private": true,
+  "type": "module",
+  "main": "./_entry.js"
+}
