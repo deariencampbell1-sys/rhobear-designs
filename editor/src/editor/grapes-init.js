@@ -8,6 +8,7 @@ import gjsPresetWebpage from 'grapesjs-preset-webpage';
 import gjsBlocksBasic from 'grapesjs-blocks-basic';
 import gjsPluginForms from 'grapesjs-plugin-forms';
 import gjsCustomCode from 'grapesjs-custom-code';
+import { STYLE_MANAGER_CONFIG } from './style-sectors.js';
 
 const BLANK_PAGE = `
 <section style="padding: 60px 24px; text-align: center; font-family: system-ui, sans-serif;">
@@ -46,66 +47,13 @@ export function createEditor() {
     layerManager: {
       appendTo: '#gjs-layers',
     },
-    styleManager: {
-      appendTo: '#gjs-styles',
-      sectors: [
-        {
-          name: 'Layout',
-          open: true,
-          properties: [
-            'display',
-            'flex-direction',
-            'justify-content',
-            'align-items',
-            'flex-wrap',
-            'gap',
-            'position',
-            'top',
-            'right',
-            'bottom',
-            'left',
-            'z-index',
-            'overflow',
-          ],
-        },
-        {
-          name: 'Size',
-          open: false,
-          properties: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'],
-        },
-        {
-          name: 'Typography',
-          open: false,
-          properties: [
-            'font-family',
-            'font-size',
-            'font-weight',
-            'letter-spacing',
-            'color',
-            'line-height',
-            'text-align',
-            'text-decoration',
-            'text-shadow',
-          ],
-        },
-        {
-          name: 'Decorations',
-          open: false,
-          properties: [
-            'background-color',
-            'background',
-            'border-radius',
-            'border',
-            'box-shadow',
-            'opacity',
-          ],
-        },
-      ],
-    },
+    styleManager: STYLE_MANAGER_CONFIG,
     traitManager: {
       appendTo: '#gjs-traits',
     },
-    selectorManager: { componentFirst: true },
+    selectorManager: {
+      componentFirst: true,
+    },
     richTextEditor: {
       actions: ['bold', 'italic', 'underline', 'strikethrough', 'link'],
     },
@@ -115,6 +63,7 @@ export function createEditor() {
         modalImportTitle: 'Import',
         modalImportButton: 'Import',
         importViewerOptions: {},
+        useCustomTheme: false,
       },
       [gjsCustomCode]: {},
     },
@@ -123,7 +72,12 @@ export function createEditor() {
 
   editor.setComponents(BLANK_PAGE);
 
+  const syncStyleManager = (component) => {
+    editor.StyleManager.select(component || null);
+  };
+
   editor.on('component:selected', (component) => {
+    syncStyleManager(component);
     const el = document.getElementById('status-selection');
     if (el) {
       const tag = component.get('tagName') || 'element';
@@ -133,12 +87,26 @@ export function createEditor() {
   });
 
   editor.on('component:deselected', () => {
+    syncStyleManager(null);
     const el = document.getElementById('status-selection');
     if (el) el.textContent = 'No selection';
   });
 
+  editor.on('style:property:update', (data) => {
+    const el = document.getElementById('status-message');
+    if (!el || !data?.property) return;
+    const prop = data.property;
+    const name = prop.getName?.() || prop.get?.('property') || 'style';
+    const value = data.value ?? prop.getValue?.() ?? '';
+    el.textContent = `Style: ${name} → ${value}`;
+  });
+
   editor.on('load', () => {
     editor.Panels.getPanels().reset([]);
+    const host = document.getElementById('gjs-styles');
+    if (host && host.childElementCount === 0) {
+      editor.StyleManager.render();
+    }
   });
 
   return editor;

@@ -200,6 +200,36 @@ test.describe('RHOBEAR Designs Editor — smoke', () => {
     await expect(page.getByTestId('status-message')).toContainText('New blank page');
   });
 
+  test('style inspector height change applies to selected element', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const { editor } = window.__RB_EDITOR__;
+      const section = editor.getWrapper().find('section')[0];
+      editor.select(section);
+      editor.StyleManager.select(section);
+      const height = editor.StyleManager.getProperty('size', 'height');
+      height.upValue('400px');
+      return section.getStyle().height;
+    });
+
+    expect(result).toBe('400px');
+    await expect(page.getByTestId('status-message')).toContainText('height → 400px');
+  });
+
+  test('flex justify-content buttons apply to flex container', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const { editor } = window.__RB_EDITOR__;
+      const section = editor.getWrapper().find('section')[0];
+      editor.select(section);
+      section.addStyle({ display: 'flex' });
+      editor.StyleManager.select(section);
+      const jc = editor.StyleManager.getProperty('flex', 'justify-content');
+      jc.upValue('center');
+      return section.getStyle()['justify-content'];
+    });
+    expect(result).toBe('center');
+    await expect(page.getByTestId('status-message')).toContainText('justify-content → center');
+  });
+
   test('all data-action buttons map to handlers', async ({ page }) => {
     const unmapped = await page.evaluate(() => {
       const actions = {};

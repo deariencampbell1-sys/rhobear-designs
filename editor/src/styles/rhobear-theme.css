@@ -185,6 +185,12 @@ body {
   overflow-y: auto;
 }
 
+#panel-styles .rb-panel__body,
+#panel-traits .rb-panel__body {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .rb-sidebar--left .rb-panel__body {
   max-height: none;
   flex: 1;
