@@ -20,7 +20,7 @@ vendored GrapesJS. Shared owned headless core (doc model / command bus / seriali
   - [ ] GrapesJS-as-ModeB behind shell
   - [ ] import/folder/asset + embed hardening
   - [ ] export HTML/ZIP + round-trip fidelity tests (51 samples)
-- [ ] **UX phase (Iron Man + owner, by hand) — STARTING.** Aurora Teal (#2DD4BF/#5EEAD4/#08080a). Re-theme off purple; clean Canva-surface; intent inspector; mode switch; reserve AI seams (chat bubble + annotate-screenshot + comments + key/OAuth settings) for next phase.
+- [x] **UX phase — built, branded (Aurora Teal), smoke-tested 20/20, stood up @ http://127.0.0.1:5180.** Two modes wired to engine, intent inspector, onboarding, AI seam. Iterating with owner from here. Top tune: overlay selection-box offset.
 
 _Updated as each wave lands._
 
