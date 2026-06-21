@@ -78,7 +78,10 @@ export function createLiveMode(refs) {
     doc.addEventListener('click', onClick, true);
     doc.addEventListener('contextmenu', onContext, true);
     doc.addEventListener('input', onInlineInput, true);
+    doc.addEventListener('dragover', onDragOver, true);
+    doc.addEventListener('drop', onDrop, true);
     win.addEventListener('scroll', reposition, true);
+    refreshOutline();
   }
 
   function rectOf(el) {
@@ -279,7 +282,7 @@ export function createLiveMode(refs) {
   function deleteSelected() {
     if (!selectedEl || !selectedEl.parentNode) return;
     selectedEl.parentNode.removeChild(selectedEl);
-    deselect(); dirty = true; setStatus('Deleted element');
+    deselect(); dirty = true; setStatus('Deleted element'); refreshOutline();
   }
   function moveSelected(dir) {
     const el = selectedEl; if (!el || !el.parentNode) return;
@@ -288,23 +291,135 @@ export function createLiveMode(refs) {
     dirty = true; reposition(); positionFloatbar(el); setStatus('Moved element');
   }
 
-  // ---- insert from the element library (chips/buttons/cards/sections…) ----
-  function insertElement(elObj) {
-    if (!doc || !elObj) return;
+  // ---- insert / replace from the element library (chips/buttons/cards/…) ----
+  let pendingReplace = false;
+
+  function nodeFromElObj(elObj) {
     if (elObj.css) {
       const cur = doc.getElementById('rb-lib-css');
       injectStyle('rb-lib-css', (cur ? cur.textContent : '') + '\n' + elObj.css);
     }
     const tmp = doc.createElement('div');
     tmp.innerHTML = String(elObj.html || '').trim();
-    const node = tmp.firstElementChild || tmp;
-    const container = (selectedEl && /^(div|section|main|article|aside|nav|footer|header|ul|ol|form|body)$/i.test(selectedEl.tagName))
-      ? selectedEl : doc.body;
-    container.appendChild(node);
+    return tmp.firstElementChild || tmp;
+  }
+
+  function insertElement(elObj, atTarget) {
+    if (!doc || !elObj) return;
+    const node = nodeFromElObj(elObj);
+    if (pendingReplace && selectedEl && selectedEl.parentNode) {
+      selectedEl.parentNode.replaceChild(node, selectedEl);
+      pendingReplace = false;
+      dirty = true; setStatus(`Replaced with ${elObj.name || 'element'}`);
+      selectElement(node);
+      refreshOutline();
+      return;
+    }
+    let container, before = null;
+    if (atTarget && atTarget.nodeType === 1) {
+      container = atTarget.parentNode || doc.body; before = atTarget.nextSibling;
+    } else {
+      container = (selectedEl && isContainer(selectedEl)) ? selectedEl : doc.body;
+    }
+    container.insertBefore(node, before);
     dirty = true; setStatus(`Inserted ${elObj.name || 'element'}`);
     try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
     selectElement(node);
+    refreshOutline();
   }
+
+  function isContainer(el) {
+    return /^(div|section|main|article|aside|nav|footer|header|ul|ol|form|body)$/i.test(el.tagName);
+  }
+
+  function beginReplace() {
+    if (!selectedEl) { setStatus('Select an element first, then pick a replacement'); return; }
+    pendingReplace = true;
+    setStatus('Replace mode — click an element in the stash to swap it in');
+  }
+
+  function insertImage(url, alt) {
+    if (!doc || !url) return;
+    const img = doc.createElement('img');
+    img.src = url; img.alt = alt || 'image'; img.style.maxWidth = '100%'; img.style.display = 'block';
+    const container = (selectedEl && isContainer(selectedEl)) ? selectedEl : doc.body;
+    container.appendChild(img);
+    dirty = true; setStatus('Inserted image'); selectElement(img); refreshOutline();
+  }
+
+  // ---- drag from stash → drop onto canvas (same-origin DnD) ----
+  let dragPayload = null;
+  function beginDragInsert(elObj) { dragPayload = elObj; }
+  function onDragOver(e) { if (dragPayload) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; if (overlay) overlay.showHover(rectOf(e.target)); } }
+  function onDrop(e) {
+    if (!dragPayload) return;
+    e.preventDefault();
+    const target = e.target && e.target.nodeType === 1 ? e.target : null;
+    insertElement(dragPayload, target);
+    dragPayload = null;
+    if (overlay) overlay.showHover(null);
+  }
+
+  // ---- grab + drag to MOVE/reorder a selected element ----
+  let moving = false; let moveIndicator = null;
+  function startMove() {
+    if (!selectedEl || !doc) return;
+    moving = true; setStatus('Moving — drop it where you want');
+    if (!moveIndicator) { moveIndicator = doc.createElement('div'); moveIndicator.id = 'rb-drop-line'; doc.body.appendChild(moveIndicator); }
+    moveIndicator.style.cssText = 'position:fixed;height:3px;background:#2dd4bf;z-index:2147483647;pointer-events:none;box-shadow:0 0 8px #2dd4bf;display:none';
+    doc.addEventListener('mousemove', onMoveTrack, true);
+    doc.addEventListener('mouseup', onMoveDrop, true);
+    document.addEventListener('mouseup', cancelMoveSoon, true);
+  }
+  let moveTarget = null; let moveAfter = false;
+  function onMoveTrack(e) {
+    if (!moving) return;
+    const t = doc.elementFromPoint(e.clientX, e.clientY);
+    if (!t || t === selectedEl || t === moveIndicator || t === doc.body || t === doc.documentElement) return;
+    moveTarget = t;
+    const r = t.getBoundingClientRect();
+    moveAfter = (e.clientY - r.top) > r.height / 2;
+    moveIndicator.style.display = 'block';
+    moveIndicator.style.left = `${r.left}px`;
+    moveIndicator.style.width = `${r.width}px`;
+    moveIndicator.style.top = `${(moveAfter ? r.bottom : r.top) - 1}px`;
+  }
+  function onMoveDrop() {
+    if (!moving) return;
+    finishMove();
+    if (moveTarget && moveTarget.parentNode && selectedEl && moveTarget !== selectedEl) {
+      moveTarget.parentNode.insertBefore(selectedEl, moveAfter ? moveTarget.nextSibling : moveTarget);
+      dirty = true; setStatus('Moved element'); reposition(); refreshOutline();
+    }
+  }
+  function cancelMoveSoon() { if (moving) finishMove(); }
+  function finishMove() {
+    moving = false;
+    if (moveIndicator) moveIndicator.style.display = 'none';
+    doc.removeEventListener('mousemove', onMoveTrack, true);
+    doc.removeEventListener('mouseup', onMoveDrop, true);
+    document.removeEventListener('mouseup', cancelMoveSoon, true);
+  }
+
+  // ---- live layers outline ----
+  let onOutline = null;
+  function setOutlineHandler(cb) { onOutline = cb; }
+  function refreshOutline() { if (onOutline) onOutline(getOutline()); }
+  function getOutline() {
+    if (!doc || !doc.body) return [];
+    const out = [];
+    (function walk(el, depth) {
+      for (const child of el.children) {
+        const tag = child.tagName.toLowerCase();
+        if (tag === 'script' || tag === 'style' || tag === 'link' || child.id === 'rb-drop-line') continue;
+        const cls = child.className && typeof child.className === 'string' ? '.' + child.className.trim().split(/\s+/)[0] : '';
+        out.push({ node: child, depth, label: tag + (cls || ''), text: (child.textContent || '').trim().slice(0, 24) });
+        if (depth < 5 && out.length < 300) walk(child, depth + 1);
+      }
+    })(doc.body, 0);
+    return out;
+  }
+  function selectNode(node) { if (node) { selectElement(node); try { node.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} } }
 
   // ---- fonts (load into the iframe + apply) ----
   function loadFontInFrame(family) {
@@ -377,7 +492,12 @@ export function createLiveMode(refs) {
   function isDirty() { return dirty; }
   function hasSelection() { return !!selectedEl; }
 
-  return { load, deselect, duplicateSelected, deleteSelected, moveSelected, insertElement, getExport, isDirty, hasSelection, reposition };
+  return {
+    load, deselect, duplicateSelected, deleteSelected, moveSelected, insertElement,
+    insertImage, beginReplace, beginDragInsert, startMove,
+    setOutlineHandler, getOutline, selectNode,
+    getExport, isDirty, hasSelection, reposition,
+  };
 }
 
 /** Best-effort rgb()/hex → #hex for <input type=color>. */

@@ -49,6 +49,9 @@ export default defineConfig({
   server: {
     port: 5180,
     open: true,
+    // Allow serving the repo-root samples/ (one level above this editor app)
+    // so the templates gallery can bundle template HTML via import.meta.glob.
+    fs: { allow: ['..'] },
   },
   preview: {
     port: 4173,

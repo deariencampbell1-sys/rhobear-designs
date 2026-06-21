@@ -31,6 +31,8 @@
             <button type="button" class="rb-modeswitch__btn is-active" data-action="mode-live" data-testid="btn-mode-live" role="tab">Edit Live Site</button>
             <button type="button" class="rb-modeswitch__btn" data-action="mode-build" data-testid="btn-mode-build" role="tab">Build from scratch</button>
           </div>
+          <button type="button" class="rb-btn" data-action="open-templates" data-testid="btn-templates" title="Browse templates">Templates</button>
+          <button type="button" class="rb-btn rb-btn--ghost" data-action="open-projects" data-testid="btn-projects" title="Projects &amp; folders">Projects</button>
         </div>
 
         <div class="rb-toolbar__spacer"></div>
@@ -72,7 +74,8 @@
               <div data-live-only class="is-gone" id="element-library" data-testid="element-library"></div>
             </div>
             <div class="rb-rail__pane" data-rail-pane="layers" data-testid="rail-pane-layers">
-              <div id="gjs-layers"></div>
+              <div id="gjs-layers" data-build-only></div>
+              <div id="live-layers" data-live-only class="is-gone" data-testid="live-layers"></div>
             </div>
           </div>
         </aside>
@@ -95,14 +98,17 @@
             <h1 class="rb-empty__title">Edit any website like it's a canvas</h1>
             <p class="rb-empty__sub">Open a stood-up page and edit it live — it keeps its look and its functions. Or start a blank build from scratch. No AI required.</p>
             <div class="rb-empty__actions">
-              <button type="button" class="rb-btn rb-btn--primary" data-action="open-html" data-testid="empty-open">Open a page</button>
+              <button type="button" class="rb-btn rb-btn--primary" data-action="open-templates" data-testid="empty-templates">Browse templates</button>
+              <button type="button" class="rb-btn" data-action="open-html" data-testid="empty-open">Open a page</button>
               <button type="button" class="rb-btn" data-action="mode-build" data-testid="empty-build">Build from scratch</button>
             </div>
           </div>
 
           <!-- Floating select bar (live mode) -->
           <div class="rb-floatbar" id="floatbar" data-testid="floatbar">
+            <button type="button" class="rb-btn rb-btn--icon rb-floatbar__grab" id="float-grab" data-testid="float-grab" title="Drag to move">✥</button>
             <button type="button" class="rb-btn rb-btn--icon" data-action="duplicate" data-testid="float-duplicate" title="Duplicate">⧉</button>
+            <button type="button" class="rb-btn rb-btn--icon" data-action="replace" data-testid="float-replace" title="Replace from stash">⇄</button>
             <button type="button" class="rb-btn rb-btn--icon" data-action="delete" data-testid="float-delete" title="Delete">🗑</button>
           </div>
 
@@ -191,6 +197,33 @@
           <button type="button" class="rb-btn" data-action="settings-close">Cancel</button>
           <button type="button" class="rb-btn rb-btn--primary" data-action="settings-save" data-testid="btn-settings-save">Save locally</button>
         </div>
+      </div>
+    </dialog>
+
+    <!-- Templates gallery -->
+    <dialog id="templates-modal" class="rb-modal rb-modal--wide" data-testid="templates-modal">
+      <div class="rb-modal__content">
+        <div class="rb-modal__actions rb-modal__actions--top">
+          <strong>Templates <span class="rb-pill" id="templates-count">—</span></strong>
+          <input type="search" class="rb-input rb-tpl-search" id="templates-search" placeholder="Search templates…" data-testid="templates-search" />
+          <button type="button" class="rb-btn" data-action="templates-close" data-testid="btn-templates-close">Close</button>
+        </div>
+        <div class="rb-tpl-grid rb-scroll" id="templates-grid" data-testid="templates-grid"></div>
+      </div>
+    </dialog>
+
+    <!-- Projects + folders -->
+    <dialog id="projects-modal" class="rb-modal" data-testid="projects-modal">
+      <div class="rb-modal__content">
+        <div class="rb-modal__actions rb-modal__actions--top">
+          <strong>Projects &amp; folders</strong>
+          <button type="button" class="rb-btn" data-action="projects-close" data-testid="btn-projects-close">Close</button>
+        </div>
+        <div class="rb-proj-actions">
+          <input type="text" class="rb-input" id="proj-name" placeholder="New project name…" data-testid="proj-name" />
+          <button type="button" class="rb-btn rb-btn--primary" data-action="proj-save" data-testid="btn-proj-save">Save current</button>
+        </div>
+        <div class="rb-proj-list rb-scroll" id="projects-list" data-testid="projects-list"></div>
       </div>
     </dialog>
 

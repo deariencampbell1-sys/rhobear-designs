@@ -12,6 +12,9 @@ import { createBuildMode } from './build-mode.js';
 // node:fs-based (browser-incompatible); Vite bundles JSON natively.
 import elementsManifest from '../library/elements/manifest.json';
 
+import { createTemplatesGallery } from './templates-gallery.js';
+import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
+
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
 const _ELEMENT_CATS = [...new Set(_ELEMENTS.map((e) => e.category))];
 const listCategories = () => _ELEMENT_CATS;
@@ -44,6 +47,15 @@ export function bootShell() {
     fileFolder: $('file-folder'),
     fileImage: $('file-image'),
     elementLibrary: $('element-library'),
+    liveLayers: $('live-layers'),
+    floatGrab: $('float-grab'),
+    templatesModal: $('templates-modal'),
+    templatesGrid: $('templates-grid'),
+    templatesSearch: $('templates-search'),
+    templatesCount: $('templates-count'),
+    projectsModal: $('projects-modal'),
+    projectsList: $('projects-list'),
+    projName: $('proj-name'),
   };
 
   let mode = 'live';
@@ -75,6 +87,57 @@ export function bootShell() {
   });
 
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
+
+  // templates gallery
+  const gallery = createTemplatesGallery({
+    modal: refs.templatesModal, grid: refs.templatesGrid, search: refs.templatesSearch,
+    countEl: refs.templatesCount, onStatus: setStatus,
+    onOpen: (html, meta) => {
+      if (!html) return;
+      setMode('live'); loadedAny = true; hideEmpty();
+      setTitle(live.load(html, meta && meta.name) || (meta && meta.name) || 'Template');
+    },
+  });
+
+  // live layers outline → rail Layers pane
+  live.setOutlineHandler((outline) => renderLiveLayers(outline));
+  function renderLiveLayers(outline) {
+    const host = refs.liveLayers; if (!host) return;
+    host.innerHTML = '';
+    if (!outline || !outline.length) { host.innerHTML = '<p class="rb-lib-hint">Open a page to see its layers.</p>'; return; }
+    for (const n of outline) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'rb-layer'; b.style.paddingLeft = `${8 + n.depth * 12}px`;
+      b.innerHTML = `<span class="rb-layer__tag">${escapeHtml(n.label)}</span>` + (n.text ? `<span class="rb-layer__txt">${escapeHtml(n.text)}</span>` : '');
+      b.addEventListener('click', () => live.selectNode(n.node));
+      host.appendChild(b);
+    }
+  }
+
+  // projects + folders
+  function renderProjects() {
+    const host = refs.projectsList; if (!host) return;
+    host.innerHTML = '';
+    const ps = listProjects();
+    if (!ps.length) { host.innerHTML = '<p class="rb-lib-hint">No saved projects yet — name one and Save current.</p>'; return; }
+    for (const p of ps) {
+      const row = document.createElement('div'); row.className = 'rb-proj-row';
+      const open = document.createElement('button');
+      open.type = 'button'; open.className = 'rb-proj-open';
+      open.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="rb-proj-mode">${escapeHtml(p.mode)}</span>`;
+      open.addEventListener('click', () => openProject(p.id));
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'rb-btn rb-btn--icon rb-btn--ghost'; del.textContent = '🗑'; del.title = 'Delete';
+      del.addEventListener('click', () => { deleteProject(p.id); renderProjects(); });
+      row.appendChild(open); row.appendChild(del); host.appendChild(row);
+    }
+  }
+  function openProject(id) {
+    const p = getProject(id); if (!p) return;
+    refs.projectsModal.close();
+    setMode('live'); loadedAny = true; hideEmpty();
+    setTitle(live.load(p.html, p.name) || p.name);
+  }
 
   // ---------------------------------------------------------------- modes
   function setMode(next) {
@@ -157,6 +220,17 @@ export function bootShell() {
     'preview': doPreview,
     'preview-close': () => refs.previewModal.close(),
 
+    'open-templates': () => gallery.open(),
+    'templates-close': () => refs.templatesModal.close(),
+    'open-projects': () => { renderProjects(); refs.projectsModal.showModal(); },
+    'projects-close': () => refs.projectsModal.close(),
+    'proj-save': () => {
+      const name = (refs.projName.value || '').trim() || docTitleStr || 'Untitled';
+      saveProject({ name, html: currentExport(), mode });
+      refs.projName.value = ''; renderProjects(); setStatus(`Saved project "${name}"`);
+    },
+    'replace': () => live.beginReplace(),
+
     'undo': () => { if (mode === 'build') build.undo(); refreshUndo(); },
     'redo': () => { if (mode === 'build') build.redo(); refreshUndo(); },
     'duplicate': () => { mode === 'build' ? build.duplicate() : live.duplicateSelected(); },
@@ -235,9 +309,16 @@ export function bootShell() {
   });
   refs.fileImage.addEventListener('change', () => {
     const f = refs.fileImage.files && refs.fileImage.files[0];
-    if (f) { setMode('build'); build.addImage(URL.createObjectURL(f)); loadedAny = true; }
+    if (f) {
+      const url = URL.createObjectURL(f);
+      if (mode === 'live') live.insertImage(url, f.name); else build.addImage(url);
+      loadedAny = true;
+    }
     refs.fileImage.value = '';
   });
+
+  // grab handle → drag-to-move the selected element (live mode)
+  if (refs.floatGrab) refs.floatGrab.addEventListener('mousedown', (e) => { e.preventDefault(); live.startMove(); });
 
   // element library (the stash) in the live-mode Add rail
   function renderElementLibrary() {
@@ -253,8 +334,10 @@ export function bootShell() {
       for (const el of listElements(active)) {
         const card = document.createElement('button');
         card.type = 'button'; card.className = 'rb-lib-card';
-        card.title = `${el.name || el.id} · ${el.category}`;
+        card.title = `${el.name || el.id} · ${el.category} — click to add or drag onto the canvas`;
         card.innerHTML = `<span class="rb-lib-card__name">${escapeHtml(el.name || el.id)}</span>`;
+        card.draggable = true;
+        card.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/plain', el.id); live.beginDragInsert(getElement(el.id)); });
         card.addEventListener('click', () => live.insertElement(getElement(el.id)));
         grid.appendChild(card);
       }

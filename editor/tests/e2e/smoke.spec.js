@@ -80,6 +80,38 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await expect(page.getByTestId('inspector')).not.toHaveClass(/is-hidden/);
   });
 
+  test('templates gallery opens (62) and opens one into the live editor', async ({ page }) => {
+    await page.getByTestId('btn-templates').click();
+    await expect(page.getByTestId('templates-modal')).toBeVisible();
+    const cards = page.getByTestId('templates-grid').locator('.rb-tpl-card');
+    await expect(cards.first()).toBeVisible();
+    expect(await cards.count()).toBeGreaterThan(10);
+    await cards.first().click();
+    await expect(page.getByTestId('templates-modal')).not.toBeVisible();
+    const fr = page.frameLocator('[data-testid="live-frame"]');
+    await expect(fr.locator('body')).not.toBeEmpty({ timeout: 15000 });
+  });
+
+  test('projects: save current creates a listed entry', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    await page.frameLocator('[data-testid="live-frame"]').locator('h1').waitFor();
+    await page.getByTestId('btn-projects').click();
+    await expect(page.getByTestId('projects-modal')).toBeVisible();
+    await page.getByTestId('proj-name').fill('My Project');
+    await page.getByTestId('btn-proj-save').click();
+    await expect(page.getByTestId('projects-list')).toContainText('My Project');
+  });
+
+  test('live layers tree lists elements and selects on click', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    await page.frameLocator('[data-testid="live-frame"]').locator('h1').waitFor();
+    await page.getByTestId('rail-tab-layers').click();
+    const layers = page.getByTestId('live-layers').locator('.rb-layer');
+    await expect(layers.first()).toBeVisible();
+    await layers.first().click();
+    await expect(page.getByTestId('inspector')).not.toHaveClass(/is-hidden/);
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);
