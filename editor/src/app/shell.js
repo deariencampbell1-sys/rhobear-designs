@@ -366,6 +366,9 @@ export function bootShell() {
       if ($('ai-model')) $('ai-model').value = c.model || '';
       syncProviderFields();
       if ($('ai-test-result')) $('ai-test-result').textContent = '';
+      // Always reopen the key field masked, even if it was revealed last time.
+      if ($('ai-key')) $('ai-key').type = 'password';
+      if ($('ai-key-reveal')) $('ai-key-reveal').textContent = '👁';
       refs.aiPanel.classList.remove('is-open'); refs.settingsModal.showModal();
     },
     'settings-close': () => refs.settingsModal.close(),
@@ -392,6 +395,12 @@ export function bootShell() {
       testConnection({ provider, apiKey: key, model, baseUrl }).then((r) => {
         if (result) { result.textContent = r.message; result.style.color = r.ok ? '#2dd4bf' : '#ff6b6b'; }
       });
+    },
+    'toggle-key': () => {
+      const k = $('ai-key'); const b = $('ai-key-reveal'); if (!k) return;
+      const show = k.type === 'password';
+      k.type = show ? 'text' : 'password';
+      if (b) { b.textContent = show ? '🙈' : '👁'; b.title = show ? 'Hide key' : 'Show / hide key'; }
     },
   };
 
@@ -563,7 +572,8 @@ export function bootShell() {
   }
   function aiRefresh() {
     const c = aiConfig(); const ok = !!(c.key && c.provider);
-    if (refs.aiStatus) refs.aiStatus.textContent = ok ? (PROVIDER_LABELS[c.provider] || c.provider) : 'offline';
+    const label = ok ? (PROVIDER_LABELS[c.provider] || c.provider) : 'offline';
+    if (refs.aiStatus) refs.aiStatus.textContent = label;
     // The chat input is ALWAYS typeable — never disable it. A disabled field
     // reads as "the chat is dead"; instead we let the user type freely and ask
     // for a key at send time. Calm + forgiving, and no way to get a stuck input.
@@ -573,11 +583,18 @@ export function bootShell() {
         ? 'Ask AI to change the selected element…'
         : 'Type a request — I’ll ask for your key when you send…';
     }
-    if (refs.aiMessages && !refs.aiMessages.dataset.greeted) {
+    if (!refs.aiMessages) return;
+    if (!refs.aiMessages.dataset.greeted) {
       refs.aiMessages.dataset.greeted = '1';
-      addAiMsg('assistant', ok
-        ? 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a teal headline".'
-        : 'Add your API key below (Connect) — Anthropic, OpenAI, or Google. The editor works fully without me.');
+      if (ok) { refs.aiMessages.dataset.connected = c.provider; addAiMsg('assistant', `Connected to ${label} ✓ — select an element, then tell me what to change.`); }
+      else addAiMsg('assistant', 'Add your API key below (Connect) — Anthropic, OpenAI, Google, or any OpenAI-compatible endpoint like MiniMax. The editor works fully without me.');
+      return;
+    }
+    // Announce a NEW connection (or a provider change) so saving a key always
+    // gives visible confirmation — it never silently looks like it "didn't register".
+    if (ok && refs.aiMessages.dataset.connected !== c.provider) {
+      refs.aiMessages.dataset.connected = c.provider;
+      addAiMsg('assistant', `Connected to ${label} ✓ — your key is saved locally on this device. Tell me what to change.`);
     }
   }
   async function sendAi(prompt) {

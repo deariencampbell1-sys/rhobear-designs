@@ -210,8 +210,11 @@
         </div>
         <div class="rb-setting">
           <span class="rb-setting__label">API key</span>
-          <input type="password" class="rb-input" id="ai-key" placeholder="sk-…" data-testid="ai-key" />
-          <span class="rb-setting__hint">Or use OAuth where the provider supports it (coming with the AI release).</span>
+          <div class="rb-key-row" style="display:flex;gap:6px;align-items:center">
+            <input type="password" class="rb-input" id="ai-key" placeholder="sk-… / your MiniMax key" data-testid="ai-key" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:0" />
+            <button type="button" class="rb-btn rb-btn--icon rb-btn--ghost" id="ai-key-reveal" data-action="toggle-key" data-testid="ai-key-reveal" title="Show / hide key" aria-label="Show or hide key">👁</button>
+          </div>
+          <span class="rb-setting__hint">Stored only in your browser, never sent to us. Masked for privacy — tap 👁 to check it, then it re-hides.</span>
         </div>
         <p class="rb-setting__hint" id="ai-test-result" data-testid="ai-test-result" style="min-height:1.2em;margin:6px 0 0"></p>
         <div class="rb-modal__actions">
