@@ -57,7 +57,7 @@ export function createLiveMode(refs) {
   let dropLine = null;
   let onOutline = null;
   let history = []; let hi = -1; let snapTimer = null; let mo = null; let restoring = false;
-  let pickTargetLink = null; let textbar = null; let linkEl = null;
+  let pickTargetLink = null; let textbar = null; let linkEl = null; let editing = false;
 
   const setStatus = (m) => { if (onStatus) onStatus(m); };
 
@@ -96,6 +96,8 @@ export function createLiveMode(refs) {
     doc.addEventListener('contextmenu', onContext, true);
     doc.addEventListener('focusout', onFocusOut, true);
     doc.addEventListener('input', () => { dirty = true; }, true);
+    // Ctrl+Z/Y inside the iframe never reaches the parent document — handle it here.
+    doc.addEventListener('keydown', onDocKeydown, true);
     doc.addEventListener('pointerdown', onPointerDown, true);
     doc.addEventListener('dragover', onDragOver, true);
     doc.addEventListener('drop', onDrop, true);
@@ -122,7 +124,9 @@ export function createLiveMode(refs) {
   function snapDebounced() { clearTimeout(snapTimer); snapTimer = setTimeout(snap, 350); }
   function startObserving() {
     if (mo) mo.disconnect();
-    mo = new win.MutationObserver(() => { if (!restoring) snapDebounced(); });
+    // While editing text, don't snapshot every keystroke — we snap once on focusout
+    // so a single Ctrl+Z reverts the whole text change, not one character batch.
+    mo = new win.MutationObserver(() => { if (!restoring && !editing) snapDebounced(); });
     mo.observe(doc.body, { childList: true, subtree: true, attributes: true, characterData: true });
   }
   function restoreSnap(html) {
@@ -136,6 +140,20 @@ export function createLiveMode(refs) {
   }
   function undo() { if (hi > 0) { hi--; restoreSnap(history[hi]); setStatus('Undo'); } else setStatus('Nothing to undo'); }
   function redo() { if (hi < history.length - 1) { hi++; restoreSnap(history[hi]); setStatus('Redo'); } }
+
+  // Keydown fired inside the iframe — mirror the parent's undo/redo/Escape so the
+  // shortcut works while the user's focus is on the page they're editing.
+  function onDocKeydown(e) {
+    const t = e.target;
+    const inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ||
+      (t.getAttribute && t.getAttribute('contenteditable') === 'true'));
+    if (e.key === 'Escape') { if (!inField) deselect(); else if (t.blur) t.blur(); return; }
+    if (inField) return; // let native text undo work while actively editing a field
+    const z = e.key === 'z' || e.key === 'Z';
+    const y = e.key === 'y' || e.key === 'Y';
+    if ((e.ctrlKey || e.metaKey) && z) { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
+    else if ((e.ctrlKey || e.metaKey) && y) { e.preventDefault(); redo(); }
+  }
 
   function rectOf(el) { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; }
 
@@ -171,6 +189,8 @@ export function createLiveMode(refs) {
     if (!el || el.nodeType !== 1) return;
     e.preventDefault(); e.stopPropagation();
     selectElement(el);
+    snap(); // capture the pre-edit text so one Ctrl+Z reverts the whole change
+    editing = true;
     el.setAttribute('contenteditable', 'true');
     el.draggable = false;
     el.focus();
@@ -183,6 +203,7 @@ export function createLiveMode(refs) {
     if (el && el.getAttribute && el.getAttribute('contenteditable') === 'true') {
       el.removeAttribute('contenteditable');
       el.draggable = true;
+      editing = false;
       dirty = true; hideTextbar(); snap();
     }
   }

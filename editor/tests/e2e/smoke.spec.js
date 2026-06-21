@@ -149,6 +149,26 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     expect(await frame.locator('h1').getAttribute('contenteditable')).toBe('true');
   });
 
+  test('Ctrl+Z reverts a text replacement (undo works while focus is in the page)', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    const h1 = frame.locator('h1');
+    await h1.waitFor();
+    const original = (await h1.textContent()).trim();
+    // double-click to edit, select-all, replace the text
+    await h1.dblclick();
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('Totally different headline');
+    // click away inside the page to end the edit (focus stays in the iframe)
+    await frame.locator('body').click({ position: { x: 3, y: 3 }, force: true });
+    await expect(h1).toHaveText('Totally different headline');
+    await page.waitForTimeout(120);
+    // Ctrl+Z from inside the iframe must revert the whole replacement in one step
+    await h1.click();
+    await page.keyboard.press('Control+z');
+    await expect(h1).toHaveText(original);
+  });
+
   test('gradient swatch sets a background-image', async ({ page }) => {
     await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
     const frame = page.frameLocator('[data-testid="live-frame"]');
