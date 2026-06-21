@@ -19,7 +19,8 @@
     "grapesjs-custom-code": "^1.0.2",
     "grapesjs-plugin-forms": "^2.0.6",
     "grapesjs-preset-webpage": "^1.0.3",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

@@ -1,0 +1,21 @@
+{
+  "name": "@rhobear/editor-3d",
+  "version": "0.0.0",
+  "description": "Headless 3D scene engine — Three.js renderer + handle API + pure serialize/transform helpers. RHOBEAR Designs editor.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "create.js",
+    "scene.js",
+    "handle.js",
+    "serialize.js",
+    "transform.js",
+    "registry.js"
+  ]
+}
