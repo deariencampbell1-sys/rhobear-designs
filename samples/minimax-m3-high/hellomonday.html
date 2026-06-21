@@ -1,0 +1,448 @@
+<!doctype html>
+<!--
+  Original URL: https://www.hellomonday.com/
+  Filename:     hellomonday.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: Brooklyn-based creative agency (now part of DEPT®). Playful,
+  warm, optimistic, and unmistakably post-2010 boutique-agency — large
+  friendly serif headlines, candy-soft pastel hero gradient, big numbers,
+  and a slow, scroll-driven portfolio of "Hello, [Brand]" case studies.
+
+  Layout / hierarchy:
+    - Slim fixed nav: small circular "M" mark + Work / Studio / Careers / Contact
+    - Hero: oversized serif "Hello, world." wordmark on a warm peach/cream
+      gradient, scroll cue below.
+    - Capabilities band — three columns of services with icon glyphs.
+    - Featured Work — large alternating tiles (left/right) with massive
+      client names in italic serif ("Hello, Google.") and moody gradient
+      plates that act as project covers.
+    - Studio intro — chunky paragraph + numeric stats (years, awards,
+      people, offices).
+    - Press + Awards marquee.
+    - "Say Hello" CTA + footer.
+
+  Motion / interaction:
+    - Title underlines animate in on hover.
+    - Project plates ease-in on scroll with a slight vertical offset.
+    - Custom cursor with label swap ("View", "Play", "Open").
+    - Smooth scroll for nav anchors.
+    - Marquee runs infinitely.
+
+  Color system:
+    --bg-0     #fff6ec   (warm peach cream)
+    --bg-1     #ffffff
+    --ink      #1a1a1a   (near-black text)
+    --ink-60   rgba(26,26,26,.60)
+    --peach    #ffd9b8
+    --rose     #ff7a6e
+    --sky      #8fb9ff
+    --mint     #b8e8c4
+    --lemon    #ffe26b
+
+  CHALLENGES SOLVED
+  -----------------
+    - Warm pastel gradient hero recreated with a single fixed background
+      that uses conic + radial blend for a hand-painted feel.
+    - Alternating project tiles use CSS grid columns that flip on
+      alternating cards (every other one becomes mirror layout).
+    - Stats band uses tabular monospaced numbers for editorial polish.
+    - Custom cursor with label DOM swap on hover for category-specific
+      feedback ("View case" / "Play reel" / etc.).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hello Monday — Creative Agency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,400..600,30..100&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-0:#fff6ec;
+      --bg-1:#ffffff;
+      --bg-2:#fdebcf;
+      --ink:#1a1a1a;
+      --ink-80:rgba(26,26,26,.80);
+      --ink-60:rgba(26,26,26,.60);
+      --ink-40:rgba(26,26,26,.40);
+      --ink-20:rgba(26,26,26,.20);
+      --ink-10:rgba(26,26,26,.10);
+      --peach:#ffd9b8;
+      --rose:#ff7a6e;
+      --sky:#8fb9ff;
+      --mint:#b8e8c4;
+      --lemon:#ffe26b;
+      --font-display:'DM Serif Display','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'Space Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0);scroll-behavior:smooth}
+    body{margin:0;background:var(--bg-0);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+    @media (max-width:900px){body{cursor:auto}}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--rose);color:#fff}
+
+    /* ---------- HERO BG ---------- */
+    .hero-bg{position:absolute;inset:0;z-index:-1;background:radial-gradient(120% 80% at 80% 0%,#ffd9b8 0%,transparent 60%),radial-gradient(80% 60% at 10% 80%,#ffe26b 0%,transparent 60%),radial-gradient(80% 70% at 90% 90%,#ff7a6e 0%,transparent 60%),#fff6ec}
+    .hero-bg::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.07'/></svg>")}
+
+    .wrap{max-width:1440px;margin:0 auto;padding:0 48px;position:relative}
+    @media (max-width:980px){.wrap{padding:0 24px}}
+
+    /* ---------- NAV ---------- */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:20px 48px}
+    @media (max-width:980px){.nav{padding:16px 24px}}
+    .mark{width:46px;height:46px;border-radius:50%;background:var(--ink);color:var(--bg-0);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-style:italic;font-size:22px;letter-spacing:-.02em}
+    .nav ul{display:flex;gap:34px;list-style:none;margin:0;padding:0;font-size:14px;letter-spacing:.04em}
+    @media (max-width:780px){.nav ul{display:none}}
+    .nav ul a{position:relative;padding:4px 0}
+    .nav ul a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:right;transition:transform .45s cubic-bezier(.5,.05,.2,1)}
+    .nav ul a:hover::after{transform:scaleX(1);transform-origin:left}
+    .nav .hello{padding:11px 22px;border:1px solid var(--ink);border-radius:999px;font-size:13px;letter-spacing:.05em;transition:all .3s ease}
+    .nav .hello:hover{background:var(--ink);color:var(--bg-0)}
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .cursor{position:fixed;top:0;left:0;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--bg-0);pointer-events:none;z-index:100;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;transition:width .25s ease,height .25s ease,opacity .2s ease;opacity:0}
+    .cursor.show{opacity:1}
+    .cursor.label{width:auto;height:auto;padding:6px 12px;border-radius:999px;font-family:var(--font-mono);font-weight:700}
+    @media (max-width:900px){.cursor{display:none}}
+
+    /* ---------- HERO ---------- */
+    .hero{position:relative;padding:160px 0 120px;overflow:hidden}
+    @media (max-width:780px){.hero{padding:120px 0 80px}}
+    .hero .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);flex-wrap:wrap;gap:12px}
+    .hero .meta .d{display:flex;align-items:center;gap:8px}
+    .hero .meta .d .b{width:8px;height:8px;border-radius:50%;background:var(--rose);display:inline-block;animation:pulse 2.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.5);opacity:.5}}
+    .hero h1{font-family:var(--font-display);font-weight:400;font-size:clamp(80px,15vw,240px);line-height:.95;letter-spacing:-.025em;margin:0;color:var(--ink);font-style:italic}
+    .hero h1 .reg{font-style:normal;font-weight:400}
+    .hero h1 .ac{color:var(--rose)}
+    .hero h1 .du{position:relative;display:inline-block}
+    .hero h1 .du::after{content:'.';color:var(--rose)}
+    .hero .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:60px;gap:40px;flex-wrap:wrap}
+    .hero .row p{max-width:480px;font-size:18px;line-height:1.55;color:var(--ink-80)}
+    .hero .row p em{font-style:italic;color:var(--rose);font-family:var(--font-display);font-size:1.05em}
+    .hero .scroll{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .hero .scroll .bar{width:1px;height:60px;background:var(--ink-40);position:relative;overflow:hidden}
+    .hero .scroll .bar::before{content:'';position:absolute;inset:0;background:var(--ink);animation:scrolldown 2.2s ease-in-out infinite}
+    @keyframes scrolldown{0%{transform:translateY(-100%)}50%{transform:translateY(0)}100%{transform:translateY(100%)}}
+
+    /* ---------- CAPABILITIES ---------- */
+    .caps{padding:120px 0;position:relative}
+    .sec-head{margin-bottom:80px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px}
+    .sec-head .label{font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60)}
+    .sec-head .label .b{width:8px;height:8px;border-radius:50%;background:var(--lemon);display:inline-block;margin-right:10px;vertical-align:middle}
+    .sec-head h2{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,5.5vw,84px);line-height:1;letter-spacing:-.025em;margin:0;max-width:880px}
+    .sec-head h2 .it{font-style:italic;color:var(--rose)}
+    .caps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+    @media (max-width:980px){.caps-grid{grid-template-columns:1fr;gap:24px}}
+    .cap{padding:40px;border-radius:24px;background:var(--bg-1);border:1px solid var(--ink-10);transition:transform .4s ease,box-shadow .4s ease;position:relative;overflow:hidden}
+    .cap:hover{transform:translateY(-6px);box-shadow:0 30px 60px -30px rgba(26,26,26,.3)}
+    .cap .icon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;font-family:var(--font-display);font-style:italic;font-size:28px}
+    .cap .icon.a{background:var(--peach)}
+    .cap .icon.b{background:var(--sky)}
+    .cap .icon.c{background:var(--mint)}
+    .cap h3{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0 0 12px;font-style:italic}
+    .cap p{font-size:15px;line-height:1.55;color:var(--ink-60);margin:0}
+    .cap .num{position:absolute;top:30px;right:36px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-40)}
+
+    /* ---------- WORK ---------- */
+    .work{padding:120px 0;background:var(--ink);color:var(--bg-0);border-radius:36px;margin:0 36px}
+    @media (max-width:980px){.work{margin:0 12px;padding:80px 24px;border-radius:24px}}
+    .work .sec-head h2{color:var(--bg-0)}
+    .work .sec-head .label{color:rgba(255,246,236,.6)}
+    .work .sec-head .label .b{background:var(--rose)}
+    .proj{display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center;padding:80px 0;border-top:1px solid rgba(255,246,236,.1)}
+    @media (max-width:980px){.proj{grid-template-columns:1fr;gap:30px;padding:50px 0}}
+    .proj.alt{grid-template-columns:1fr 1.1fr}
+    .proj.alt .info{order:2}
+    .proj.alt .plate{order:1}
+    @media (max-width:980px){.proj.alt .info,.proj.alt .plate{order:initial}}
+    .proj .plate{position:relative;aspect-ratio:5/4;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#ff7a6e,#ffd9b8)}
+    .proj .plate::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.15'/></svg>")}
+    .proj .plate .pill{position:absolute;top:18px;left:18px;padding:7px 14px;border-radius:999px;background:var(--bg-1);color:var(--ink);font-size:11px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;font-weight:700;z-index:2}
+    .proj .plate .num{position:absolute;bottom:18px;right:18px;font-family:var(--font-display);font-style:italic;font-size:60px;color:rgba(255,246,236,.4);z-index:2}
+    .proj.alt .plate{background:linear-gradient(135deg,#8fb9ff,#b8e8c4)}
+    .proj.alt .plate .pill{background:var(--lemon)}
+    .proj .info .cat{font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);margin-bottom:14px}
+    .proj .info h3{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:clamp(48px,7vw,108px);line-height:.95;letter-spacing:-.025em;margin:0 0 18px;color:var(--bg-0)}
+    .proj .info h3 .reg{font-style:normal;color:var(--bg-0)}
+    .proj .info p{font-size:16px;line-height:1.6;color:rgba(255,246,236,.7);max-width:480px;margin:0 0 24px}
+    .proj .info .more{display:inline-flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--bg-0);border-bottom:1px solid rgba(255,246,236,.3);padding-bottom:4px;transition:border-color .3s ease}
+    .proj .info .more:hover{border-color:var(--rose)}
+
+    /* ---------- STUDIO STATS ---------- */
+    .stats{padding:140px 0;text-align:center}
+    .stats h2{font-family:var(--font-display);font-weight:400;font-style:italic;font-size:clamp(36px,5vw,72px);line-height:1.1;max-width:920px;margin:0 auto 60px;letter-spacing:-.02em}
+    .stats h2 .reg{font-style:normal}
+    .stats h2 .ac{color:var(--rose);font-style:normal}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10)}
+    @media (max-width:780px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+    .stats-grid .s{padding:40px 20px;border-right:1px solid var(--ink-10)}
+    .stats-grid .s:last-child{border-right:none}
+    @media (max-width:780px){.stats-grid .s:nth-child(2){border-right:none}}
+    .stats-grid .s .n{font-family:var(--font-display);font-weight:400;font-style:italic;font-size:clamp(56px,8vw,108px);line-height:.9;color:var(--ink);letter-spacing:-.025em}
+    .stats-grid .s .l{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);margin-top:14px}
+
+    /* ---------- PRESS ---------- */
+    .press{padding:100px 0;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);overflow:hidden}
+    .press-marq{display:flex;gap:60px;animation:slide 30s linear infinite;white-space:nowrap;font-family:var(--font-display);font-style:italic;font-size:38px;color:var(--ink-40);letter-spacing:-.02em}
+    .press-marq span{display:inline-flex;align-items:center;gap:60px}
+    .press-marq .d{font-style:normal;color:var(--rose);font-size:14px;width:14px;height:14px;border-radius:50%;background:var(--rose);display:inline-block}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ---------- CTA ---------- */
+    .cta{padding:160px 0 120px;text-align:center}
+    .cta h2{font-family:var(--font-display);font-weight:400;font-style:italic;font-size:clamp(60px,10vw,160px);line-height:.95;letter-spacing:-.03em;margin:0 0 40px}
+    .cta h2 .reg{font-style:normal}
+    .cta h2 .ac{color:var(--rose);font-style:normal}
+    .cta .big-btn{display:inline-flex;align-items:center;gap:16px;padding:22px 36px;background:var(--ink);color:var(--bg-0);border-radius:999px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;transition:all .4s ease;cursor:none}
+    @media (max-width:900px){.cta .big-btn{cursor:pointer}}
+    .cta .big-btn:hover{background:var(--rose);color:#fff;transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(255,122,110,.5)}
+    .cta .big-btn .arr{width:30px;height:30px;border:1.4px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+    .cta .mail{display:block;margin-top:36px;font-family:var(--font-mono);font-size:14px;color:var(--ink-60);letter-spacing:.05em}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:var(--ink);color:var(--bg-0);padding:80px 0 36px;border-radius:32px 32px 0 0;margin:60px 0 0}
+    @media (max-width:980px){footer{border-radius:24px 24px 0 0;margin:30px 0 0;padding:60px 0 30px}}
+    footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+    @media (max-width:780px){footer .wrap{grid-template-columns:1fr 1fr}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin:0 0 18px;font-weight:500}
+    footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px;color:rgba(255,246,236,.7)}
+    footer ul a:hover{color:var(--bg-0)}
+    footer .big{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:clamp(48px,7vw,108px);letter-spacing:-.025em;line-height:.95;margin-bottom:32px}
+    footer .big .reg{font-style:normal}
+    footer .legal{display:flex;justify-content:space-between;align-items:center;padding-top:40px;margin-top:60px;border-top:1px solid rgba(255,246,236,.15);font-size:12px;color:rgba(255,246,236,.5);font-family:var(--font-mono);letter-spacing:.06em;flex-wrap:wrap;gap:16px;grid-column:1/-1}
+    footer .legal .l{display:flex;align-items:center;gap:10px}
+    footer .legal .l .b{width:7px;height:7px;border-radius:50%;background:var(--rose);display:inline-block}
+
+    /* ---------- REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(36px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor">View</div>
+
+  <nav class="nav">
+    <a href="#" class="mark">M</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#studio">Studio</a></li>
+      <li><a href="#careers">Careers</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="hello">Say Hello →</a>
+  </nav>
+
+  <div class="hero-bg"></div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="meta reveal">
+        <div class="d"><span class="b"></span> Brooklyn · NYC · Available 2025</div>
+        <div>Independent · Hello Monday · DEPT®</div>
+      </div>
+      <h1 class="reveal"><span class="reg">Hello,</span> <span class="du">world</span><span class="ac">.</span></h1>
+      <div class="row">
+        <p class="reveal">We're <em>Hello Monday</em> — a creative agency inside DEPT® that designs and builds digital experiences for some of the most loved brands on earth. <em>Playful on the surface. Rigorous underneath.</em></p>
+        <div class="scroll reveal"><div class="bar"></div>Scroll</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CAPABILITIES -->
+  <section class="caps">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 01 / What we do</div>
+        <h2>We make brands <span class="it">feel alive</span> on the internet.</h2>
+      </div>
+      <div class="caps-grid">
+        <div class="cap reveal">
+          <div class="num">01</div>
+          <div class="icon a">✦</div>
+          <h3>Brand</h3>
+          <p>Identity systems, motion languages, naming, and the small considered decisions that make a brand unmistakable.</p>
+        </div>
+        <div class="cap reveal">
+          <div class="num">02</div>
+          <div class="icon b">◇</div>
+          <h3>Product</h3>
+          <p>End-to-end digital product design and engineering — from research and IA to the pixels, the prototypes, and the launch.</p>
+        </div>
+        <div class="cap reveal">
+          <div class="num">03</div>
+          <div class="icon c">⌬</div>
+          <h3>Campaign</h3>
+          <p>Launch moments, content engines, and the kind of integrated storytelling that travels well across every channel.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work" class="work">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 02 / Selected work</div>
+        <h2>Hello, <span class="it">work.</span></h2>
+      </div>
+
+      <article class="proj reveal">
+        <div class="plate" style="background:linear-gradient(135deg,#ff7a6e 0%,#ffd9b8 50%,#ffe26b 100%);">
+          <span class="pill">Brand · Site</span>
+          <span class="num">01</span>
+        </div>
+        <div class="info">
+          <div class="cat">Google · 2024</div>
+          <h3>Hello, <span class="reg">Google.</span></h3>
+          <p>A complete reimagining of Google Workspace's marketing surface — playful, accessible, and unmistakably Google.</p>
+          <a href="#" class="more">Read case study →</a>
+        </div>
+      </article>
+
+      <article class="proj alt reveal">
+        <div class="info">
+          <div class="cat">Spotify · 2023</div>
+          <h3>Hello, <span class="reg">Spotify.</span></h3>
+          <p>A generative cover-art engine that turns a listener's year-end data into a one-of-a-kind visual artifact.</p>
+          <a href="#" class="more">Read case study →</a>
+        </div>
+        <div class="plate" style="background:linear-gradient(135deg,#8fb9ff 0%,#b8e8c4 50%,#ffe26b 100%);">
+          <span class="pill">Product</span>
+          <span class="num">02</span>
+        </div>
+      </article>
+
+      <article class="proj reveal">
+        <div class="plate" style="background:linear-gradient(135deg,#b8e8c4 0%,#8fb9ff 50%,#ff7a6e 100%);">
+          <span class="pill">Campaign</span>
+          <span class="num">03</span>
+        </div>
+        <div class="info">
+          <div class="cat">Met Museum · 2024</div>
+          <h3>Hello, <span class="reg">Met.</span></h3>
+          <p>An interactive digital companion to the Met's 150th-anniversary exhibition, blending archival photography with a live drawing tool.</p>
+          <a href="#" class="more">Read case study →</a>
+        </div>
+      </article>
+
+      <article class="proj alt reveal">
+        <div class="info">
+          <div class="cat">Mailchimp · 2023</div>
+          <h3>Hello, <span class="reg">Mailchimp.</span></h3>
+          <p>A bold redesign of Mailchimp's marketing site — built around an animation system that makes every scroll feel hand-touched.</p>
+          <a href="#" class="more">Read case study →</a>
+        </div>
+        <div class="plate" style="background:linear-gradient(135deg,#ffd9b8 0%,#ff7a6e 50%,#1a1a1a 100%);">
+          <span class="pill" style="background:var(--lemon);">Brand</span>
+          <span class="num">04</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section id="studio" class="stats">
+    <div class="wrap">
+      <h2 class="reveal">We are a small team of <span class="reg">designers, engineers, writers and producers</span> <span class="ac">obsessed</span> with the details.</h2>
+      <div class="stats-grid reveal">
+        <div class="s"><div class="n">24</div><div class="l">Years in business</div></div>
+        <div class="s"><div class="n">87</div><div class="l">Awards &amp; honors</div></div>
+        <div class="s"><div class="n">120</div><div class="l">Humans on staff</div></div>
+        <div class="s"><div class="n">04</div><div class="l">Studios worldwide</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRESS -->
+  <section class="press">
+    <div class="press-marq" id="pressM">
+      <span>Featured in <span class="d"></span> Awwwards <span class="d"></span> It's Nice That <span class="d"></span> Communication Arts <span class="d"></span> FastCo <span class="d"></span> The Brand Identity <span class="d"></span> Eye Magazine <span class="d"></span> Print <span class="d"></span> Wallpaper* <span class="d"></span> Wired <span class="d"></span> FWA <span class="d"></span> Webby <span class="d"></span> Awwwards <span class="d"></span> It's Nice That <span class="d"></span> Communication Arts <span class="d"></span> FastCo <span class="d"></span> The Brand Identity <span class="d"></span> Eye Magazine <span class="d"></span> Print <span class="d"></span> Wallpaper* <span class="d"></span> Wired <span class="d"></span> FWA <span class="d"></span> Webby</span>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta">
+    <div class="wrap">
+      <h2 class="reveal">Say <span class="reg">hello</span><span class="ac">.</span></h2>
+      <a href="mailto:hello@hellomonday.com" class="big-btn reveal"><span class="arr">→</span> Start a project</a>
+      <span class="mail reveal">or just write to us · hello@hellomonday.com</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="big">Hello, <span class="reg">tomorrow.</span></div>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Manifesto</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="#">Featured</a></li>
+          <li><a href="#">Archive</a></li>
+          <li><a href="#">Case studies</a></li>
+          <li><a href="#">Reels</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@hellomonday.com">hello@hellomonday.com</a></li>
+          <li>68 Jay St, Suite 1100</li>
+          <li>Brooklyn, NY 11201</li>
+          <li>+1 (212) 555-0114</li>
+        </ul>
+      </div>
+      <div class="legal">
+        <div class="l"><span class="b"></span> Hello Monday · DEPT® · 2001 — 2025</div>
+        <div>Made with care in Brooklyn</div>
+        <div>Privacy · Terms</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const cur=document.getElementById('cursor');
+    let mx=0,my=0,cx=0,cy=0;
+    if(matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.classList.add('show')});
+      window.addEventListener('mouseleave',()=>cur.classList.remove('show'));
+      (function loop(){cx+=(mx-cx)*0.18;cy+=(my-cy)*0.18;cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+      const setLabel=(t)=>{cur.textContent=t;cur.classList.add('label')};
+      const resetLabel=()=>{cur.textContent='View';cur.classList.add('label')};
+      document.querySelectorAll('.proj').forEach(el=>{el.addEventListener('mouseenter',()=>setLabel('Read'));el.addEventListener('mouseleave',resetLabel)});
+      document.querySelectorAll('.cap').forEach(el=>{el.addEventListener('mouseenter',()=>setLabel('Open'));el.addEventListener('mouseleave',resetLabel)});
+      document.querySelectorAll('.hello,.big-btn').forEach(el=>{el.addEventListener('mouseenter',()=>setLabel('Say Hi'));el.addEventListener('mouseleave',resetLabel)});
+      resetLabel();
+    } else {cur.style.display='none';}
+
+    /* Reveal */
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    /* Marquee */
+    document.querySelectorAll('.press-marq').forEach(t=>{t.innerHTML=t.innerHTML+t.innerHTML});
+  </script>
+</body>
+</html>

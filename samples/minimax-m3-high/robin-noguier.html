@@ -1,0 +1,423 @@
+<!doctype html>
+<!--
+  Original URL: https://robin-noguier.com/
+  Filename:     robin-noguier.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: French independent front-end developer. The portfolio is the
+  quietest on this list — a single editorial scroll, almost no imagery,
+  and a disciplined mono/serif pairing that gives every project a "lab
+  notebook" feel. The site reads as a long letter to a future collaborator,
+  not a brochure. Pure type, generous whitespace, and one or two tiny
+  gradient accents.
+
+  Layout / hierarchy:
+    - Tiny fixed nav: small monogram (RN) + a single project-list link +
+      contact email.
+    - Hero: oversized monospace "Hi, I'm Robin." + a one-line mission.
+    - About paragraph — long, careful, almost a manifesto.
+    - Project list — each row is a single line: project name (left),
+      year + role + stack (right). No plates, no logos, no images.
+    - "Side projects" / experiments — smaller secondary list.
+    - Selected quotes / press (small).
+    - Contact + footer.
+
+  Motion / interaction:
+    - Cursor: small dot → ring on hover; tiny label swap on rows.
+    - Each project row underlines its title on hover.
+    - Letters of the headline stagger-fade in.
+    - Smooth scroll for anchor nav.
+
+  Color system:
+    --bg-0     #fafaf7   (paper)
+    --bg-1     #ffffff
+    --ink      #111111   (ink)
+    --ink-60   rgba(17,17,17,.60)
+    --ink-30   rgba(17,17,17,.30)
+    --mint     #b8e8c4   (single accent — used only twice)
+    --gold     #d8a85a
+
+  CHALLENGES SOLVED
+  -----------------
+    - The whole site is editorial typography, no images needed.
+    - Project rows use a single CSS grid with left-aligned name + right-
+      aligned meta; this is the entire portfolio.
+    - Custom cursor with magnetic CTA.
+    - Staggered letter reveal on the hero name.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Robin Noguier — Independent Front-End Developer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-0:#fafaf7;
+      --bg-1:#ffffff;
+      --bg-2:#f0eee7;
+      --ink:#111111;
+      --ink-80:rgba(17,17,17,.80);
+      --ink-60:rgba(17,17,17,.60);
+      --ink-40:rgba(17,17,17,.40);
+      --ink-20:rgba(17,17,17,.20);
+      --ink-10:rgba(17,17,17,.10);
+      --mint:#b8e8c4;
+      --gold:#d8a85a;
+      --font-display:'Fraunces','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0);scroll-behavior:smooth}
+    body{margin:0;background:var(--bg-0);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+    @media (max-width:900px){body{cursor:auto}}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--ink);color:var(--bg-0)}
+
+    .wrap{max-width:1180px;margin:0 auto;padding:0 40px;position:relative}
+    @media (max-width:780px){.wrap{padding:0 24px}}
+
+    /* ---------- NAV ---------- */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:22px 40px;background:rgba(250,250,247,.85);backdrop-filter:blur(12px)}
+    @media (max-width:780px){.nav{padding:18px 24px}}
+    .nav .mark{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:.04em;display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--ink-20);border-radius:8px}
+    .nav .mark .d{width:8px;height:8px;border-radius:50%;background:var(--ink);display:inline-block}
+    .nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-size:13px;color:var(--ink-60);font-family:var(--font-mono);letter-spacing:.04em}
+    @media (max-width:780px){.nav ul{display:none}}
+    .nav ul a{position:relative;padding:5px 0;transition:color .25s ease}
+    .nav ul a:hover{color:var(--ink)}
+    .nav ul a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .45s ease}
+    .nav ul a:hover::after{transform:scaleX(1)}
+    .nav .cta{font-family:var(--font-mono);font-size:13px;color:var(--ink);border-bottom:1px solid var(--ink-30);padding-bottom:2px;transition:border-color .3s ease}
+    .nav .cta:hover{border-color:var(--ink)}
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .cursor{position:fixed;top:0;left:0;width:8px;height:8px;border-radius:50%;background:var(--ink);pointer-events:none;z-index:100;transform:translate(-50%,-50%);transition:width .3s ease,height .3s ease,border .3s ease}
+    .cursor.ring{width:44px;height:44px;background:transparent;border:1.4px solid var(--ink)}
+    .cursor.label{width:auto;height:auto;padding:7px 12px;border-radius:999px;background:var(--ink);color:var(--bg-0);font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+    @media (max-width:900px){.cursor{display:none}}
+
+    /* ---------- HERO ---------- */
+    .hero{padding:170px 0 80px;position:relative}
+    @media (max-width:780px){.hero{padding:130px 0 60px}}
+    .hero .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);flex-wrap:wrap;gap:14px}
+    .hero .meta .d{display:flex;align-items:center;gap:10px}
+    .hero .meta .d .b{width:7px;height:7px;border-radius:50%;background:var(--ink);display:inline-block;animation:pulse 2.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.5);opacity:.5}}
+    .hero h1{font-family:var(--font-display);font-weight:500;font-size:clamp(56px,9vw,140px);line-height:1;letter-spacing:-.03em;margin:0;color:var(--ink)}
+    .hero h1 .l{display:inline-block;opacity:0;transform:translateY(40px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+    .hero h1 .l:nth-child(1){animation-delay:.05s}
+    .hero h1 .l:nth-child(2){animation-delay:.10s}
+    .hero h1 .l:nth-child(3){animation-delay:.15s}
+    .hero h1 .l:nth-child(4){animation-delay:.20s}
+    .hero h1 .l:nth-child(5){animation-delay:.25s}
+    .hero h1 .l:nth-child(6){animation-delay:.30s}
+    .hero h1 .l:nth-child(7){animation-delay:.35s}
+    .hero h1 .l:nth-child(8){animation-delay:.40s}
+    .hero h1 .l:nth-child(9){animation-delay:.45s}
+    .hero h1 .l:nth-child(10){animation-delay:.50s}
+    .hero h1 .l:nth-child(11){animation-delay:.55s}
+    .hero h1 .l:nth-child(12){animation-delay:.60s}
+    .hero h1 .l:nth-child(13){animation-delay:.65s}
+    .hero h1 .l:nth-child(14){animation-delay:.70s}
+    .hero h1 .l:nth-child(15){animation-delay:.75s}
+    .hero h1 .l:nth-child(16){animation-delay:.80s}
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+    .hero .role{margin-top:24px;font-family:var(--font-mono);font-size:13px;letter-spacing:.04em;color:var(--ink-60);text-transform:uppercase}
+    .hero .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:50px;gap:40px;flex-wrap:wrap}
+    .hero p.sub{max-width:620px;font-family:var(--font-display);font-style:italic;font-weight:400;font-size:clamp(20px,2.2vw,30px);line-height:1.45;color:var(--ink-80);margin:0}
+    .hero p.sub em{font-style:normal;color:var(--ink);font-weight:500}
+    .hero .scroll{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .hero .scroll .bar{width:1px;height:60px;background:var(--ink-30);position:relative;overflow:hidden}
+    .hero .scroll .bar::before{content:'';position:absolute;inset:0;background:var(--ink);animation:scrolldown 2.2s ease-in-out infinite}
+    @keyframes scrolldown{0%{transform:translateY(-100%)}50%{transform:translateY(0)}100%{transform:translateY(100%)}}
+
+    /* ---------- ABOUT ---------- */
+    .about{padding:100px 0;max-width:880px;margin:0 auto}
+    .about p{font-family:var(--font-display);font-size:clamp(20px,2vw,26px);line-height:1.6;color:var(--ink-80);margin:0 0 24px}
+    .about p em{font-style:italic;color:var(--ink);font-weight:500}
+    .about .signature{font-family:var(--font-display);font-style:italic;font-size:24px;color:var(--ink);margin-top:50px;display:flex;align-items:center;gap:14px}
+    .about .signature .line{width:60px;height:1px;background:var(--ink-40);display:inline-block}
+
+    /* ---------- WORK ---------- */
+    .work{padding:120px 0}
+    .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:60px;flex-wrap:wrap;gap:24px}
+    .sec-head .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .sec-head .label .b{width:7px;height:7px;border-radius:50%;background:var(--ink);display:inline-block;margin-right:10px;vertical-align:middle}
+    .sec-head h2{font-family:var(--font-display);font-weight:500;font-size:clamp(36px,4.5vw,60px);line-height:1;letter-spacing:-.025em;margin:0;max-width:760px}
+    .sec-head h2 .it{font-style:italic}
+    .proj-list{border-top:1px solid var(--ink-10)}
+    .proj-row{display:grid;grid-template-columns:50px 1.6fr 1fr 1fr 80px;gap:24px;align-items:center;padding:30px 0;border-bottom:1px solid var(--ink-10);transition:padding .4s ease;cursor:none}
+    @media (max-width:900px){.proj-row{cursor:pointer}}
+    @media (max-width:980px){.proj-row{grid-template-columns:50px 1.4fr 80px;gap:14px;padding:24px 0}}
+    .proj-row:hover{padding-left:18px;padding-right:18px;margin:0 -18px;background:var(--bg-1);border-radius:12px;border-color:transparent}
+    @media (max-width:980px){.proj-row:hover{padding-left:10px;padding-right:10px;margin:0 -10px}}
+    .proj-row .n{font-family:var(--font-mono);font-size:12px;color:var(--ink-40);letter-spacing:.1em}
+    .proj-row .name{font-family:var(--font-display);font-weight:500;font-size:clamp(24px,2.8vw,42px);line-height:1.05;letter-spacing:-.02em;margin:0;color:var(--ink)}
+    .proj-row .name .it{font-style:italic;color:var(--ink-80);font-weight:400}
+    .proj-row .role{font-family:var(--font-mono);font-size:12px;color:var(--ink-60);letter-spacing:.04em}
+    .proj-row .stack{font-family:var(--font-mono);font-size:11px;color:var(--ink-40);letter-spacing:.04em}
+    @media (max-width:980px){.proj-row .role,.proj-row .stack{display:none}}
+    .proj-row .year{font-family:var(--font-mono);font-size:12px;color:var(--ink-40);letter-spacing:.1em;text-align:right}
+    .proj-row .arr{font-family:var(--font-mono);font-size:18px;color:var(--ink-40);text-align:right;transition:all .4s ease}
+    .proj-row:hover .arr{color:var(--ink);transform:translateX(6px)}
+
+    /* ---------- SIDE PROJECTS ---------- */
+    .side{padding:120px 0;background:var(--bg-1);border-radius:32px;margin:60px 36px;position:relative;overflow:hidden}
+    @media (max-width:980px){.side{margin:30px 12px;padding:80px 24px;border-radius:24px}}
+    .side::before{content:'LAB';position:absolute;top:30px;right:50px;font-family:var(--font-mono);font-size:11px;letter-spacing:.4em;color:var(--ink-20)}
+    .side .sec-head{margin-bottom:40px}
+    .side .row{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:24px;line-height:1.5;color:var(--ink-80);margin:0 0 16px}
+    .side .row strong{font-style:normal;font-weight:500;color:var(--ink)}
+
+    /* ---------- QUOTES ---------- */
+    .quotes{padding:120px 0;text-align:center}
+    .quotes blockquote{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:clamp(28px,3.4vw,46px);line-height:1.3;max-width:880px;margin:0 auto 24px;color:var(--ink-80);letter-spacing:-.015em}
+    .quotes blockquote em{font-style:normal;color:var(--ink);font-weight:500}
+    .quotes cite{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);font-style:normal}
+    .quotes cite a{color:var(--ink-80);border-bottom:1px solid var(--ink-30)}
+
+    /* ---------- CTA ---------- */
+    .cta{padding:160px 0 120px;text-align:center}
+    .cta h2{font-family:var(--font-display);font-weight:500;font-size:clamp(48px,8vw,124px);line-height:.96;letter-spacing:-.03em;margin:0 0 40px}
+    .cta h2 .it{font-style:italic;color:var(--ink-60);font-weight:400}
+    .cta .big-btn{display:inline-flex;align-items:center;gap:14px;padding:20px 36px;background:var(--ink);color:var(--bg-0);border-radius:8px;font-family:var(--font-mono);font-size:14px;font-weight:500;letter-spacing:.04em;transition:all .4s ease;cursor:none}
+    @media (max-width:900px){.cta .big-btn{cursor:pointer}}
+    .cta .big-btn:hover{background:var(--bg-0);color:var(--ink);transform:translateY(-3px);box-shadow:0 20px 40px -15px rgba(17,17,17,.3);border:1px solid var(--ink)}
+    .cta .big-btn .arr{width:28px;height:28px;border:1.4px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+    .cta .mail{display:block;margin-top:30px;font-family:var(--font-mono);font-size:13px;color:var(--ink-60);letter-spacing:.05em}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:var(--ink);color:var(--bg-0);padding:60px 0 36px;border-radius:32px 32px 0 0;margin:60px 0 0}
+    @media (max-width:980px){footer{border-radius:24px 24px 0 0;margin:30px 0 0;padding:50px 0 30px}}
+    footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}
+    @media (max-width:780px){footer .wrap{grid-template-columns:1fr 1fr}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,250,247,.5);margin:0 0 18px;font-weight:500}
+    footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px;color:rgba(250,250,247,.7);font-family:var(--font-mono)}
+    footer ul a:hover{color:var(--bg-0)}
+    footer .big{font-family:var(--font-display);font-weight:500;font-size:clamp(40px,6vw,88px);letter-spacing:-.025em;line-height:.95;margin-bottom:32px;font-style:italic}
+    footer .big .reg{font-style:normal;font-weight:500}
+    footer .legal{display:flex;justify-content:space-between;align-items:center;padding-top:40px;margin-top:60px;border-top:1px solid rgba(250,250,247,.15);font-size:12px;color:rgba(250,250,247,.5);font-family:var(--font-mono);letter-spacing:.06em;flex-wrap:wrap;gap:16px;grid-column:1/-1}
+    footer .legal .l{display:flex;align-items:center;gap:10px}
+    footer .legal .l .b{width:7px;height:7px;border-radius:50%;background:var(--bg-0);display:inline-block}
+
+    /* ---------- REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(36px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <nav class="nav">
+    <a href="#" class="mark"><span class="d"></span>RN</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#lab">Lab</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="mailto:hi@robin-noguier.com" class="cta">hi@robin-noguier.com →</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="meta reveal">
+        <div class="d"><span class="b"></span> Paris · Available freelance</div>
+        <div>Independent · Front-End Engineer</div>
+      </div>
+      <h1><span class="l">H</span><span class="l">i</span><span class="l">,</span><span class="l"> </span><span class="l">I</span><span class="l">'</span><span class="l">m</span><span class="l"> </span><span class="l">R</span><span class="l">o</span><span class="l">b</span><span class="l">i</span><span class="l">n</span><span class="l">.</span></h1>
+      <div class="role reveal">Front-End Developer · Paris · Available 2025</div>
+      <div class="row">
+        <p class="sub reveal">I'm a <em>front-end developer</em> based in Paris. I build considered, hand-coded websites for studios, designers, and the occasional well-funded friend. I care about <em>typography, motion, performance,</em> and the small details that make the web feel less like software.</p>
+        <div class="scroll reveal"><div class="bar"></div>Scroll</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- WORK -->
+  <section id="work" class="work">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 01 / Selected work · 2018 — 2025</div>
+        <h2>Things I've <span class="it">shipped.</span></h2>
+      </div>
+
+      <div class="proj-list">
+        <a href="#" class="proj-row reveal">
+          <span class="n">01</span>
+          <h3 class="name">Balthazar <span class="it">Studio.</span></h3>
+          <span class="role">Lead Front-End</span>
+          <span class="stack">Next.js · GSAP · Sanity</span>
+          <span class="year">2024</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">02</span>
+          <h3 class="name">Studio <span class="it">Nørd.</span></h3>
+          <span class="role">Front-End Engineer</span>
+          <span class="stack">Astro · Three.js · Lenis</span>
+          <span class="year">2024</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">03</span>
+          <h3 class="name">Maison <span class="it">Verte.</span></h3>
+          <span class="role">Lead Engineer</span>
+          <span class="stack">Remix · Prisma · Postgres</span>
+          <span class="year">2023</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">04</span>
+          <h3 class="name">Atelier <span class="it">Mer.</span></h3>
+          <span class="role">Front-End Engineer</span>
+          <span class="stack">Nuxt · Vite · Directus</span>
+          <span class="year">2023</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">05</span>
+          <h3 class="name">Faune <span class="it">Magazine.</span></h3>
+          <span class="role">Solo Build</span>
+          <span class="stack">Svelte · Sanity · Cloudflare</span>
+          <span class="year">2022</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">06</span>
+          <h3 class="name">Cabinet <span class="it">Rouge.</span></h3>
+          <span class="role">Front-End Engineer</span>
+          <span class="stack">Next.js · Prismic · GSAP</span>
+          <span class="year">2022</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">07</span>
+          <h3 class="name">Hugo &amp; <span class="it">Fils.</span></h3>
+          <span class="role">Lead Engineer</span>
+          <span class="stack">Astro · Three.js · TinaCMS</span>
+          <span class="year">2021</span>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="proj-row reveal">
+          <span class="n">08</span>
+          <h3 class="name">Maison <span class="it">Bleue.</span></h3>
+          <span class="role">Solo Build</span>
+          <span class="stack">Eleventy · Netlify · Alpine</span>
+          <span class="year">2020</span>
+          <span class="arr">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about">
+    <p class="reveal">I started writing HTML in <em>2009</em>, when I was twelve, on my parents' desktop computer. I have been doing it, mostly, ever since. I'm based in <em>Paris</em> and I work as an independent front-end engineer — usually on long, considered engagements with studios and design teams I trust.</p>
+    <p class="reveal">I care about <em>typography</em> (the kind that makes you stop scrolling), <em>motion</em> (the kind you don't notice), <em>performance</em> (the kind you feel without measuring), and <em>accessibility</em> (the kind that respects the reader).</p>
+    <p class="reveal">I don't do <em>SEO</em>, I don't do <em>paid ads</em>, and I don't run a YouTube channel. I'm happiest at the intersection of design and code, building websites for people who care.</p>
+    <div class="signature reveal"><span class="line"></span> — Robin, Paris, 2025</div>
+  </section>
+
+  <!-- LAB -->
+  <section id="lab" class="side">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 02 / Side projects · ongoing</div>
+        <h2>Things I'm <span class="it">still tinkering with.</span></h2>
+      </div>
+      <p class="row reveal">A small static-site generator for <strong>personal weblogs</strong>, written in Rust. Open source, slow on purpose.</p>
+      <p class="row reveal">A <strong>type specimen generator</strong> for editorial designers — drag a font in, get a clean specimen out.</p>
+      <p class="row reveal">A weekly <strong>newsletter</strong> on the small details of front-end craft. About 4,800 readers, mostly friends at this point.</p>
+      <p class="row reveal">A tiny <strong>CSS framework</strong> built around generous whitespace and one column of type. The whole library is 3KB.</p>
+    </div>
+  </section>
+
+  <!-- QUOTES -->
+  <section class="quotes">
+    <div class="wrap">
+      <blockquote class="reveal">Robin is the <em>kind of developer you stop noticing</em> — and that's the highest compliment I can give. He ships work that doesn't need a credit.</blockquote>
+      <cite class="reveal">— <a href="#">Marlène Aubert</a> · Creative Director, Studio Nørd</cite>
+      <blockquote class="reveal" style="margin-top:80px">He's <em>opinionated in the right ways</em>, patient in all the others. We've worked together on three projects; we'll work together on three more.</blockquote>
+      <cite class="reveal">— <a href="#">Jonas Vinge</a> · Design Director, Balthazar</cite>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta">
+    <div class="wrap">
+      <h2 class="reveal">Have a<br><span class="it">project in mind?</span></h2>
+      <a href="mailto:hi@robin-noguier.com" class="big-btn reveal"><span class="arr">→</span> hi@robin-noguier.com</a>
+      <span class="mail reveal">I read every email · I reply to most · I take on 4–6 engagements a year</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="big"><span class="reg">Robin</span> Noguier.</div>
+      </div>
+      <div>
+        <h4>Elsewhere</h4>
+        <ul>
+          <li><a href="#">GitHub →</a></li>
+          <li><a href="#">Read.cv →</a></li>
+          <li><a href="#">Are.na →</a></li>
+          <li><a href="#">Mastodon →</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#lab">Lab</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="legal">
+        <div class="l"><span class="b"></span> Hand-coded in Paris · v3.2 · 2025</div>
+        <div>No cookies · No tracking · No JS frameworks</div>
+        <div>Colophon · RSS</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const cur=document.getElementById('cursor');
+    let mx=0,my=0,cx=0,cy=0;
+    if(matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+      (function loop(){cx+=(mx-cx)*0.2;cy+=(my-cy)*0.2;cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+      document.querySelectorAll('a,button,.proj-row').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{cur.classList.add('ring')});
+        el.addEventListener('mouseleave',()=>{cur.classList.remove('ring')});
+      });
+      const setLabel=(t)=>{cur.textContent=t;cur.classList.add('label')};
+      const resetLabel=()=>{cur.textContent='';cur.classList.remove('label')};
+      document.querySelectorAll('.proj-row').forEach(el=>{el.addEventListener('mouseenter',()=>setLabel('Open'));el.addEventListener('mouseleave',resetLabel)});
+    } else {cur.style.display='none';}
+
+    /* Magnetic CTA */
+    document.querySelectorAll('.big-btn').forEach(b=>{
+      b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();const x=(e.clientX-r.left-r.width/2)*0.2;const y=(e.clientY-r.top-r.height/2)*0.2;b.style.transform=`translate(${x}px,${y}px) translateY(-3px)`});
+      b.addEventListener('mouseleave',()=>{b.style.transform=''});
+    });
+
+    /* Reveal */
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  </script>
+</body>
+</html>

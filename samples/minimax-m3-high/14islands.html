@@ -1,0 +1,467 @@
+<!doctype html>
+<!--
+  Original URL: https://14islands.com/
+  Filename:     14islands.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: Copenhagen-based digital design & engineering studio. The site
+  is the cleanest example of Scandinavian restraint on the internet — bone
+  white canvas, generous whitespace, a friendly serif/sans pairing, and a
+  very deliberate, almost gallery-like pacing of project tiles. The
+  signature element is the orange-coral "islands" accent that the studio
+  sprinkles across otherwise neutral surfaces.
+
+  Layout / hierarchy:
+    - Slim nav: 14islands mark left, four text links right.
+    - Hero: oversized editorial line "We design and build digital products
+      with personality." set in serif. Sub-line in sans. Scroll cue.
+    - Project index — large image-driven tiles in a 12-col grid, each with
+      client name, year, and a long descriptive label.
+    - Studio section: split with a few carefully written paragraphs and a
+      portrait plate (replaced with a gradient).
+    - Capabilities: four columns with small icons.
+    - Contact CTA + footer.
+
+  Motion / interaction:
+    - Custom cursor (small dot → expanding ring on links).
+    - Project tiles rise and slightly scale on scroll-into-view.
+    - Letters of the hero headline stagger-fade in on load.
+    - Magnetic hover on the CTA pill.
+    - Smooth scroll for nav.
+
+  Color system:
+    --bg-0     #f8f6f1   (bone)
+    --bg-1     #ffffff
+    --ink      #1a1a1a   (deep gray-black)
+    --ink-60   rgba(26,26,26,.60)
+    --island   #ff6240   (signature coral)
+    --sky      #6fa6ff
+    --sand     #e9e1d3
+
+  CHALLENGES SOLVED
+  -----------------
+    - The hero letters stagger in via CSS animation-delay set on each span.
+    - Project tiles use CSS Grid with a 12-col track and span patterns that
+      match the irregular, gallery-like pacing of the live site.
+    - Per-tile accent "island" color is set as a CSS custom property on the
+      tile itself, so the palette reads as curated rather than uniform.
+    - Pure-CSS gradient + noise compositions stand in for project plates.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>14islands — Digital Design &amp; Engineering Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-0:#f8f6f1;
+      --bg-1:#ffffff;
+      --bg-2:#efece4;
+      --ink:#1a1a1a;
+      --ink-80:rgba(26,26,26,.80);
+      --ink-60:rgba(26,26,26,.60);
+      --ink-40:rgba(26,26,26,.40);
+      --ink-20:rgba(26,26,26,.20);
+      --ink-10:rgba(26,26,26,.10);
+      --island:#ff6240;
+      --sky:#6fa6ff;
+      --sand:#e9e1d3;
+      --font-display:'Fraunces','Times New Roman',serif;
+      --font-ui:'DM Sans','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'DM Sans','Helvetica Neue',monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0);scroll-behavior:smooth}
+    body{margin:0;background:var(--bg-0);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+    @media (max-width:900px){body{cursor:auto}}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--island);color:#fff}
+
+    .wrap{max-width:1480px;margin:0 auto;padding:0 56px;position:relative}
+    @media (max-width:980px){.wrap{padding:0 24px}}
+
+    /* ---------- NAV ---------- */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:24px 56px;background:rgba(248,246,241,.85);backdrop-filter:blur(12px)}
+    @media (max-width:980px){.nav{padding:18px 24px}}
+    .nav .mark{font-family:var(--font-display);font-weight:500;font-size:22px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+    .nav .mark .d{width:10px;height:10px;border-radius:50%;background:var(--island);display:inline-block;box-shadow:0 0 12px rgba(255,98,64,.5)}
+    .nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--ink-60)}
+    @media (max-width:780px){.nav ul{display:none}}
+    .nav ul a{position:relative;padding:5px 0;transition:color .25s ease}
+    .nav ul a:hover{color:var(--ink)}
+    .nav ul a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--island);transform:scaleX(0);transform-origin:left;transition:transform .45s ease}
+    .nav ul a:hover::after{transform:scaleX(1)}
+    .nav .cta{padding:11px 22px;background:var(--ink);color:var(--bg-0);border-radius:999px;font-size:13px;letter-spacing:.04em;transition:all .3s ease}
+    .nav .cta:hover{background:var(--island);color:#fff}
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .cursor{position:fixed;top:0;left:0;width:10px;height:10px;border-radius:50%;background:var(--ink);pointer-events:none;z-index:100;transform:translate(-50%,-50%);transition:width .3s ease,height .3s ease,border .3s ease,background .3s ease}
+    .cursor.ring{width:50px;height:50px;background:transparent;border:1.4px solid var(--island)}
+    .cursor.label{width:auto;height:auto;padding:8px 14px;border-radius:999px;background:var(--ink);color:var(--bg-0);font-family:var(--font-ui);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+    @media (max-width:900px){.cursor{display:none}}
+
+    /* ---------- HERO ---------- */
+    .hero{padding:170px 0 100px;position:relative;overflow:hidden}
+    @media (max-width:780px){.hero{padding:130px 0 70px}}
+    .hero .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px;font-family:var(--font-ui);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);flex-wrap:wrap;gap:14px}
+    .hero .meta .d{display:flex;align-items:center;gap:10px}
+    .hero .meta .d .b{width:7px;height:7px;border-radius:50%;background:var(--island);display:inline-block;animation:pulse 2.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.5);opacity:.5}}
+    .hero h1{font-family:var(--font-display);font-weight:500;font-size:clamp(56px,9vw,148px);line-height:1;letter-spacing:-.025em;margin:0;color:var(--ink);max-width:1280px}
+    .hero h1 .it{font-style:italic;color:var(--island);font-weight:400}
+    .hero h1 .l{display:inline-block;opacity:0;transform:translateY(40px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+    .hero h1 .l:nth-child(1){animation-delay:.05s}
+    .hero h1 .l:nth-child(2){animation-delay:.12s}
+    .hero h1 .l:nth-child(3){animation-delay:.19s}
+    .hero h1 .l:nth-child(4){animation-delay:.26s}
+    .hero h1 .l:nth-child(5){animation-delay:.33s}
+    .hero h1 .l:nth-child(6){animation-delay:.40s}
+    .hero h1 .l:nth-child(7){animation-delay:.47s}
+    .hero h1 .l:nth-child(8){animation-delay:.54s}
+    .hero h1 .l:nth-child(9){animation-delay:.61s}
+    .hero h1 .l:nth-child(10){animation-delay:.68s}
+    .hero h1 .l:nth-child(11){animation-delay:.75s}
+    .hero h1 .l:nth-child(12){animation-delay:.82s}
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+    .hero .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:60px;gap:40px;flex-wrap:wrap}
+    .hero p.sub{max-width:520px;font-size:18px;line-height:1.6;color:var(--ink-80);margin:0}
+    .hero p.sub em{font-style:italic;color:var(--island);font-family:var(--font-display);font-size:1.05em}
+    .hero .scroll{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--font-ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .hero .scroll .bar{width:1px;height:60px;background:var(--ink-30);position:relative;overflow:hidden}
+    .hero .scroll .bar::before{content:'';position:absolute;inset:0;background:var(--island);animation:scrolldown 2.2s ease-in-out infinite}
+    @keyframes scrolldown{0%{transform:translateY(-100%)}50%{transform:translateY(0)}100%{transform:translateY(100%)}}
+
+    /* ---------- MARQUEE ---------- */
+    .marq{overflow:hidden;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);padding:18px 0;margin-top:80px}
+    .marq .track{display:flex;gap:60px;animation:slide 38s linear infinite;white-space:nowrap;font-family:var(--font-ui);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60)}
+    .marq .track span{display:inline-flex;align-items:center;gap:60px}
+    .marq .track .d{width:6px;height:6px;border-radius:50%;background:var(--island);display:inline-block}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ---------- WORK ---------- */
+    .work{padding:140px 0}
+    .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:80px;flex-wrap:wrap;gap:24px}
+    .sec-head .label{font-family:var(--font-ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .sec-head .label .b{width:7px;height:7px;border-radius:50%;background:var(--island);display:inline-block;margin-right:10px;vertical-align:middle}
+    .sec-head h2{font-family:var(--font-display);font-weight:500;font-size:clamp(36px,5vw,68px);line-height:1;letter-spacing:-.02em;margin:0;max-width:760px}
+    .sec-head h2 .it{font-style:italic;color:var(--island)}
+    .proj-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:32px 24px}
+    .proj{display:flex;flex-direction:column;gap:18px;position:relative;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+    .proj:hover{transform:translateY(-6px)}
+    .proj .plate{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a1a1a,#3a3a3a);cursor:none}
+    @media (max-width:900px){.proj .plate{cursor:pointer}}
+    .proj .plate::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.13'/></svg>")}
+    .proj .plate .pill{position:absolute;top:14px;left:14px;padding:6px 12px;border-radius:999px;background:var(--accent,var(--island));color:#fff;font-family:var(--font-ui);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;z-index:2}
+    .proj .plate .num{position:absolute;top:14px;right:18px;font-family:var(--font-display);font-style:italic;font-size:48px;color:rgba(255,255,255,.25);z-index:2}
+    .proj .info{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+    .proj .info h3{font-family:var(--font-display);font-weight:500;font-size:24px;line-height:1.1;letter-spacing:-.015em;margin:0;color:var(--ink)}
+    .proj .info h3 .it{font-style:italic;color:var(--accent,var(--island))}
+    .proj .info .cat{font-family:var(--font-ui);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-60);margin-top:6px}
+    .proj .info .year{font-family:var(--font-display);font-style:italic;font-size:18px;color:var(--ink-40)}
+    .proj.span-7{grid-column:span 7}
+    .proj.span-5{grid-column:span 5}
+    .proj.span-6{grid-column:span 6}
+    .proj.span-4{grid-column:span 4}
+    .proj.span-8{grid-column:span 8}
+    @media (max-width:980px){.proj.span-7,.proj.span-5,.proj.span-6,.proj.span-4,.proj.span-8{grid-column:span 12}}
+
+    /* ---------- STUDIO ---------- */
+    .studio{padding:140px 0;background:var(--bg-1);border-radius:32px;margin:60px 36px;position:relative;overflow:hidden}
+    @media (max-width:980px){.studio{margin:30px 12px;padding:80px 24px;border-radius:24px}}
+    .studio::before{content:'14ISLANDS';position:absolute;bottom:-30px;right:40px;font-family:var(--font-display);font-weight:500;font-size:clamp(160px,24vw,360px);line-height:.85;color:rgba(26,26,26,.04);letter-spacing:-.04em;pointer-events:none}
+    .studio .wrap{display:grid;grid-template-columns:1fr 1.5fr;gap:80px;align-items:start;position:relative;z-index:1}
+    @media (max-width:980px){.studio .wrap{grid-template-columns:1fr;gap:40px}}
+    .studio .left h2{font-family:var(--font-display);font-weight:500;font-size:clamp(36px,5vw,64px);line-height:1;letter-spacing:-.025em;margin:0 0 24px}
+    .studio .left h2 .it{font-style:italic;color:var(--island)}
+    .studio .left p{font-size:14px;line-height:1.6;color:var(--ink-60);max-width:340px}
+    .studio .right p{font-size:19px;line-height:1.55;color:var(--ink-80);margin:0 0 24px;max-width:720px}
+    .studio .right p em{font-style:italic;color:var(--island);font-family:var(--font-display);font-size:1.05em}
+
+    /* ---------- CAPABILITIES ---------- */
+    .caps{padding:140px 0}
+    .caps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink-10)}
+    @media (max-width:980px){.caps-grid{grid-template-columns:repeat(2,1fr)}}
+    .cap{padding:48px 28px 40px;border-right:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);transition:background .35s ease;cursor:none}
+    @media (max-width:900px){.cap{cursor:pointer}}
+    .cap:hover{background:var(--bg-1)}
+    .cap:last-child{border-right:none}
+    @media (max-width:980px){.cap:nth-child(2n){border-right:none}.cap:nth-last-child(-n+2){border-bottom:none}}
+    .cap .icon{width:46px;height:46px;border-radius:50%;background:var(--island);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-style:italic;font-size:20px;margin-bottom:24px}
+    .cap.b .icon{background:var(--sky);color:#fff}
+    .cap.c .icon{background:#1a1a1a;color:#fff}
+    .cap.d .icon{background:var(--sand);color:#1a1a1a}
+    .cap h3{font-family:var(--font-display);font-weight:500;font-style:italic;font-size:24px;line-height:1.1;margin:0 0 10px}
+    .cap p{font-size:14px;line-height:1.55;color:var(--ink-60);margin:0;max-width:240px}
+
+    /* ---------- CTA ---------- */
+    .cta{padding:160px 0 120px;text-align:center}
+    .cta h2{font-family:var(--font-display);font-weight:500;font-size:clamp(56px,9vw,148px);line-height:.96;letter-spacing:-.03em;margin:0 0 40px}
+    .cta h2 .it{font-style:italic;color:var(--island)}
+    .cta .big-btn{display:inline-flex;align-items:center;gap:16px;padding:22px 38px;background:var(--ink);color:var(--bg-0);border-radius:999px;font-size:14px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;transition:all .4s ease;cursor:none}
+    @media (max-width:900px){.cta .big-btn{cursor:pointer}}
+    .cta .big-btn:hover{background:var(--island);color:#fff;transform:translateY(-3px);box-shadow:0 20px 40px -15px rgba(255,98,64,.5)}
+    .cta .big-btn .arr{width:30px;height:30px;border:1.4px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+    .cta .mail{display:block;margin-top:30px;font-family:var(--font-ui);font-size:13px;color:var(--ink-60);letter-spacing:.05em}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:var(--ink);color:var(--bg-0);padding:80px 0 36px;border-radius:32px 32px 0 0;margin:60px 0 0}
+    @media (max-width:980px){footer{border-radius:24px 24px 0 0;margin:30px 0 0;padding:60px 0 30px}}
+    footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+    @media (max-width:780px){footer .wrap{grid-template-columns:1fr 1fr}}
+    footer h4{font-family:var(--font-ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--island);margin:0 0 18px;font-weight:500}
+    footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px;color:rgba(248,246,241,.7)}
+    footer ul a:hover{color:var(--bg-0)}
+    footer .big{font-family:var(--font-display);font-weight:500;font-size:clamp(48px,7vw,108px);letter-spacing:-.025em;line-height:.95;margin-bottom:32px}
+    footer .big .it{font-style:italic;color:var(--island)}
+    footer .legal{display:flex;justify-content:space-between;align-items:center;padding-top:40px;margin-top:60px;border-top:1px solid rgba(248,246,241,.15);font-size:12px;color:rgba(248,246,241,.5);font-family:var(--font-ui);letter-spacing:.06em;flex-wrap:wrap;gap:16px;grid-column:1/-1}
+    footer .legal .l{display:flex;align-items:center;gap:10px}
+    footer .legal .l .b{width:7px;height:7px;border-radius:50%;background:var(--island);display:inline-block}
+
+    /* ---------- REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(36px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <nav class="nav">
+    <a href="#" class="mark"><span class="d"></span>14islands</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#studio">Studio</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="cta">Hello →</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="meta reveal">
+        <div class="d"><span class="b"></span> Copenhagen · Available Q1 2025</div>
+        <div>Digital Design &amp; Engineering · Est. 2012</div>
+      </div>
+      <h1><span class="l">W</span><span class="l">e</span><span class="l"> </span><span class="l">d</span><span class="l">e</span><span class="l">s</span><span class="l">i</span><span class="l">g</span><span class="l">n</span><span class="l"> </span><span class="l">&amp;</span><span class="l"> </span><span class="l it">build.</span></h1>
+      <div class="row">
+        <p class="sub reveal">We design and build <em>digital products with personality</em> — for ambitious teams in retail, music, finance, and tech. The kind of work we'd happily use ourselves.</p>
+        <div class="scroll reveal"><div class="bar"></div>Scroll</div>
+      </div>
+    </div>
+    <div class="marq"><div class="track"><span><span class="d"></span> Bang &amp; Olufsen · Spotify · Lego · Pandora · Saxo Bank · DSB · Novo Nordisk · Carlsberg · Maersk · Tivoli · The North Face · Adidas · Patagonia · Polaroid · Wolt · Unity · LEGO Ventures · B&amp;O · 14islands ·</span><span><span class="d"></span> Bang &amp; Olufsen · Spotify · Lego · Pandora · Saxo Bank · DSB · Novo Nordisk · Carlsberg · Maersk · Tivoli · The North Face · Adidas · Patagonia · Polaroid · Wolt · Unity · LEGO Ventures · B&amp;O · 14islands ·</span></div></div>
+  </header>
+
+  <!-- WORK -->
+  <section id="work" class="work">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 01 / Selected work</div>
+        <h2>An island <span class="it">atlas.</span></h2>
+      </div>
+
+      <div class="proj-grid">
+        <article class="proj span-7 reveal" style="--accent:#ff6240">
+          <div class="plate" style="background:linear-gradient(135deg,#ff6240 0%,#1a1a1a 100%);">
+            <span class="pill">Brand · App · 2024</span>
+            <span class="num">01</span>
+          </div>
+          <div class="info">
+            <div><h3>Bang &amp; Olufsen <span class="it">Atelier.</span></h3><div class="cat">Product · iOS · Identity</div></div>
+            <div class="year">2024</div>
+          </div>
+        </article>
+
+        <article class="proj span-5 reveal" style="--accent:#6fa6ff">
+          <div class="plate" style="background:linear-gradient(135deg,#6fa6ff 0%,#1a1a1a 100%);">
+            <span class="pill">Web · 2024</span>
+            <span class="num">02</span>
+          </div>
+          <div class="info">
+            <div><h3>Polaroid <span class="it">Originals.</span></h3><div class="cat">Brand · Site · CMS</div></div>
+            <div class="year">2024</div>
+          </div>
+        </article>
+
+        <article class="proj span-5 reveal" style="--accent:#1a1a1a">
+          <div class="plate" style="background:linear-gradient(135deg,#1a1a1a 0%,#f8f6f1 100%);">
+            <span class="pill">App · 2023</span>
+            <span class="num">03</span>
+          </div>
+          <div class="info">
+            <div><h3>Wolt <span class="it">Drive.</span></h3><div class="cat">Product · iOS · Android</div></div>
+            <div class="year">2023</div>
+          </div>
+        </article>
+
+        <article class="proj span-7 reveal" style="--accent:#ff6240">
+          <div class="plate" style="background:linear-gradient(135deg,#1a1a1a 0%,#ff6240 60%,#f8f6f1 100%);">
+            <span class="pill">Brand · Web · 2024</span>
+            <span class="num">04</span>
+          </div>
+          <div class="info">
+            <div><h3>Patagonia <span class="it">Activism.</span></h3><div class="cat">Campaign · Identity · Web</div></div>
+            <div class="year">2024</div>
+          </div>
+        </article>
+
+        <article class="proj span-4 reveal" style="--accent:#6fa6ff">
+          <div class="plate" style="background:linear-gradient(180deg,#6fa6ff 0%,#1a1a1a 100%);">
+            <span class="pill">Brand · 2023</span>
+            <span class="num">05</span>
+          </div>
+          <div class="info">
+            <div><h3>Saxo <span class="it">Bank.</span></h3><div class="cat">Brand · Identity</div></div>
+            <div class="year">2023</div>
+          </div>
+        </article>
+
+        <article class="proj span-8 reveal" style="--accent:#1a1a1a">
+          <div class="plate" style="background:linear-gradient(135deg,#e9e1d3 0%,#1a1a1a 60%,#ff6240 100%);">
+            <span class="pill">Web · 2023</span>
+            <span class="num">06</span>
+          </div>
+          <div class="info">
+            <div><h3>Tivoli <span class="it">Gardens.</span></h3><div class="cat">Site · Brand · Print</div></div>
+            <div class="year">2023</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section id="studio" class="studio">
+    <div class="wrap">
+      <div class="left reveal">
+        <h2>A small studio <span class="it">on the harbor.</span></h2>
+        <p>14islands is a digital design &amp; engineering studio of 32 people, working out of a converted boatyard in central Copenhagen. We design, prototype, and ship — together.</p>
+      </div>
+      <div class="right reveal">
+        <p>We're a <em>studio of generalists</em>. Half of us design, half of us engineer, and most of us do a little of both. The split keeps us honest — design that can't be built doesn't ship, and engineering without design judgment is just code.</p>
+        <p>We work in <em>small, senior teams</em> over long engagements. We believe in writing less, choosing carefully, and treating every project as if it were our own.</p>
+        <p>Our work has been recognized by <em>FWA, Awwwards, CSSDA, Brand New, ADC, and D&amp;AD</em> — but the metric we care about most is whether a client asks us back.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAPABILITIES -->
+  <section id="services" class="caps">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 02 / Capabilities</div>
+        <h2>What we <span class="it">do.</span></h2>
+      </div>
+      <div class="caps-grid">
+        <div class="cap reveal">
+          <div class="icon">✦</div>
+          <h3>Brand</h3>
+          <p>Identity systems, motion languages, naming — the considered kind.</p>
+        </div>
+        <div class="cap b reveal">
+          <div class="icon">◇</div>
+          <h3>Product</h3>
+          <p>Native iOS, Android, and the kind of products that earn their place.</p>
+        </div>
+        <div class="cap c reveal">
+          <div class="icon">⌬</div>
+          <h3>Engineering</h3>
+          <p>WebGL, native, full-stack — the work that makes ideas shippable.</p>
+        </div>
+        <div class="cap d reveal">
+          <div class="icon">✺</div>
+          <h3>Strategy</h3>
+          <p>Research, narrative, positioning — the strategic layer underneath.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta">
+    <div class="wrap">
+      <h2 class="reveal">Say <span class="it">hello.</span></h2>
+      <a href="mailto:hello@14islands.com" class="big-btn reveal"><span class="arr">→</span> hello@14islands.com</a>
+      <span class="mail reveal">Refshalevej 153 · 1432 Copenhagen K</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="big">14 <span class="it">islands.</span></div>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Manifesto</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="#">Cases</a></li>
+          <li><a href="#">Clients</a></li>
+          <li><a href="#">Awards</a></li>
+          <li><a href="#">Index</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@14islands.com">hello@14islands.com</a></li>
+          <li>Refshalevej 153</li>
+          <li>1432 Copenhagen K</li>
+          <li>+45 33 12 14 14</li>
+        </ul>
+      </div>
+      <div class="legal">
+        <div class="l"><span class="b"></span> 14islands · 2012 — 2025</div>
+        <div>Designed &amp; built in Copenhagen</div>
+        <div>Privacy · Terms · Cookies</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const cur=document.getElementById('cursor');
+    let mx=0,my=0,cx=0,cy=0;
+    if(matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+      (function loop(){cx+=(mx-cx)*0.2;cy+=(my-cy)*0.2;cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+      document.querySelectorAll('a,button,.proj,.cap').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{cur.classList.add('ring')});
+        el.addEventListener('mouseleave',()=>{cur.classList.remove('ring')});
+      });
+      const setLabel=(t)=>{cur.textContent=t;cur.classList.add('label')};
+      const resetLabel=()=>{cur.textContent='';cur.classList.remove('label')};
+      document.querySelectorAll('.proj').forEach(el=>{el.addEventListener('mouseenter',()=>setLabel('View case'));el.addEventListener('mouseleave',resetLabel)});
+    } else {cur.style.display='none';}
+
+    /* Magnetic CTA */
+    document.querySelectorAll('.big-btn').forEach(b=>{
+      b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();const x=(e.clientX-r.left-r.width/2)*0.2;const y=(e.clientY-r.top-r.height/2)*0.2;b.style.transform=`translate(${x}px,${y}px) translateY(-3px)`});
+      b.addEventListener('mouseleave',()=>{b.style.transform=''});
+    });
+
+    /* Reveal */
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    /* Marquee */
+    document.querySelectorAll('.marq .track').forEach(t=>{t.innerHTML=t.innerHTML+t.innerHTML});
+  </script>
+</body>
+</html>

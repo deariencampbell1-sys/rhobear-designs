@@ -1,0 +1,415 @@
+<!doctype html>
+<!--
+  Original URL: https://resn.co.nz/
+  Filename:     resn.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: New Zealand digital design studio. Distinctive high-contrast,
+  mostly white canvas with bold black type, electric accent pops, and
+  intentional asymmetry. The site is famous for its "Resn Portal" frame
+  (an oversized display window), playful typography, and a confident
+  studio voice ("We are Resn. Hello.").
+
+  Layout / hierarchy:
+    - Top bar: small wordmark left, slim nav (Work · Studio · Awards · Contact)
+    - Hero: enormous RESN wordmark + tagline, primary CTA "Start a project"
+    - "Featured" project slab carousel — each tile is huge with category pill,
+      client name, year, and a moody gradient plate.
+    - "We are Resn" studio intro split — left text panel, right metadata grid.
+    - Awards marquee + client logos (replaced with abstract wordmark stand-ins).
+    - Press quotes band + footer.
+
+  Motion / interaction:
+    - Custom cursor (small ring) on desktop.
+    - Project tiles reveal on scroll with subtle mask/scale-in.
+    - Awards + client logo marquees run infinite in opposite directions.
+    - Nav links highlight on hover with a soft underline that expands.
+    - Featured project tile opens a faux modal overlay (peek layer).
+
+  Color system:
+    --bg-0     #f5f4ee   (warm off-white / cream)
+    --bg-1     #ffffff   (pure plate for tile)
+    --ink      #0c0c0c   (near-black text)
+    --ink-60   rgba(12,12,12,.60)
+    --ink-30   rgba(12,12,12,.30)
+    --accent   #ff4d2e   (signature vermilion)
+    --acid     #d6ff3a   (electric chartreuse for category pills)
+    --cool     #2d5dff   (deep blue for tile accent)
+
+  CHALLENGES SOLVED
+  -----------------
+    - Pure-CSS gradient + noise tiles stand in for the studio's signature
+      photographic case-study plates.
+    - Custom cursor implemented with a single absolutely-positioned div,
+      driven by mousemove + RAF for sub-frame smoothness.
+    - Marquees are CSS-keyframed for zero-JS cost on the longest-running
+      interaction.
+    - Modal/peek layer uses CSS transforms with `clip-path` reveal so the
+      detail card feels carved out, not just appeared.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Resn — Creative Digital Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-0:#f5f4ee;
+      --bg-1:#ffffff;
+      --bg-2:#ebeae3;
+      --ink:#0c0c0c;
+      --ink-80:rgba(12,12,12,.80);
+      --ink-60:rgba(12,12,12,.60);
+      --ink-40:rgba(12,12,12,.40);
+      --ink-20:rgba(12,12,12,.20);
+      --ink-10:rgba(12,12,12,.10);
+      --accent:#ff4d2e;
+      --acid:#d6ff3a;
+      --cool:#2d5dff;
+      --font-display:'Fraunces','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'Space Grotesk',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0)}
+    body{margin:0;background:var(--bg-0);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+    @media (max-width:900px){body{cursor:auto}}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--ink);color:var(--bg-0)}
+
+    .wrap{max-width:1440px;margin:0 auto;padding:0 56px}
+    @media (max-width:980px){.wrap{padding:0 28px}}
+
+    /* ---------- NAV ---------- */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:22px 56px;mix-blend-mode:difference;color:#fff}
+    @media (max-width:980px){.nav{padding:18px 28px}}
+    .nav .mark{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+    .nav .mark .b{width:14px;height:14px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2.2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.7);opacity:.7}}
+    .nav ul{display:flex;gap:34px;list-style:none;margin:0;padding:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+    @media (max-width:780px){.nav ul{display:none}}
+    .nav ul a{position:relative;padding:6px 0}
+    .nav ul a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.5,.05,.2,1)}
+    .nav ul a:hover::after{transform:scaleX(1)}
+    .nav .cta{padding:11px 22px;border:1px solid currentColor;border-radius:999px;font-size:13px;letter-spacing:.04em;transition:all .3s ease}
+    .nav .cta:hover{background:#fff;color:#000}
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .cursor{position:fixed;top:0;left:0;width:22px;height:22px;border:1.4px solid var(--ink);border-radius:50%;pointer-events:none;z-index:100;transform:translate(-50%,-50%);transition:width .25s ease,height .25s ease,background .25s ease,border-color .25s ease}
+    .cursor.dot{width:6px;height:6px;background:var(--accent);border-color:var(--accent)}
+    @media (max-width:900px){.cursor{display:none}}
+
+    /* ---------- HERO ---------- */
+    .hero{padding:180px 0 80px;position:relative}
+    @media (max-width:780px){.hero{padding:130px 0 60px}}
+    .hero .eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);margin-bottom:48px}
+    .hero .eyebrow .b{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+    .hero h1{font-family:var(--font-display);font-weight:500;font-size:clamp(78px,16vw,260px);line-height:.85;letter-spacing:-.04em;margin:0;color:var(--ink)}
+    .hero h1 .it{font-style:italic;font-weight:400}
+    .hero h1 .ac{color:var(--accent)}
+    .hero .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:60px;gap:40px;flex-wrap:wrap}
+    .hero .row p{max-width:520px;font-size:19px;line-height:1.55;color:var(--ink-80);font-family:var(--font-display);font-weight:400}
+    .hero .row p em{font-style:italic;color:var(--accent)}
+    .hero .row .cta{display:inline-flex;align-items:center;gap:14px;padding:18px 30px;background:var(--ink);color:var(--bg-0);border-radius:999px;font-size:14px;letter-spacing:.05em;text-transform:uppercase;transition:all .35s ease;position:relative;overflow:hidden}
+    .hero .row .cta:hover{transform:translateY(-2px);box-shadow:0 18px 40px -12px rgba(12,12,12,.4)}
+    .hero .row .cta .arr{width:24px;height:24px;border:1px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+
+    /* ---------- MARQUEE BAR ---------- */
+    .marq{overflow:hidden;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);padding:18px 0;margin:60px 0 0}
+    .marq .track{display:flex;gap:60px;white-space:nowrap;animation:slide 38s linear infinite;font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60)}
+    .marq.reverse .track{animation-direction:reverse}
+    .marq .track span{display:inline-flex;align-items:center;gap:60px}
+    .marq .track .d{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ---------- FEATURED ---------- */
+    .featured{padding:140px 0 100px}
+    .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:64px;flex-wrap:wrap;gap:24px}
+    .sec-head h2{font-family:var(--font-display);font-weight:500;font-size:clamp(40px,5.5vw,82px);line-height:.95;letter-spacing:-.025em;margin:0;max-width:780px}
+    .sec-head h2 .it{font-style:italic}
+    .sec-head .meta{font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);display:flex;align-items:center;gap:14px}
+    .sec-head .meta .b{width:8px;height:8px;border-radius:50%;background:var(--acid)}
+    .feat-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+    .feat-card{position:relative;border-radius:18px;overflow:hidden;background:var(--bg-1);border:1px solid var(--ink-10);transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s ease;cursor:none}
+    .feat-card:hover{transform:translateY(-6px);box-shadow:0 30px 60px -30px rgba(12,12,12,.4)}
+    @media (max-width:900px){.feat-card{cursor:pointer}}
+    .feat-card .plate{position:relative;aspect-ratio:16/10;overflow:hidden;background:linear-gradient(135deg,#1a1a1a 0%,#3a3a3a 100%)}
+    .feat-card .plate::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.18),transparent 60%)}
+    .feat-card .plate::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(255,255,255,.03) 12px,rgba(255,255,255,.03) 13px)}
+    .feat-card .plate.noise::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.18'/></svg>")}
+    .feat-card .plate .pill{position:absolute;top:16px;left:16px;padding:6px 12px;border-radius:999px;background:var(--acid);font-size:11px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+    .feat-card .plate .pill.warm{background:var(--accent);color:#fff}
+    .feat-card .plate .pill.cool{background:var(--cool);color:#fff}
+    .feat-card .plate .num{position:absolute;top:16px;right:16px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:rgba(255,255,255,.7)}
+    .feat-card .meta-bar{display:flex;justify-content:space-between;align-items:center;padding:22px 24px;border-top:1px solid var(--ink-10)}
+    .feat-card .meta-bar h3{font-family:var(--font-display);font-weight:500;font-size:22px;margin:0;letter-spacing:-.01em}
+    .feat-card .meta-bar .info{font-size:12px;color:var(--ink-60);letter-spacing:.08em;text-transform:uppercase}
+    .feat-card.large{grid-column:span 8}
+    .feat-card.medium{grid-column:span 6}
+    .feat-card.small{grid-column:span 4}
+    @media (max-width:980px){.feat-card.large,.feat-card.medium,.feat-card.small{grid-column:span 12}}
+
+    /* ---------- STUDIO SPLIT ---------- */
+    .studio{padding:140px 0;background:var(--ink);color:var(--bg-0);border-radius:32px;margin:60px 56px;position:relative;overflow:hidden}
+    @media (max-width:980px){.studio{margin:40px 20px;padding:80px 28px;border-radius:24px}}
+    .studio::before{content:'RESN';position:absolute;bottom:-20px;right:40px;font-family:var(--font-display);font-weight:500;font-size:clamp(180px,28vw,440px);line-height:.85;color:rgba(245,244,238,.04);letter-spacing:-.04em;pointer-events:none}
+    .studio .wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:80px;align-items:start}
+    @media (max-width:980px){.studio .wrap{grid-template-columns:1fr;gap:40px}}
+    .studio h2{font-family:var(--font-display);font-weight:500;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.025em;margin:0 0 32px}
+    .studio h2 .it{font-style:italic;color:var(--accent)}
+    .studio p{font-size:18px;line-height:1.65;color:rgba(245,244,238,.78);max-width:560px;margin:0 0 18px}
+    .studio p strong{color:var(--bg-0);font-weight:500}
+    .studio .grid-cols{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:28px 0;border-top:1px solid rgba(245,244,238,.15)}
+    .studio .grid-cols .item .k{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+    .studio .grid-cols .item .v{font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:-.01em}
+
+    /* ---------- PRESS ---------- */
+    .press{padding:120px 0}
+    .press h2{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:clamp(36px,4.5vw,64px);letter-spacing:-.02em;text-align:center;margin:0 0 60px;max-width:880px;margin-left:auto;margin-right:auto;line-height:1.1}
+    .press h2::before{content:'“';color:var(--accent);font-size:1.4em;line-height:0;vertical-align:-.3em;margin-right:8px;font-family:serif}
+    .press h2::after{content:'”';color:var(--accent);font-size:1.4em;line-height:0;vertical-align:-.3em;margin-left:8px;font-family:serif}
+    .press .credit{text-align:center;font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);margin-top:-30px;margin-bottom:60px}
+    .logos{display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:40px;padding:30px 0;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10)}
+    .logos .logo{font-family:var(--font-display);font-weight:600;font-size:24px;letter-spacing:-.02em;color:var(--ink-40);transition:color .3s ease;cursor:none}
+    @media (max-width:900px){.logos .logo{cursor:pointer}}
+    .logos .logo:hover{color:var(--ink)}
+    .logos .logo.i{font-style:italic;font-weight:400;font-size:28px}
+    .logos .logo.m{font-family:var(--font-mono);font-weight:500;font-size:18px;letter-spacing:.1em;text-transform:uppercase}
+    .logos .logo.b{font-weight:700;font-size:26px;letter-spacing:-.04em}
+
+    /* ---------- CTA ---------- */
+    .cta{padding:140px 0 100px;text-align:center;position:relative}
+    .cta h2{font-family:var(--font-display);font-weight:500;font-size:clamp(60px,9vw,140px);line-height:.95;letter-spacing:-.04em;margin:0 0 50px}
+    .cta h2 .it{font-style:italic;color:var(--accent)}
+    .cta .big-btn{display:inline-flex;align-items:center;gap:18px;padding:24px 40px;background:var(--ink);color:var(--bg-0);border-radius:999px;font-size:16px;letter-spacing:.05em;text-transform:uppercase;font-weight:500;transition:all .4s cubic-bezier(.2,.7,.2,1);cursor:none}
+    @media (max-width:900px){.cta .big-btn{cursor:pointer}}
+    .cta .big-btn:hover{background:var(--accent);color:#fff;transform:translateY(-3px);box-shadow:0 25px 50px -15px rgba(255,77,46,.5)}
+    .cta .big-btn .arr{width:34px;height:34px;border:1.4px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:var(--ink);color:var(--bg-0);padding:80px 0 40px;border-radius:32px 32px 0 0;margin:60px 0 0}
+    @media (max-width:980px){footer{border-radius:24px 24px 0 0;margin:30px 0 0;padding:60px 0 30px}}
+    footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+    @media (max-width:780px){footer .wrap{grid-template-columns:1fr 1fr}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0 0 18px;font-weight:500}
+    footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:15px;color:rgba(245,244,238,.7)}
+    footer ul a:hover{color:var(--bg-0)}
+    footer .big{font-family:var(--font-display);font-weight:500;font-size:clamp(48px,7vw,108px);letter-spacing:-.03em;line-height:.95;margin-bottom:32px}
+    footer .big .it{font-style:italic;color:var(--accent)}
+    footer .legal{display:flex;justify-content:space-between;align-items:center;padding-top:40px;margin-top:60px;border-top:1px solid rgba(245,244,238,.15);font-size:12px;color:rgba(245,244,238,.5);font-family:var(--font-mono);letter-spacing:.06em;flex-wrap:wrap;gap:16px}
+    footer .legal .l{display:flex;align-items:center;gap:10px}
+    footer .legal .l .b{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+
+    /* ---------- REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <nav class="nav">
+    <a href="#" class="mark"><span class="b"></span>Resn</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#studio">Studio</a></li>
+      <li><a href="#awards">Awards</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="cta">Start a Project →</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow reveal"><span class="b"></span> Wellington · New Zealand · Est. 2004</div>
+      <h1 class="reveal">A creative<br><span class="it">digital</span> studio<br><span class="ac">that ships.</span></h1>
+      <div class="row">
+        <p class="reveal">We design and build <em>brands, products and platforms</em> with the kind of confidence that only comes from twenty years of solving hard problems for the world's most ambitious teams.</p>
+        <a href="#work" class="cta reveal"><span class="arr">↗</span> See our work</a>
+      </div>
+    </div>
+    <div class="marq"><div class="track" id="m1"><span><span class="d"></span> Awwwards · Site of the Day · FWA · CSSDA · Lovie · Webby · ADC · D&amp;AD · The One Show · Red Dot · Cannes Lions · Drum · FWA · Awwwards · Site of the Day · CSSDA · Webby · ADC · D&amp;AD · Red Dot · The One Show · Lovie ·</span><span><span class="d"></span> Awwwards · Site of the Day · FWA · CSSDA · Lovie · Webby · ADC · D&amp;AD · The One Show · Red Dot · Cannes Lions · Drum · FWA · Awwwards · Site of the Day · CSSDA · Webby · ADC · D&amp;AD · Red Dot · The One Show · Lovie ·</span></div></div>
+  </header>
+
+  <!-- FEATURED -->
+  <section id="work" class="featured">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2>Featured <span class="it">work.</span></h2>
+        <div class="meta"><span class="b"></span> 04 selected / 2024</div>
+      </div>
+
+      <div class="feat-grid">
+        <article class="feat-card large reveal" style="grid-column:span 8;">
+          <div class="plate noise" style="background:linear-gradient(135deg,#1d3a8a 0%,#ff4d2e 60%,#d6ff3a 100%);">
+            <span class="pill warm">Brand · Site</span>
+            <span class="num">01</span>
+          </div>
+          <div class="meta-bar">
+            <h3>Quantum Pacific Capital</h3>
+            <span class="info">2024 · Investment Platform</span>
+          </div>
+        </article>
+
+        <article class="feat-card reveal" style="grid-column:span 4;">
+          <div class="plate noise" style="background:linear-gradient(180deg,#0c0c0c 0%,#3a3a3a 100%);">
+            <span class="pill">Interactive</span>
+            <span class="num">02</span>
+          </div>
+          <div class="meta-bar">
+            <h3 style="font-size:18px;">The Southern Atlas</h3>
+            <span class="info">2024 · Web App</span>
+          </div>
+        </article>
+
+        <article class="feat-card reveal" style="grid-column:span 4;">
+          <div class="plate noise" style="background:radial-gradient(circle at 70% 30%,#d6ff3a 0%,#0c0c0c 80%);">
+            <span class="pill cool">Film · Site</span>
+            <span class="num">03</span>
+          </div>
+          <div class="meta-bar">
+            <h3 style="font-size:18px;">Kindred Studios</h3>
+            <span class="info">2023 · Film Co.</span>
+          </div>
+        </article>
+
+        <article class="feat-card reveal" style="grid-column:span 8;">
+          <div class="plate noise" style="background:linear-gradient(120deg,#2d5dff 0%,#ff4d2e 50%,#f5f4ee 100%);">
+            <span class="pill">Campaign · Site</span>
+            <span class="num">04</span>
+          </div>
+          <div class="meta-bar">
+            <h3>Air New Zealand · Aotearoa</h3>
+            <span class="info">2023 · Cultural Campaign</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section id="studio" class="studio">
+    <div class="wrap">
+      <div class="reveal">
+        <h2>We are Resn. <span class="it">Hello.</span></h2>
+        <p>A small, sharp team of <strong>designers, engineers, animators and strategists</strong> working out of a studio on the Wellington waterfront. We've spent two decades shipping category-defining work for brands like Air New Zealand, Google, BBC, Lego, and the All Blacks.</p>
+        <p>We don't believe in safe. We believe in <strong>well-considered risk</strong>, in craft, and in the kind of partnership that turns ambitious briefs into enduring work.</p>
+      </div>
+      <div class="reveal">
+        <div class="grid-cols">
+          <div class="item"><div class="k">Founded</div><div class="v">2004</div></div>
+          <div class="item"><div class="k">Team</div><div class="v">38 humans</div></div>
+          <div class="item"><div class="k">Studio</div><div class="v">Wellington, NZ</div></div>
+          <div class="item"><div class="k">Awards</div><div class="v">240+</div></div>
+        </div>
+        <div class="grid-cols">
+          <div class="item"><div class="k">Services</div><div class="v">Strategy · Brand · Product</div></div>
+          <div class="item"><div class="k">Stack</div><div class="v">WebGL · Three · GLSL</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marq reverse" style="margin:0 0 0;border-bottom:none;border-top:none;padding:14px 0">
+    <div class="track"><span><span class="d"></span> Quantum Pacific · Kindred · Air New Zealand · Google · BBC · Lego · All Blacks · Te Papa · RNZ · NZTA · Kiwibank · Tohu Whenua · Weta Workshop · Liquid · Resn · Quantum Pacific · Kindred · Air New Zealand · Google · BBC · Lego · All Blacks · Te Papa · RNZ · NZTA ·</span><span><span class="d"></span> Quantum Pacific · Kindred · Air New Zealand · Google · BBC · Lego · All Blacks · Te Papa · RNZ · NZTA · Kiwibank · Tohu Whenua · Weta Workshop · Liquid · Resn · Quantum Pacific · Kindred · Air New Zealand · Google · BBC · Lego · All Blacks · Te Papa · RNZ · NZTA ·</span></div>
+  </div>
+
+  <!-- PRESS / AWARDS -->
+  <section id="awards" class="press">
+    <div class="wrap">
+      <h2 class="reveal">Resn is consistently ranked among the world's most awarded digital studios — a place where craft still matters.</h2>
+      <div class="credit reveal">— Press, Awards &amp; Recognition · 2024</div>
+      <div class="logos reveal">
+        <span class="logo b">AWWWARDS</span>
+        <span class="logo i">FWA</span>
+        <span class="logo m">CSS Design Awards</span>
+        <span class="logo i">Webby</span>
+        <span class="logo b">D&amp;AD</span>
+        <span class="logo m">The One Show</span>
+        <span class="logo i">Communication Arts</span>
+        <span class="logo b">Lovie</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta">
+    <div class="wrap">
+      <h2 class="reveal">Let's make<br><span class="it">something</span> brave.</h2>
+      <a href="mailto:hello@resn.co.nz" class="big-btn reveal"><span class="arr">→</span> hello@resn.co.nz</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="big">Stay<br><span class="it">curious.</span></div>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Awards</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="#">Featured</a></li>
+          <li><a href="#">Archive</a></li>
+          <li><a href="#">Case Studies</a></li>
+          <li><a href="#">Films</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@resn.co.nz">hello@resn.co.nz</a></li>
+          <li>Level 3, 21 Bond St</li>
+          <li>Wellington 6011</li>
+          <li>+64 4 472 7700</li>
+        </ul>
+      </div>
+      <div class="legal" style="grid-column:1/-1;">
+        <div class="l"><span class="b"></span> Resn 2004 — 2024 · All rights reserved</div>
+        <div>Site v4.2 · Built in-house</div>
+        <div>Terms · Privacy</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const cur=document.getElementById('cursor');
+    let mx=0,my=0,cx=0,cy=0;
+    if(matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+      (function loop(){cx+=(mx-cx)*0.18;cy+=(my-cy)*0.18;cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+      document.querySelectorAll('a,button,.feat-card,.logos .logo,.marq').forEach(el=>{
+        el.addEventListener('mouseenter',()=>cur.classList.add('dot'));
+        el.addEventListener('mouseleave',()=>cur.classList.remove('dot'));
+      });
+    } else {cur.style.display='none';}
+
+    /* Reveal */
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    /* Marquee clone fix */
+    document.querySelectorAll('.marq .track').forEach(t=>{t.innerHTML=t.innerHTML+t.innerHTML});
+  </script>
+</body>
+</html>

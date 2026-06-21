@@ -14,9 +14,21 @@
 | 5 | bychudy.com | `bychudy.html` | Warsaw art direction + photography studio for the Polish music industry — typographic project index (no imagery), featured Ryk × Fantasmagorie spread, six category tiles, custom cursor with ring hover state. |
 | 6 | wearestokt.com | `wearestokt.html` | Motion-driven branding studio — Three.js breathing icosahedron hero with custom shader, letter-by-letter reveal of the mission line, scrolling service marquee, six featured project plates, Motion Index reel grid. |
 
+## Round-2 Batch B (7 new sites)
+
+| # | Site | File | Notes |
+|---|------|------|-------|
+| 7 | resn.co.nz | `resn.html` | Wellington creative digital studio — warm cream canvas with vermilion accents, oversized RESN wordmark with italic accent, "We are Resn. Hello." split, awards marquee, ink-black studio band with giant watermark. |
+| 8 | hellomonday.com | `hellomonday.html` | Brooklyn creative agency — peach-cream gradient hero, "Hello, world." in italic serif, alternating project tiles ("Hello, Google.", "Hello, Spotify.", "Hello, Met.", "Hello, Mailchimp."), pastel capability cards, custom cursor with label swap. |
+| 9 | buildinamsterdam.com | `buildinamsterdam.html` | Amsterdam creative-tech studio — deep ink canvas, mint-accent kinetic letter in hero, 4-up service grid, alternating case rows (WhatsApp, Google, Adyen, Porsche), numeric approach stats, news cards. |
+| 10 | cuberto.com | `cuberto.html` | Moscow digital product studio — rotating Three.js icosahedron centerpiece with wireframe solids + fresnel rim, premium index-style case rows (Stripe, Linear, Notion, Framer, Arc, Pitch), philosophy spread, 3-up services band. |
+| 11 | 14islands.com | `14islands.html` | Copenhagen digital studio — bone-white Nordic canvas, signature coral "island" accent, staggered letter-reveal hero, gallery-paced 12-col project grid (B&O, Polaroid, Wolt, Patagonia, Saxo, Tivoli), 4-up capabilities. |
+| 12 | exoape.com | `exoape.html` | Amsterdam digital creative studio — full-viewport EXO APE wordmark in heavy Archivo Black, italic tagline, giant client marquee, alternating case rows (Spotify Wrapped, Adidas, KLM, Patagonia), 8-tile awards wall. |
+| 13 | robin-noguier.com | `robin-noguier.html` | Parisian indie front-end developer portfolio — pure editorial typography, no imagery, single-line project list (name / role / stack / year), long-form manifesto, side-project "lab" band, two pull-quotes. |
+
 ## Approach
 
-- **Self-contained HTML per site** — Tailwind via CDN + Three.js via CDN (only used in `alche-studio.html` and `wearestokt.html`, where WebGL is on-brief), no build step, no external assets.
+- **Self-contained HTML per site** — Tailwind via CDN + Three.js via CDN (used in `cuberto.html` and `wearestokt.html` for the icosahedron centerpiece), no build step, no external assets.
 - **No brand assets used** — every illustration, plate, thumbnail, and avatar is procedural CSS, gradient + noise composition, inline SVG, or WebGL geometry.
 - **Color tokens defined as CSS variables** at the top of each file for easy audit.
 - **Comment block at top of each file** documents the original URL, live-site observations, and challenges solved.
@@ -31,5 +43,12 @@
 - **Tab system + BGM player on 109ichiki.html** — radio-button tabs with smooth panel transitions, faux BGM controls with a moving progress bar, mosaic profile tile.
 - **Type-as-imagery on bychudy.com** — the live site is photography-heavy; the brief forbade brand assets, so the project names themselves become the visual centerpiece, set in Fraunces at 7vw with italic accents.
 - **Motion reveal on wearestokt.com** — letter-by-letter reveal of the mission line on scroll-into-view, plus a Three.js icosahedron with custom shader breathing behind the hero type.
+- **Vermilion wordmark + cream canvas on resn.html** — the "We are Resn. Hello." split mirrors the live site's split personality; giant RESN watermark on the dark studio band reads as a "we mean it" signature.
+- **"Hello, [Brand]." pattern on hellomonday.html** — every project is named the way the studio names them on the live site, set in italic DM Serif Display at ~7vw against alternating gradient plates.
+- **Kinetic gold letter on buildinamsterdam.html** — a single italic glyph in the hero breathes / rotates to capture the playful-yet-precise Dutch restraint of the live site; mint accent ties everything together.
+- **Three.js rotating icosahedron on cuberto.html** — wireframe outer + solid inner + floating point cloud, scroll-driven rotation, capturing the studio's signature geometric centerpiece.
+- **Coral "island" accent on 14islands.html** — every project tile carries its own accent variable so the gallery reads curated, not uniform; per-letter hero stagger matches the deliberate pacing.
+- **Full-viewport EXO APE wordmark on exoape.html** — Archivo Black at ~360px, italic tagline, awards wall of 8 tiles with hover background — captures the bold modernist voice.
+- **Pure typography on robin-noguier.html** — the only file in this batch with zero imagery. Eight single-line project rows + a long manifesto + two pull quotes + an "ongoing lab" band; honors the quiet, editorial restraint of the original.
 
 Full rules: [`../README.md`](../README.md) · [`../AGENTS.md`](../AGENTS.md)

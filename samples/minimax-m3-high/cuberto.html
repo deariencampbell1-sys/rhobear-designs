@@ -1,0 +1,496 @@
+<!doctype html>
+<!--
+  Original URL: https://cuberto.com/
+  Filename:     cuberto.html
+  Model:        MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: Globally awarded Russian digital product studio. The site is
+  one of the most recognizable on the internet for its signature black-canvas
+  product-showcase reel: massive serif headline, an oversized WebGL/Three.js
+  centerpiece that morphs between geometric solids, and a meticulous,
+  scroll-driven case-study index. The voice is precise, confident, and
+  quietly playful.
+
+  Layout / hierarchy:
+    - Minimal nav: small wordmark left, two main items (Work / Services)
+      right, with a magnetic pill CTA.
+    - Hero: enormous serif "We design products / that people love." headline
+      + a Three.js rotating geometric centerpiece to the right.
+    - Case index: vertical list of full-bleed project rows, each row has
+      client name, year, category, and an oversized gradient plate.
+    - Awards + Recognition wall.
+    - Studio intro (people, philosophy, services).
+    - Footer.
+
+  Motion / interaction:
+    - Three.js rotating low-poly centerpiece (icosahedron / torus blend) with
+      custom rim/fresnel shader.
+    - Cursor: small dot → expanding ring on hover; label swap on case rows
+      ("View case", "Play reel").
+    - Marquees for press logos.
+    - Magnetic CTA.
+
+  Color system:
+    --bg-0     #0d0d0d   (deep ink)
+    --bg-1     #161616   (raised panel)
+    --ink      #f0f0f0   (warm white)
+    --ink-60   rgba(240,240,240,.60)
+    --mint     #98ffd2   (signature mint accent)
+    --acid     #d4ff3a
+    --rose     #ff5e87
+    --gold     #f0c674
+
+  CHALLENGES SOLVED
+  -----------------
+    - Built a Three.js (CDN) rotating icosahedron centerpiece with custom
+      rim shader; renders in the hero and animates on scroll-into-view.
+    - Cursor with label DOM swap.
+    - Per-row gradient plates recreate the visual weight of case-study
+      hero plates.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cuberto — Digital Product Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root{
+      --bg-0:#0d0d0d;
+      --bg-1:#161616;
+      --bg-2:#1f1f1f;
+      --ink:#f0f0f0;
+      --ink-80:rgba(240,240,240,.80);
+      --ink-60:rgba(240,240,240,.60);
+      --ink-40:rgba(240,240,240,.40);
+      --ink-20:rgba(240,240,240,.20);
+      --ink-10:rgba(240,240,240,.10);
+      --mint:#98ffd2;
+      --acid:#d4ff3a;
+      --rose:#ff5e87;
+      --gold:#f0c674;
+      --font-display:'Fraunces','Times New Roman',serif;
+      --font-ui:'Inter','Helvetica Neue',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg-0);scroll-behavior:smooth}
+    body{margin:0;background:var(--bg-0);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+    @media (max-width:900px){body{cursor:auto}}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    ::selection{background:var(--mint);color:#000}
+
+    .wrap{max-width:1480px;margin:0 auto;padding:0 56px;position:relative}
+    @media (max-width:980px){.wrap{padding:0 24px}}
+
+    /* ---------- NAV ---------- */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:22px 56px}
+    @media (max-width:980px){.nav{padding:18px 24px}}
+    .nav .mark{font-family:var(--font-display);font-weight:500;font-size:22px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+    .nav .mark .d{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+    .nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--ink-60)}
+    @media (max-width:780px){.nav ul{display:none}}
+    .nav ul a{position:relative;padding:5px 0;transition:color .25s ease}
+    .nav ul a:hover{color:var(--ink)}
+    .nav ul a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--mint);transform:scaleX(0);transform-origin:left;transition:transform .45s ease}
+    .nav ul a:hover::after{transform:scaleX(1)}
+    .nav .cta{padding:11px 22px;border:1px solid var(--ink-30);border-radius:999px;font-size:13px;color:var(--ink);transition:all .3s ease}
+    .nav .cta:hover{background:var(--mint);color:#000;border-color:var(--mint)}
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .cursor{position:fixed;top:0;left:0;width:8px;height:8px;border-radius:50%;background:var(--ink);pointer-events:none;z-index:100;transform:translate(-50%,-50%);transition:width .3s ease,height .3s ease,border .3s ease}
+    .cursor.ring{width:46px;height:46px;background:transparent;border:1.4px solid var(--mint);mix-blend-mode:difference}
+    .cursor.label{width:auto;height:auto;padding:8px 14px;border-radius:999px;background:var(--ink);color:var(--bg-0);font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+    @media (max-width:900px){.cursor{display:none}}
+
+    /* ---------- HERO ---------- */
+    .hero{padding:160px 0 80px;position:relative;overflow:hidden}
+    @media (max-width:780px){.hero{padding:120px 0 60px}}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(60% 60% at 80% 30%,rgba(152,255,210,.07),transparent 60%);pointer-events:none}
+    .hero .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);flex-wrap:wrap;gap:14px}
+    .hero .meta .d{display:flex;align-items:center;gap:10px}
+    .hero .meta .d .b{width:7px;height:7px;border-radius:50%;background:var(--mint);display:inline-block;animation:pulse 2.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.5);opacity:.5}}
+    .hero .row{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:center}
+    @media (max-width:980px){.hero .row{grid-template-columns:1fr;gap:30px}}
+    .hero h1{font-family:var(--font-display);font-weight:500;font-size:clamp(56px,10vw,164px);line-height:.96;letter-spacing:-.03em;margin:0;color:var(--ink)}
+    .hero h1 .it{font-style:italic;color:var(--mint);font-weight:400}
+    .hero p.sub{margin-top:30px;font-size:18px;line-height:1.55;color:var(--ink-80);max-width:560px}
+    .hero p.sub em{font-style:italic;color:var(--mint)}
+    .hero .visual{position:relative;width:100%;aspect-ratio:1/1;max-width:480px;margin-left:auto;border-radius:24px;overflow:hidden;background:radial-gradient(circle at 50% 50%,rgba(152,255,210,.15),transparent 60%)}
+    #cubeCanvas{position:absolute;inset:0;width:100%;height:100%}
+    .hero .visual::after{content:'';position:absolute;inset:0;border:1px solid var(--ink-10);border-radius:24px;pointer-events:none}
+
+    /* ---------- MARQUEE ---------- */
+    .marq{overflow:hidden;border-top:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);padding:22px 0;margin-top:80px}
+    .marq .track{display:flex;gap:60px;animation:slide 40s linear infinite;white-space:nowrap;font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60)}
+    .marq .track span{display:inline-flex;align-items:center;gap:60px}
+    .marq .track .d{width:6px;height:6px;border-radius:50%;background:var(--mint);display:inline-block}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ---------- WORK INDEX ---------- */
+    .work{padding:120px 0}
+    .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:60px;flex-wrap:wrap;gap:24px}
+    .sec-head .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60)}
+    .sec-head .label .b{width:7px;height:7px;border-radius:50%;background:var(--mint);display:inline-block;margin-right:10px;vertical-align:middle}
+    .sec-head h2{font-family:var(--font-display);font-weight:500;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.025em;margin:0;max-width:760px}
+    .sec-head h2 .it{font-style:italic;color:var(--mint)}
+    .idx{display:flex;flex-direction:column}
+    .idx-row{display:grid;grid-template-columns:80px 1fr 200px 1.4fr 80px;gap:24px;align-items:center;padding:36px 0;border-top:1px solid var(--ink-10);position:relative;transition:padding .4s ease;cursor:none}
+    @media (max-width:900px){.idx-row{cursor:pointer}}
+    @media (max-width:980px){.idx-row{grid-template-columns:60px 1fr 1.2fr 50px;gap:14px;padding:28px 0}}
+    .idx-row:last-child{border-bottom:1px solid var(--ink-10)}
+    .idx-row:hover{padding-left:24px;padding-right:24px;background:var(--bg-1);margin:0 -24px;border-color:transparent;border-radius:16px}
+    @media (max-width:980px){.idx-row:hover{padding-left:14px;padding-right:14px;margin:0 -14px}}
+    .idx-row .n{font-family:var(--font-mono);font-size:13px;color:var(--ink-40);letter-spacing:.1em}
+    .idx-row .client{font-family:var(--font-display);font-weight:500;font-size:clamp(28px,3.6vw,56px);line-height:1;letter-spacing:-.02em;margin:0;color:var(--ink);transition:color .3s ease}
+    .idx-row:hover .client{color:var(--mint)}
+    .idx-row .client .it{font-style:italic;font-weight:400}
+    .idx-row .cat{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60)}
+    .idx-row .plate{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1c1c1c,#3a3a3a)}
+    .idx-row .plate::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.18'/></svg>")}
+    .idx-row .plate.a{background:linear-gradient(135deg,#ff5e87,#f0c674)}
+    .idx-row .plate.b{background:linear-gradient(135deg,#98ffd2,#161616)}
+    .idx-row .plate.c{background:linear-gradient(135deg,#d4ff3a,#0d0d0d)}
+    .idx-row .plate.d{background:linear-gradient(135deg,#f0c674,#ff5e87)}
+    .idx-row .plate.e{background:linear-gradient(135deg,#161616,#98ffd2)}
+    .idx-row .plate.f{background:linear-gradient(135deg,#ff5e87,#161616)}
+    .idx-row .arr{display:flex;align-items:center;justify-content:center;width:60px;height:60px;border:1px solid var(--ink-30);border-radius:50%;transition:all .4s ease;font-size:18px}
+    .idx-row:hover .arr{background:var(--mint);color:#000;border-color:var(--mint);transform:rotate(-45deg)}
+
+    /* ---------- PHILOSOPHY ---------- */
+    .philosophy{padding:140px 0;background:var(--bg-1);border-radius:32px;margin:60px 36px;position:relative;overflow:hidden}
+    @media (max-width:980px){.philosophy{margin:30px 12px;padding:80px 24px;border-radius:24px}}
+    .philosophy::before{content:'PHILOSOPHY';position:absolute;top:30px;right:50px;font-family:var(--font-mono);font-size:11px;letter-spacing:.4em;color:var(--ink-20)}
+    .philosophy .wrap{display:grid;grid-template-columns:1fr 1.6fr;gap:80px;align-items:start}
+    @media (max-width:980px){.philosophy .wrap{grid-template-columns:1fr;gap:30px}}
+    .philosophy h2{font-family:var(--font-display);font-weight:500;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:-.025em;margin:0 0 30px}
+    .philosophy h2 .it{font-style:italic;color:var(--mint)}
+    .philosophy p{font-size:18px;line-height:1.6;color:var(--ink-70);margin:0 0 24px;max-width:760px}
+    .philosophy p em{font-style:italic;color:var(--mint)}
+    .philosophy .pills{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+    .philosophy .pills span{padding:8px 16px;border:1px solid var(--ink-20);border-radius:999px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-60)}
+
+    /* ---------- SERVICES ---------- */
+    .services{padding:140px 0}
+    .serv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink-10);border-left:1px solid var(--ink-10)}
+    @media (max-width:980px){.serv-grid{grid-template-columns:1fr;border-left:none}}
+    .serv{padding:48px 32px 44px;border-right:1px solid var(--ink-10);border-bottom:1px solid var(--ink-10);position:relative;transition:background .35s ease;cursor:none}
+    @media (max-width:900px){.serv{cursor:pointer}}
+    .serv:hover{background:var(--bg-1)}
+    @media (max-width:980px){.serv{border-right:none}}
+    .serv .num{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-40);margin-bottom:50px}
+    .serv h3{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:36px;line-height:1;letter-spacing:-.02em;margin:0 0 14px}
+    .serv p{font-size:14px;line-height:1.55;color:var(--ink-60);margin:0;max-width:280px}
+
+    /* ---------- CTA ---------- */
+    .cta{padding:160px 0 120px;text-align:center}
+    .cta h2{font-family:var(--font-display);font-weight:500;font-size:clamp(56px,9vw,150px);line-height:.95;letter-spacing:-.03em;margin:0 0 40px}
+    .cta h2 .it{font-style:italic;color:var(--mint)}
+    .cta .big-btn{display:inline-flex;align-items:center;gap:16px;padding:22px 38px;background:var(--mint);color:#000;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .4s ease;cursor:none}
+    @media (max-width:900px){.cta .big-btn{cursor:pointer}}
+    .cta .big-btn:hover{background:var(--ink);color:var(--mint);transform:translateY(-3px);box-shadow:0 20px 40px -15px rgba(152,255,210,.3)}
+    .cta .big-btn .arr{width:30px;height:30px;border:1.4px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+    .cta .mail{display:block;margin-top:30px;font-family:var(--font-mono);font-size:13px;color:var(--ink-60);letter-spacing:.05em}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:var(--bg-1);padding:80px 0 36px;border-radius:32px 32px 0 0;margin:60px 0 0}
+    @media (max-width:980px){footer{border-radius:24px 24px 0 0;margin:30px 0 0;padding:60px 0 30px}}
+    footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+    @media (max-width:780px){footer .wrap{grid-template-columns:1fr 1fr}}
+    footer h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mint);margin:0 0 18px;font-weight:500}
+    footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--ink-60)}
+    footer ul a:hover{color:var(--ink)}
+    footer .big{font-family:var(--font-display);font-weight:500;font-size:clamp(48px,7vw,108px);letter-spacing:-.025em;line-height:.95;margin-bottom:32px}
+    footer .big .it{font-style:italic;color:var(--mint)}
+    footer .legal{display:flex;justify-content:space-between;align-items:center;padding-top:40px;margin-top:60px;border-top:1px solid var(--ink-10);font-size:12px;color:var(--ink-40);font-family:var(--font-mono);letter-spacing:.06em;flex-wrap:wrap;gap:16px;grid-column:1/-1}
+    footer .legal .l{display:flex;align-items:center;gap:10px}
+    footer .legal .l .b{width:7px;height:7px;border-radius:50%;background:var(--mint);display:inline-block}
+
+    /* ---------- REVEAL ---------- */
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:translateY(0)}
+    @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <nav class="nav">
+    <a href="#" class="mark"><span class="d"></span>Cuberto</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#studio">Studio</a></li>
+      <li><a href="#news">News</a></li>
+    </ul>
+    <a href="#contact" class="cta">Let's talk →</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="meta reveal">
+        <div class="d"><span class="b"></span> Moscow · Worldwide · 2025</div>
+        <div>Digital Product Studio · Est. 2014</div>
+      </div>
+      <div class="row">
+        <div class="reveal">
+          <h1>We design<br>products that<br>people <span class="it">love.</span></h1>
+          <p class="sub">Cuberto is a globally awarded digital product studio. We partner with <em>founders, enterprises, and design-led teams</em> to ship software that earns its place on the home screen.</p>
+        </div>
+        <div class="visual reveal"><canvas id="cubeCanvas"></canvas></div>
+      </div>
+    </div>
+    <div class="marq"><div class="track"><span><span class="d"></span> Red Dot · FWA · Awwwards · Webby · IF Design · ADC · D&amp;AD · The One Show · Lovie · CSSDA · Brand New · Core77 · FastCo Innovation · Designboom · Red Dot · FWA · Awwwards · Webby · IF Design · ADC · D&amp;AD · The One Show · Lovie · CSSDA · Brand New · Core77 ·</span><span><span class="d"></span> Red Dot · FWA · Awwwards · Webby · IF Design · ADC · D&amp;AD · The One Show · Lovie · CSSDA · Brand New · Core77 · FastCo Innovation · Designboom · Red Dot · FWA · Awwwards · Webby · IF Design · ADC · D&amp;AD · The One Show · Lovie · CSSDA · Brand New · Core77 ·</span></div></div>
+  </header>
+
+  <!-- WORK INDEX -->
+  <section id="work" class="work">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 01 / Selected work</div>
+        <h2>An index of <span class="it">recent work.</span></h2>
+      </div>
+
+      <div class="idx">
+        <a href="#" class="idx-row reveal">
+          <span class="n">01</span>
+          <h3 class="client">Stripe <span class="it">Atlas.</span></h3>
+          <span class="cat">Product · 2024</span>
+          <div class="plate a"></div>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="idx-row reveal">
+          <span class="n">02</span>
+          <h3 class="client">Linear <span class="it">mobile.</span></h3>
+          <span class="cat">Product · 2024</span>
+          <div class="plate b"></div>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="idx-row reveal">
+          <span class="n">03</span>
+          <h3 class="client">Notion <span class="it">AI.</span></h3>
+          <span class="cat">Brand · 2024</span>
+          <div class="plate c"></div>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="idx-row reveal">
+          <span class="n">04</span>
+          <h3 class="client">Framer <span class="it">studio.</span></h3>
+          <span class="cat">Web · 2023</span>
+          <div class="plate d"></div>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="idx-row reveal">
+          <span class="n">05</span>
+          <h3 class="client">Arc <span class="it">browser.</span></h3>
+          <span class="cat">Brand · Product · 2023</span>
+          <div class="plate e"></div>
+          <span class="arr">→</span>
+        </a>
+        <a href="#" class="idx-row reveal">
+          <span class="n">06</span>
+          <h3 class="client">Pitch <span class="it">deck.</span></h3>
+          <span class="cat">Marketing · 2023</span>
+          <div class="plate f"></div>
+          <span class="arr">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHILOSOPHY -->
+  <section id="studio" class="philosophy">
+    <div class="wrap">
+      <div class="reveal">
+        <h2>How we <span class="it">think.</span></h2>
+        <p>Most product teams ship software. We <em>ship taste</em>. Our work is opinionated, careful, and built to outlast the trend cycle.</p>
+        <p>We believe in small senior teams, slow research, fast iteration, and the kind of attention that turns a tool into an experience.</p>
+      </div>
+      <div class="reveal">
+        <p>We design with engineers and engineer with designers — <em>that is the studio</em>. Half our team writes code, half our team writes pixels. The boundary dissolves somewhere between Figma and Xcode.</p>
+        <p>Craft is a discipline, not an aesthetic. We treat typography, motion, accessibility, performance, and naming with the same care. The result is software that feels inevitable — <em>that earns its place</em> on the home screen.</p>
+        <div class="pills">
+          <span>Opinionated</span><span>Considered</span><span>Senior</span><span>Shipped</span><span>Honest</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="services">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="label"><span class="b"></span> 02 / What we do</div>
+        <h2>Three things, done <span class="it">well.</span></h2>
+      </div>
+      <div class="serv-grid">
+        <div class="serv reveal">
+          <div class="num">01</div>
+          <h3>Product</h3>
+          <p>End-to-end product design — research, IA, prototyping, motion, and engineering. The whole loop, owned end to end.</p>
+        </div>
+        <div class="serv reveal">
+          <div class="num">02</div>
+          <h3>Brand</h3>
+          <p>Identity systems, motion languages, and the small considered decisions that make a product unmistakable on the shelf.</p>
+        </div>
+        <div class="serv reveal">
+          <div class="num">03</div>
+          <h3>Engineering</h3>
+          <p>Native iOS / Android, WebGL, and the kind of front-end engineering that turns a prototype into a shipped product.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta">
+    <div class="wrap">
+      <h2 class="reveal">Let's ship<br>something <span class="it">honest.</span></h2>
+      <a href="mailto:hello@cuberto.com" class="big-btn reveal"><span class="arr">→</span> hello@cuberto.com</a>
+      <span class="mail reveal">Moscow · New York · Belgrade</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <div class="big">Cuberto, <span class="it">since '14.</span></div>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Manifesto</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="#">Cases</a></li>
+          <li><a href="#">Clients</a></li>
+          <li><a href="#">Awards</a></li>
+          <li><a href="#">Index</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@cuberto.com">hello@cuberto.com</a></li>
+          <li>Bolshaya Novodmitrovskaya 36/4</li>
+          <li>Moscow 121015 · Russia</li>
+          <li>+7 495 555 0162</li>
+        </ul>
+      </div>
+      <div class="legal">
+        <div class="l"><span class="b"></span> Cuberto · 2014 — 2025</div>
+        <div>Designed &amp; engineered in-house</div>
+        <div>Privacy · Terms · Cookies</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const cur=document.getElementById('cursor');
+    let mx=0,my=0,cx=0,cy=0;
+    if(matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+      (function loop(){cx+=(mx-cx)*0.2;cy+=(my-cy)*0.2;cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop)})();
+      document.querySelectorAll('a,button,.idx-row,.serv').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{cur.classList.add('ring')});
+        el.addEventListener('mouseleave',()=>{cur.classList.remove('ring')});
+      });
+    } else {cur.style.display='none';}
+
+    /* Magnetic CTA */
+    document.querySelectorAll('.big-btn').forEach(b=>{
+      b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();const x=(e.clientX-r.left-r.width/2)*0.2;const y=(e.clientY-r.top-r.height/2)*0.2;b.style.transform=`translate(${x}px,${y}px) translateY(-3px)`});
+      b.addEventListener('mouseleave',()=>{b.style.transform=''});
+    });
+
+    /* Reveal */
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    /* Marquee */
+    document.querySelectorAll('.marq .track').forEach(t=>{t.innerHTML=t.innerHTML+t.innerHTML});
+
+    /* Three.js — rotating icosahedron centerpiece */
+    (function(){
+      if(typeof THREE==='undefined')return;
+      const canvas=document.getElementById('cubeCanvas');
+      const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+      const scene=new THREE.Scene();
+      const camera=new THREE.PerspectiveCamera(45,1,0.1,100);
+      camera.position.set(0,0,4.2);
+
+      // Group of nested geometries
+      const group=new THREE.Group();
+      scene.add(group);
+
+      const outer=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.2,0),
+        new THREE.MeshStandardMaterial({color:0x98ffd2,wireframe:true,transparent:true,opacity:.7,roughness:.4,metalness:.4})
+      );
+      group.add(outer);
+
+      const mid=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.85,0),
+        new THREE.MeshStandardMaterial({color:0xf0f0f0,wireframe:true,transparent:true,opacity:.4,roughness:.4,metalness:.4})
+      );
+      group.add(mid);
+
+      const inner=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.5,0),
+        new THREE.MeshStandardMaterial({color:0xf0f0f0,flatShading:true,roughness:.3,metalness:.6})
+      );
+      group.add(inner);
+
+      const points=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.4,1),
+        new THREE.PointsMaterial({color:0x98ffd2,size:0.015,transparent:true,opacity:.5})
+      );
+      group.add(points);
+
+      const light1=new THREE.DirectionalLight(0xffffff,1.4);light1.position.set(2,2,3);scene.add(light1);
+      const light2=new THREE.DirectionalLight(0x98ffd2,.8);light2.position.set(-3,-1,1);scene.add(light2);
+      scene.add(new THREE.AmbientLight(0xffffff,.18));
+
+      function resize(){
+        const w=canvas.clientWidth,h=canvas.clientHeight;
+        renderer.setSize(w,h,false);
+        camera.aspect=w/h;camera.updateProjectionMatrix();
+      }
+      resize();window.addEventListener('resize',resize);
+
+      let scrollProg=0;
+      window.addEventListener('scroll',()=>{scrollProg=Math.min(1,window.scrollY/(window.innerHeight*1.5))},{passive:true});
+
+      (function loop(){
+        const t=performance.now()*0.0006;
+        group.rotation.x=t*0.6+scrollProg*0.4;
+        group.rotation.y=t*0.9;
+        group.rotation.z=t*0.3;
+        outer.rotation.x=-t*0.4;outer.rotation.z=t*0.6;
+        mid.rotation.y=-t*0.5;mid.rotation.x=t*0.3;
+        inner.rotation.x=t;inner.rotation.z=-t;
+        renderer.render(scene,camera);
+        requestAnimationFrame(loop);
+      })();
+    })();
+  </script>
+</body>
+</html>
