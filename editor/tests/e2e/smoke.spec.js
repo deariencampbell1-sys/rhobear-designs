@@ -229,6 +229,27 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     expect(t).toContain('translate');
   });
 
+  test('AI: with a key set, a prompt applies the returned HTML edit (mocked provider)', async ({ page }) => {
+    await page.route('**/v1/messages', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ content: [{ type: 'text', text: 'Done.\n```html\n<h1 data-ai="1">AI Heading</h1>\n```' }] }),
+    }));
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    await page.getByTestId('ai-fab').click();
+    await page.getByTestId('ai-connect').click();
+    await page.getByTestId('ai-provider').selectOption('anthropic');
+    await page.getByTestId('ai-key').fill('sk-test');
+    await page.getByTestId('btn-settings-save').click();
+    await page.getByTestId('ai-fab').click(); // reopen panel
+    await expect(page.getByTestId('ai-status')).toContainText('Anthropic');
+    await page.getByTestId('ai-prompt').fill('change the heading');
+    await page.getByTestId('ai-send').click();
+    await expect(frame.locator('h1[data-ai="1"]')).toHaveCount(1);
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

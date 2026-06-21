@@ -604,6 +604,23 @@ export function createLiveMode(refs) {
   }
   function selectNode(node) { if (node) { selectElement(node); try { node.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} } }
 
+  // ---- AI hooks: give the assistant context, apply its edits ----
+  function getSelectionHtml() {
+    if (selectedEl) return selectedEl.outerHTML;
+    return doc ? doc.body.innerHTML.slice(0, 6000) : '';
+  }
+  function applyAIEdit(html) {
+    if (!doc || !html) return false;
+    const tmp = doc.createElement('div'); tmp.innerHTML = String(html).trim();
+    const node = tmp.firstElementChild;
+    if (!node) return false;
+    if (selectedEl && selectedEl.parentNode) selectedEl.parentNode.replaceChild(node, selectedEl);
+    else doc.body.appendChild(node);
+    dirty = true; selectElement(node); refreshOutline(); snap();
+    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+    return true;
+  }
+
   // ---- export ----
   function captureEditedHtml() {
     if (doc && doc.body) {
@@ -625,6 +642,7 @@ export function createLiveMode(refs) {
     load, deselect, duplicateSelected, deleteSelected, moveSelected, selectParent,
     insertElement, insertImage, beginReplace, beginDragInsert,
     setOutlineHandler, getOutline, selectNode, undo, redo,
+    getSelectionHtml, applyAIEdit,
     getExport, isDirty: () => dirty, hasSelection: () => !!selectedEl, reposition,
   };
 }

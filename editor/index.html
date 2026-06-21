@@ -116,14 +116,15 @@
           <button type="button" class="rb-ai-fab" data-action="ai-toggle" data-testid="ai-fab" title="AI assist" aria-label="AI assist">✦</button>
           <section class="rb-ai-panel" id="ai-panel" data-testid="ai-panel">
             <div class="rb-ai-panel__head">
-              <span class="rb-logo">◭</span> AI assist <span class="rb-pill">bring your own</span>
+              <span class="rb-logo">◭</span> AI assist
+              <span class="rb-pill" id="ai-status" data-testid="ai-status">offline</span>
             </div>
-            <div class="rb-ai-panel__body">
-              The editor works fully without AI. Connect your own LLM to let it make edits from your prompts and annotations — it drives the same tools you do, so changes paint right onto the canvas.
-              <div class="rb-ai-panel__cta">
-                <button type="button" class="rb-btn rb-btn--primary" data-action="open-settings" data-testid="ai-connect" style="width:100%">Connect an LLM…</button>
-              </div>
-            </div>
+            <div class="rb-ai-messages rb-scroll" id="ai-messages" data-testid="ai-messages"></div>
+            <form class="rb-ai-form" id="ai-form">
+              <input type="text" class="rb-input" id="ai-prompt" data-testid="ai-prompt" placeholder="Ask AI to change the selected element…" autocomplete="off" />
+              <button type="submit" class="rb-btn rb-btn--primary" id="ai-send" data-testid="ai-send">Send</button>
+            </form>
+            <button type="button" class="rb-btn rb-btn--ghost" data-action="open-settings" data-testid="ai-connect" style="margin:0 14px 12px">Connect / change LLM key…</button>
           </section>
         </main>
 

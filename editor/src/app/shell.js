@@ -14,6 +14,7 @@ import elementsManifest from '../library/elements/manifest.json';
 
 import { createTemplatesGallery } from './templates-gallery.js';
 import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
+import { chat as aiChat, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
 
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
 const _ELEMENT_CATS = [...new Set(_ELEMENTS.map((e) => e.category))];
@@ -68,6 +69,11 @@ export function bootShell() {
     projectsModal: $('projects-modal'),
     projectsList: $('projects-list'),
     projName: $('proj-name'),
+    aiPanelEl: $('ai-panel'),
+    aiMessages: $('ai-messages'),
+    aiForm: $('ai-form'),
+    aiPrompt: $('ai-prompt'),
+    aiStatus: $('ai-status'),
   };
 
   let mode = 'live';
@@ -259,15 +265,21 @@ export function bootShell() {
     'embed': () => refs.embedModal.showModal(),
     'embed-cancel': () => refs.embedModal.close(),
 
-    'ai-toggle': () => refs.aiPanel.classList.toggle('is-open'),
-    'open-settings': () => { refs.aiPanel.classList.remove('is-open'); refs.settingsModal.showModal(); },
+    'ai-toggle': () => { refs.aiPanel.classList.toggle('is-open'); aiRefresh(); },
+    'open-settings': () => {
+      const c = aiConfig();
+      if (c.provider) $('ai-provider').value = c.provider;
+      if (c.key) $('ai-key').value = c.key;
+      refs.aiPanel.classList.remove('is-open'); refs.settingsModal.showModal();
+    },
     'settings-close': () => refs.settingsModal.close(),
     'settings-save': () => {
       try {
         localStorage.setItem('rb-ai', JSON.stringify({ provider: $('ai-provider').value, key: $('ai-key').value }));
       } catch (_e) { /* ignore */ }
       refs.settingsModal.close();
-      setStatus('LLM settings saved locally');
+      aiRefresh();
+      setStatus('LLM key saved locally');
     },
   };
 
@@ -387,6 +399,51 @@ export function bootShell() {
     host.appendChild(media); host.appendChild(chips); host.appendChild(hint); host.appendChild(grid);
     renderGrid();
   }
+
+  // ---- AI assist (bring-your-own key) ----
+  function aiConfig() { try { return JSON.parse(localStorage.getItem('rb-ai') || '{}'); } catch (_e) { return {}; } }
+  function addAiMsg(role, text) {
+    const el = document.createElement('div');
+    el.className = `rb-ai-msg rb-ai-msg--${role}`;
+    el.textContent = text;
+    refs.aiMessages.appendChild(el);
+    refs.aiMessages.scrollTop = refs.aiMessages.scrollHeight;
+    return el;
+  }
+  function aiRefresh() {
+    const c = aiConfig(); const ok = !!(c.key && c.provider);
+    if (refs.aiStatus) refs.aiStatus.textContent = ok ? (PROVIDER_LABELS[c.provider] || c.provider) : 'offline';
+    if (refs.aiPrompt) refs.aiPrompt.disabled = !ok;
+    if (refs.aiMessages && !refs.aiMessages.dataset.greeted) {
+      refs.aiMessages.dataset.greeted = '1';
+      addAiMsg('assistant', ok
+        ? 'Connected. Select an element on the page, then tell me what to change — e.g. "make this hero dark with a teal headline".'
+        : 'Add your API key below (Connect) — Anthropic, OpenAI, or Google. The editor works fully without me.');
+    }
+  }
+  async function sendAi(prompt) {
+    const c = aiConfig();
+    if (!c.key || !c.provider) { addAiMsg('assistant', 'No key set — click "Connect / change LLM key" below.'); return; }
+    addAiMsg('user', prompt);
+    const pending = addAiMsg('assistant', '…thinking');
+    const ctx = (mode === 'live') ? live.getSelectionHtml() : (build.getHtmlCss().html || '');
+    const user = `${prompt}\n\nSelected element (return its complete replacement if you change it):\n\`\`\`html\n${ctx}\n\`\`\``;
+    try {
+      const text = await aiChat({ provider: c.provider, apiKey: c.key, model: c.model, system: SYSTEM_PROMPT, user });
+      const { html, reply } = parseEdit(text);
+      pending.textContent = reply;
+      if (html && mode === 'live') { if (live.applyAIEdit(html)) setStatus('AI applied a change'); }
+      else if (html) { addAiMsg('assistant', '(Switch to Edit Live Site to apply page changes.)'); }
+    } catch (err) {
+      pending.textContent = `Error: ${err.message}`;
+      pending.classList.add('rb-ai-msg--err');
+    }
+  }
+  refs.aiForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const p = (refs.aiPrompt.value || '').trim();
+    if (p) { refs.aiPrompt.value = ''; sendAi(p); }
+  });
 
   // boot: live mode + onboarding
   setMode('live');
