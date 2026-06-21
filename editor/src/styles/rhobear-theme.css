@@ -175,6 +175,9 @@ html, body {
 .rb-live-host.is-active { display: block; }
 .rb-live-frame { width: 100%; height: 100%; border: 0; background: #fff; display: block; }
 .rb-live-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+/* 3D Studio host */
+.rb-three-host { position: absolute; inset: 0; background: var(--rb-canvas-bd); }
+.rb-three-host canvas { display: block; }
 /* overlay boxes created by engine/overlay.js (createOverlay) */
 .rb-overlay-hover, .rb-overlay-selection {
   position: absolute; pointer-events: none; box-sizing: border-box;

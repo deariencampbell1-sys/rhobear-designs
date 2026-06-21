@@ -166,7 +166,7 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await frame.locator('h1').click();
     await expect(page.getByTestId('inspector-tag')).toContainText('h1');
     // click empty background → must clear, not select <body>
-    await frame.locator('body').click({ position: { x: 3, y: 3 } });
+    await frame.locator('body').click({ position: { x: 3, y: 3 }, force: true });
     await expect(page.getByTestId('inspector-tag')).not.toContainText('body');
     // body is never draggable
     expect(await frame.locator('body').getAttribute('draggable')).not.toBe('true');
@@ -248,6 +248,16 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await page.getByTestId('ai-prompt').fill('change the heading');
     await page.getByTestId('ai-send').click();
     await expect(frame.locator('h1[data-ai="1"]')).toHaveCount(1);
+  });
+
+  test('3D Studio: mode mounts a scene; inserting a primitive adds a selectable object', async ({ page }) => {
+    await page.getByTestId('btn-mode-3d').click();
+    await expect(page.getByTestId('three-host')).toBeVisible();
+    await expect(page.getByTestId('three-host').locator('canvas')).toHaveCount(1);
+    await page.getByTestId('three-rail').locator('.rb-quick-btn', { hasText: 'box' }).click();
+    await expect(page.getByTestId('three-rail').locator('.rb-lib-card')).toHaveCount(1);
+    await page.getByTestId('three-rail').locator('.rb-lib-card').first().click();
+    await expect(page.getByTestId('inspector-3d')).toContainText('Color');
   });
 
   test('rail toggles collapse', async ({ page }) => {

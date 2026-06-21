@@ -15,6 +15,7 @@ import elementsManifest from '../library/elements/manifest.json';
 import { createTemplatesGallery } from './templates-gallery.js';
 import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
 import { chat as aiChat, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
+import { createThreeMode } from './three-mode.js';
 
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
 const _ELEMENT_CATS = [...new Set(_ELEMENTS.map((e) => e.category))];
@@ -59,6 +60,10 @@ export function bootShell() {
     fileHtml: $('file-html'),
     fileFolder: $('file-folder'),
     fileImage: $('file-image'),
+    file3d: $('file-3d'),
+    threeHost: $('three-host'),
+    threeRail: $('three-rail'),
+    inspector3d: $('inspector-3d'),
     elementLibrary: $('element-library'),
     liveLayers: $('live-layers'),
     floatGrab: $('float-grab'),
@@ -105,6 +110,7 @@ export function bootShell() {
   });
 
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
+  const three = createThreeMode({ host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus });
 
   // templates gallery
   const gallery = createTemplatesGallery({
@@ -160,20 +166,23 @@ export function bootShell() {
   // ---------------------------------------------------------------- modes
   function setMode(next) {
     mode = next;
-    qa('[data-action="mode-live"],[data-action="mode-build"]').forEach((b) =>
+    qa('[data-action="mode-live"],[data-action="mode-build"],[data-action="mode-3d"]').forEach((b) =>
       b.classList.toggle('is-active', b.dataset.action === `mode-${next}`));
     qa('[data-build-only]').forEach((el) => el.classList.toggle('is-gone', next !== 'build'));
     qa('[data-live-only]').forEach((el) => el.classList.toggle('is-gone', next !== 'live'));
+    qa('[data-3d-only]').forEach((el) => el.classList.toggle('is-gone', next !== '3d'));
     refs.liveHost.classList.toggle('is-active', next === 'live');
-    refs.inspector.classList.add('is-hidden');
-    if (next === 'build') {
-      build.ensure();
+    if (next === '3d') {
       hideEmpty();
+      refs.inspector.classList.remove('is-hidden'); // 3D controls live in the inspector
+      three.ensure();
+      setStatus('3D Studio — insert a model or primitive, drag to orbit, click a part to edit');
     } else {
-      // live mode: empty until a page is loaded
-      if (!loadedAny) showEmpty(); else hideEmpty();
+      refs.inspector.classList.add('is-hidden');
+      if (next === 'build') { build.ensure(); hideEmpty(); }
+      else if (!loadedAny) showEmpty(); else hideEmpty();
+      setStatus(next === 'live' ? 'Edit Live Site — open a page to begin' : 'Build from scratch');
     }
-    setStatus(next === 'live' ? 'Edit Live Site — open a page to begin' : 'Build from scratch');
   }
 
   function showEmpty() { refs.emptyState.classList.add('is-active'); }
@@ -225,6 +234,7 @@ export function bootShell() {
   const actions = {
     'mode-live': () => setMode('live'),
     'mode-build': () => setMode('build'),
+    'mode-3d': () => setMode('3d'),
     'toggle-rail': () => refs.rail.classList.toggle('is-collapsed'),
 
     'new': () => {
@@ -342,6 +352,12 @@ export function bootShell() {
     refs.fileImage.value = '';
   });
 
+  refs.file3d.addEventListener('change', () => {
+    const f = refs.file3d.files && refs.file3d.files[0];
+    if (f) three.loadModelFile(f);
+    refs.file3d.value = '';
+  });
+
 
   // element library (the stash) in the live-mode Add rail
   function renderElementLibrary() {
@@ -450,7 +466,7 @@ export function bootShell() {
   try { renderElementLibrary(); } catch (_e) { /* library optional */ }
   setStatus('Editor ready — open a page or build from scratch');
 
-  return { setMode, live, build, get mode() { return mode; } };
+  return { setMode, live, build, three, get mode() { return mode; } };
 }
 
 function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'page'; }
