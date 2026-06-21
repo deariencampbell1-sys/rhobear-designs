@@ -292,6 +292,22 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     await expect(page.getByTestId('element-library').locator('.rb-lib-cat', { hasText: 'saved' })).toBeVisible();
   });
 
+  test('inserted elements RUN their scripts (3D embeds mount, not a blank box)', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await page.evaluate(() => window.__RB_EDITOR__.shell.live.insertElement({ name: 't', html: '<div id="ins"><scr' + 'ipt>document.getElementById("ins").setAttribute("data-ran","1")</scr' + 'ipt></div>' }));
+    await expect(frame.locator('#ins')).toHaveAttribute('data-ran', '1');
+  });
+
+  test('selecting an inserted 3D embed offers "Edit in 3D Studio"', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await page.evaluate(() => window.__RB_EDITOR__.shell.live.insertElement({ name: '3d', html: '<div class="rb-3d-embed" data-rb-3d="{&quot;objects&quot;:[]}" style="height:200px"></div>' }));
+    await expect(page.getByTestId('inspector-live')).toContainText('Edit in 3D Studio');
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);

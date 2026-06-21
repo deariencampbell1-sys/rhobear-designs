@@ -90,6 +90,12 @@ export function bootShell() {
   let loadedAny = false;
 
   const setStatus = (m) => { if (refs.statusMsg) refs.statusMsg.textContent = m; };
+  let toastEl = null; let toastTimer = null;
+  function toast(msg) {
+    if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'rb-toast'; document.body.appendChild(toastEl); }
+    toastEl.textContent = msg; toastEl.classList.add('is-show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('is-show'), 2800);
+  }
   const setTitle = (t) => { docTitleStr = t || 'Untitled page'; if (refs.docTitle) refs.docTitle.textContent = docTitleStr; };
 
   const onSelectionChange = (sel) => {
@@ -111,12 +117,13 @@ export function bootShell() {
     floatbar: refs.floatbar,
     onStatus: setStatus,
     onSelectionChange,
+    onEdit3D: (json) => { setMode('3d'); three.loadScene(json); },
   });
 
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
   const three = createThreeMode({
     host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus,
-    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) {} },
+    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) {} toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved'); },
   });
 
   // templates gallery

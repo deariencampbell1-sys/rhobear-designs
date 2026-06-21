@@ -144,45 +144,54 @@ export function createThreeMode(refs) {
     s.addEventListener('input', () => { out.textContent = s.value; cb(Number(s.value)); });
     wrap.appendChild(s); wrap.appendChild(out); return wrap;
   }
+  function loadScene(json) {
+    ensure();
+    try { scene.fromJSON(json); } catch (_e) { setStatus('Could not load that 3D scene'); return; }
+    snap(); renderRail(); renderInspector(); setStatus('Opened in 3D Studio — edit, then ★ Save to update');
+  }
   function dispose() { if (scene) { scene.dispose && scene.dispose(); scene = null; } }
-  return { ensure, undo, redo, deselect, removeSelected, dispose, saveToStash, get scene() { return scene; } };
+  return { ensure, undo, redo, deselect, removeSelected, dispose, saveToStash, loadScene, get scene() { return scene; } };
 }
 
 function deg(d) { return (d * Math.PI) / 180; }
 function hex6(v) { const s = String(v || ''); return /^#[0-9a-f]{6}$/i.test(s) ? s : '#2dd4bf'; }
 function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-/** A self-contained 3D embed: CDN three.js + scene data + a tiny runtime. Renders
- * in the live editor AND in exported HTML (primitives persist; uploaded GLBs don't
- * survive export since their object-URLs are local). */
-function buildEmbedHtml(json) {
-  const data = JSON.stringify(json).replace(/<\//g, '<\\/');
-  return `<div class="rb-3d-embed" style="width:100%;height:520px;position:relative;background:#0d0f10;border-radius:12px;overflow:hidden">
-<script type="module">
+/** A self-contained 3D embed. The scene data rides in a `data-rb-3d` attribute and
+ * a constant runtime scans for any unmounted `.rb-3d-embed` and mounts it — so it
+ * works whether the script ran on page load (export) OR was re-executed after being
+ * inserted in the editor (innerHTML-inserted scripts don't auto-run; we re-run them).
+ * Not relying on document.currentScript means re-executed copies still work. */
+const EMBED_RUNTIME = `
 import * as THREE from 'https://esm.sh/three@0.161.0';
 import { OrbitControls } from 'https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-const DATA = ${data};
-const host = document.currentScript.parentElement;
-const W = host.clientWidth || 800, H = host.clientHeight || 520;
-const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-renderer.setSize(W, H); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio)); host.appendChild(renderer.domElement);
-const scene = new THREE.Scene();
-const cam = new THREE.PerspectiveCamera(50, W/H, 0.1, 100); cam.position.set(3,2,4);
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-const dl = new THREE.DirectionalLight(0xffffff, 1.1); dl.position.set(5,8,5); scene.add(dl);
 const G = { box:()=>new THREE.BoxGeometry(1,1,1), sphere:()=>new THREE.SphereGeometry(0.7,32,32), cylinder:()=>new THREE.CylinderGeometry(0.5,0.5,1.4,32), cone:()=>new THREE.ConeGeometry(0.6,1.4,32), torus:()=>new THREE.TorusGeometry(0.6,0.22,24,80), plane:()=>new THREE.PlaneGeometry(2,2) };
-for (const o of (DATA.objects||[])) {
-  const geo = (G[o.type]||G.box)();
-  const mat = new THREE.MeshStandardMaterial({ color:o.color||'#2dd4bf', metalness:o.metalness??0, roughness:o.roughness??1 });
-  const mesh = new THREE.Mesh(geo, mat);
-  if (o.position) mesh.position.set(o.position[0],o.position[1],o.position[2]);
-  if (o.rotation) mesh.rotation.set(o.rotation[0],o.rotation[1],o.rotation[2]);
-  if (o.scale) mesh.scale.set(o.scale[0],o.scale[1],o.scale[2]);
-  scene.add(mesh);
-}
-const ctr = new OrbitControls(cam, renderer.domElement); ctr.enableDamping = true;
-new ResizeObserver(()=>{ const w=host.clientWidth,h=host.clientHeight; if(w&&h){ renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); } }).observe(host);
-(function loop(){ requestAnimationFrame(loop); ctr.update(); renderer.render(scene,cam); })();
-</script>
-</div>`;
+for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data-rb-mounted])')) {
+  host.setAttribute('data-rb-mounted','1');
+  let DATA; try { DATA = JSON.parse(host.getAttribute('data-rb-3d')); } catch (e) { continue; }
+  const W = host.clientWidth || 800, H = host.clientHeight || 520;
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setSize(W, H); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio)); host.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(50, W/H, 0.1, 100); cam.position.set(3,2,4);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const dl = new THREE.DirectionalLight(0xffffff, 1.15); dl.position.set(5,8,5); scene.add(dl);
+  for (const o of (DATA.objects||[])) {
+    const geo = (G[o.type]||G.box)();
+    const mat = new THREE.MeshStandardMaterial({ color:o.color||'#2dd4bf', metalness:o.metalness??0, roughness:o.roughness??1 });
+    const mesh = new THREE.Mesh(geo, mat);
+    if (o.position) mesh.position.set(o.position[0],o.position[1],o.position[2]);
+    if (o.rotation) mesh.rotation.set(o.rotation[0],o.rotation[1],o.rotation[2]);
+    if (o.scale) mesh.scale.set(o.scale[0],o.scale[1],o.scale[2]);
+    scene.add(mesh);
+  }
+  const ctr = new OrbitControls(cam, renderer.domElement); ctr.enableDamping = true;
+  new ResizeObserver(()=>{ const w=host.clientWidth,h=host.clientHeight; if(w&&h){ renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); } }).observe(host);
+  (function loop(){ requestAnimationFrame(loop); ctr.update(); renderer.render(scene,cam); })();
+}`;
+
+function buildEmbedHtml(json) {
+  const attr = JSON.stringify(json).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="width:100%;height:520px;position:relative;background:#0d0f10;border-radius:12px;overflow:hidden">` +
+    `<script type="module">${EMBED_RUNTIME}</script></div>`;
 }

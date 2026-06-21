@@ -41,7 +41,7 @@ const SHADOWS = [
 ];
 
 export function createLiveMode(refs) {
-  const { frame, overlayEl, inspectorBody, inspectorTag, floatbar, onStatus, onSelectionChange } = refs;
+  const { frame, overlayEl, inspectorBody, inspectorTag, floatbar, onStatus, onSelectionChange, onEdit3D } = refs;
 
   let store = createOverrideStore();
   let overlay = null;
@@ -305,19 +305,31 @@ export function createLiveMode(refs) {
     const tmp = doc.createElement('div'); tmp.innerHTML = String(elObj.html || '').trim();
     return tmp.firstElementChild || tmp;
   }
+  // innerHTML-inserted <script> tags don't execute — re-create them so embeds (3D, etc.) run.
+  function executeScripts(root) {
+    if (!root || !doc) return;
+    const list = root.tagName === 'SCRIPT' ? [root] : Array.from(root.querySelectorAll ? root.querySelectorAll('script') : []);
+    for (const old of list) {
+      const s = doc.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      if (old.parentNode) old.parentNode.replaceChild(s, old);
+    }
+  }
   function insertElement(elObj, atTarget, after) {
     if (!doc || !elObj) return;
     const node = nodeFromElObj(elObj);
     if (pendingReplace && selectedEl && selectedEl.parentNode) {
       selectedEl.parentNode.replaceChild(node, selectedEl);
       pendingReplace = false; dirty = true; setStatus(`Replaced with ${elObj.name || 'element'}`);
-      selectElement(node); refreshOutline(); return;
+      executeScripts(node); selectElement(node); refreshOutline(); return;
     }
     if (atTarget && atTarget.nodeType === 1 && atTarget.parentNode) {
       atTarget.parentNode.insertBefore(node, after ? atTarget.nextSibling : atTarget);
     } else {
       const c = (selectedEl && isContainer(selectedEl)) ? selectedEl : doc.body; c.appendChild(node);
     }
+    executeScripts(node);
     dirty = true; setStatus(`Inserted ${elObj.name || 'element'}`);
     try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
     selectElement(node); refreshOutline();
@@ -432,6 +444,15 @@ export function createLiveMode(refs) {
     ] }));
     inspectorBody.appendChild(renderEffectsSector(el, cs));
     if (linkInfo()) inspectorBody.appendChild(renderLinkSector());
+    if (el.classList && el.classList.contains('rb-3d-embed')) inspectorBody.appendChild(render3DEmbedSector(el));
+  }
+
+  function render3DEmbedSector(el) {
+    const body = document.createElement('div'); body.style.padding = '0 14px 14px';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rb-btn rb-btn--primary'; btn.style.width = '100%'; btn.textContent = '✦ Edit in 3D Studio';
+    btn.addEventListener('click', () => { try { onEdit3D && onEdit3D(JSON.parse(el.getAttribute('data-rb-3d'))); } catch (_e) {} });
+    body.appendChild(btn);
+    return renderSector({ name: '3D scene', open: true, extra: body });
   }
 
   // ---- contextual text toolbar (font / size / color / bold / italic while editing) ----
