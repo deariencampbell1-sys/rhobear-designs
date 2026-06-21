@@ -1,0 +1,1434 @@
+{
+  "$schema": "./manifest.schema.json",
+  "version": 1,
+  "generatedAt": "2026-06-21T00:00:25.721Z",
+  "collections": [
+    "minimax-m3-high",
+    "minimax-m3-medium",
+    "minimax-m2.7"
+  ],
+  "count": 62,
+  "entries": [
+    {
+      "id": "minimax-m2.7-109ichiki",
+      "collection": "minimax-m2.7",
+      "name": "1:09 — Illustration Portfolio",
+      "tags": [
+        "art-direction",
+        "illustration",
+        "minimax-m2.7",
+        "portfolio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/109ichiki.html",
+      "description": "Art Direction & Illustration",
+      "thumb": "thumbs/minimax-m2.7-109ichiki.png",
+      "originalUrl": "https://109ichiki.com/",
+      "title": "1:09 — Illustration Portfolio",
+      "headings": [
+        "1:09 Portfolio",
+        "meme.webp",
+        "⚪︎⚪︎ character",
+        "fluorescent series",
+        "neon dreams",
+        "portrait collection"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-active-theory",
+      "collection": "minimax-m2.7",
+      "name": "Active Theory — Digital Experiences",
+      "tags": [
+        "creative",
+        "experiences",
+        "minimax-m2.7",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/active-theory.html",
+      "description": "A creative studio pushing the boundaries of what's possible on the web. From concept to launch, we build experiences that move people.",
+      "thumb": "thumbs/minimax-m2.7-active-theory.png",
+      "originalUrl": "https://activetheory.net/",
+      "title": "Active Theory — Digital Experiences",
+      "headings": [
+        "We craft immersive digital worlds",
+        "Building experiences that leave a lasting impression",
+        "Projects that define us",
+        "Meridian",
+        "Sonder",
+        "Luma"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-alche-studio",
+      "collection": "minimax-m2.7",
+      "name": "Alche, Inc — イマーシブデジタルワールド",
+      "tags": [
+        "minimax-m2.7",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/alche-studio.html",
+      "description": "Links",
+      "thumb": "thumbs/minimax-m2.7-alche-studio.png",
+      "originalUrl": "https://alche.studio/",
+      "title": "Alche, Inc — イマーシブデジタルワールド",
+      "headings": [
+        "Links"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-brandappart",
+      "collection": "minimax-m2.7",
+      "name": "Brand Appart — The Design© Partner for Top-Tier Companies",
+      "tags": [
+        "brand",
+        "design",
+        "experiences",
+        "minimax-m2.7",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/brandappart.html",
+      "description": "Next-generation payment platform with seamless digital experience.",
+      "thumb": "thumbs/minimax-m2.7-brandappart.png",
+      "originalUrl": "https://www.brandappart.com/",
+      "title": "Brand Appart — The Design© Partner for Top-Tier Companies",
+      "headings": [
+        "The design© partner for top-tier companies",
+        "INCARD",
+        "SOWBEEZ",
+        "FORBES",
+        "Cartemate",
+        "Ready to stand out?"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-bruno-simon-portfolio",
+      "collection": "minimax-m2.7",
+      "name": "Bruno Simon — Creative Developer",
+      "tags": [
+        "creative",
+        "developer",
+        "minimax-m2.7",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/bruno-simon-portfolio.html",
+      "description": "Bruno Simon — Creative Developer",
+      "thumb": "thumbs/minimax-m2.7-bruno-simon-portfolio.png",
+      "originalUrl": "https://bruno-simon.com/",
+      "title": "Bruno Simon — Creative Developer"
+    },
+    {
+      "id": "minimax-m2.7-bychudy",
+      "collection": "minimax-m2.7",
+      "name": "bychudy — Art Direction & Photography",
+      "tags": [
+        "art-direction",
+        "brand",
+        "design",
+        "minimax-m2.7",
+        "photography",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/bychudy.html",
+      "description": "High-end visual collaborations with artists, musicians, and brands worldwide.",
+      "thumb": "thumbs/minimax-m2.7-bychudy.png",
+      "originalUrl": "https://www.bychudy.com/",
+      "title": "bychudy — Art Direction & Photography",
+      "headings": [
+        "Art Direction & Photography",
+        "Hotel Mafija Vinyl",
+        "NEWONCE",
+        "Hotel Mafija Vinyl",
+        "Vinyl Design",
+        "Stage Visuals"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-cappen",
+      "collection": "minimax-m2.7",
+      "name": "Cappen — Award-Winning Website Development Studio in Miami",
+      "tags": [
+        "awards",
+        "creative",
+        "design",
+        "experiences",
+        "minimax-m2.7",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/cappen.html",
+      "description": "We are a forward-thinking creative studio with a passion for blending design and technology.",
+      "thumb": "thumbs/minimax-m2.7-cappen.png",
+      "originalUrl": "https://cappen.com/",
+      "title": "Cappen — Award-Winning Website Development Studio in Miami",
+      "headings": [
+        "🍪 WE USE COOKIES — THE DIGITAL KIND",
+        "We push the limits of digital innovation, constantly exploring emerging technologies to craft visually striking, futuristic, and immersive experiences that captivate and engage.",
+        "Expertise",
+        "Strategy",
+        "Technology",
+        "Creative"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-resn",
+      "collection": "minimax-m2.7",
+      "name": "Resn — Interactive Studio",
+      "tags": [
+        "interactive",
+        "minimax-m2.7",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/resn.html",
+      "description": "We believe every pixel should matter and every interaction should feel like something.",
+      "thumb": "thumbs/minimax-m2.7-resn.png",
+      "originalUrl": "https://resn.co.nz/",
+      "title": "Resn — Interactive Studio",
+      "headings": [
+        "We make the web sing",
+        "Kinetic Audio",
+        "Nova Spirits",
+        "Verdant Fields",
+        "Craft without compromise",
+        "Strategy"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-stokt",
+      "collection": "minimax-m2.7",
+      "name": "Stōkt — Creative & Motion Design Studio",
+      "tags": [
+        "agency",
+        "awards",
+        "brand",
+        "creative",
+        "design",
+        "experiences",
+        "minimax-m2.7",
+        "motion",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/stokt.html",
+      "description": "*We actually get them. But that's not why we do it. We create motion-driven experiences that make brands impossible to ignore.",
+      "thumb": "thumbs/minimax-m2.7-stokt.png",
+      "originalUrl": "https://wearestokt.com/",
+      "title": "Stōkt — Creative & Motion Design Studio",
+      "headings": [
+        "WE DON'T CHASE AWARDS.*",
+        "THE BS 💩",
+        "Major Media Agency",
+        "Tech Startup",
+        "Fashion Brand",
+        "READY TO STAND OUT?"
+      ]
+    },
+    {
+      "id": "minimax-m2.7-they-call-me-giulio",
+      "collection": "minimax-m2.7",
+      "name": "They Call Me Giulio",
+      "tags": [
+        "minimax-m2.7",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m2.7/they-call-me-giulio.html",
+      "description": "A digital entity emerges from the void. Not born — constructed. Built from light, noise, and the ghost of too many late nights.",
+      "thumb": "thumbs/minimax-m2.7-they-call-me-giulio.png",
+      "originalUrl": "https://www.theycallmegiulio.com/",
+      "title": "They Call Me Giulio",
+      "headings": [
+        "THE BEGINNING",
+        "DIGITAL CONSCIOUSNESS",
+        "NEON DREAMS",
+        "FIND YOURSELF"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-109ichiki",
+      "collection": "minimax-m3-high",
+      "name": "1:09 illustration portfolio",
+      "tags": [
+        "illustration",
+        "minimax-m3-high",
+        "portfolio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/109ichiki.html",
+      "description": "BGM: neon_drive.wav 00:00:00:00 works illustration · MV · event · goods イラストだけでなく、MVイラストやグッズ制作など 幅広いジャンルの制作を得意としています。",
+      "thumb": "thumbs/minimax-m3-high-109ichiki.png",
+      "originalUrl": "https://109ichiki.com/",
+      "title": "1:09 illustration portfolio",
+      "headings": [
+        "1 : 09 illustration portfolio",
+        "works",
+        "蛍光色と パキッ とした ラインが好き。",
+        "ボカロや Cover動画 の MVイラストを描きます。",
+        "東京で たくさん 活動しています。",
+        "オリジナル 「もちうさ」 はじめました。"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-abhishekjha",
+      "collection": "minimax-m3-high",
+      "name": "Abhishek Jha — Visual Designer & Coder (recreation)",
+      "tags": [
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/abhishekjha.html",
+      "description": "Abhishek Jha — Visual Designer & Coder 100% 100% Scroll down to explore U Abhishek Uhm Home About Works Instagram Linked In Behance Available for projects hi@abhishekjha.me Send project inquiry The fusion of design principles with unpara…",
+      "thumb": "thumbs/minimax-m3-high-abhishekjha.png",
+      "originalUrl": "https://abhishekjha.me/",
+      "title": "Abhishek Jha — Visual Designer & Coder (recreation)",
+      "headings": [
+        "Selected works.",
+        "Things I love."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-adrienlamy",
+      "collection": "minimax-m3-high",
+      "name": "Adrien Lamy :D",
+      "tags": [
+        "creative",
+        "developer",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/adrienlamy.html",
+      "description": "ME DRAG GRAB ? PULL? × Sup, I'm Adrien, Creative Dev ✦ Paris Freelance Creative Developer with a love for animation, storytelling, and coffee. Some recent things ↓",
+      "thumb": "thumbs/minimax-m3-high-adrienlamy.png",
+      "title": "Adrien Lamy :D",
+      "headings": [
+        "Sup, I'm Adrien, Creative Dev ✦ Paris",
+        "TENNIS DE TABLE",
+        "HOT WHEELS",
+        "SKETCHBOOK",
+        "SUMMER VIBES",
+        "BLOOM"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-alche-studio",
+      "collection": "minimax-m3-high",
+      "name": "Alche, Inc — Immersive digital worlds",
+      "tags": [
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/alche-studio.html",
+      "description": "NEWS",
+      "thumb": "thumbs/minimax-m3-high-alche-studio.png",
+      "originalUrl": "https://alche.studio/",
+      "title": "Alche, Inc — Immersive digital worlds",
+      "headings": [
+        "NEWS"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-bindery",
+      "collection": "minimax-m3-high",
+      "name": "Bindery — A Creative Agency & Production Studio (Recreation)",
+      "tags": [
+        "agency",
+        "brand",
+        "creative",
+        "minimax-m3-high",
+        "production",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/bindery.html",
+      "description": "Helping a 60-year-old brand feel fresh on every plate.",
+      "thumb": "thumbs/minimax-m3-high-bindery.png",
+      "originalUrl": "https://www.bindery.co/",
+      "title": "Bindery — A Creative Agency & Production Studio (Recreation)",
+      "headings": [
+        "BINDERY",
+        "We use the power of storytelling to fire the imagination, stir the soul, and ultimately inspire audiences and customers to take action.",
+        "Make",
+        "Believers",
+        "Featured Work",
+        "Weight Watchers"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-brand-appart",
+      "collection": "minimax-m3-high",
+      "name": "Brand Appart — Design partner for top-tier companies",
+      "tags": [
+        "brand",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/brand-appart.html",
+      "description": "We help funded startups ship iconic brands, conversion-ready sites, and investor-proof decks.",
+      "thumb": "thumbs/minimax-m3-high-brand-appart.png",
+      "originalUrl": "https://www.brandappart.com/",
+      "title": "Brand Appart — Design partner for top-tier companies",
+      "headings": [
+        "The design partner for top-tier companies.",
+        "We build brands that fundraise, convert, and last.",
+        "What we ship.",
+        "Branding that drives conversion & funding.",
+        "Product experiences users adopt & keep using.",
+        "Web design for growing teams & business."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-bychudy",
+      "collection": "minimax-m3-high",
+      "name": "bychudy — art direction & photography",
+      "tags": [
+        "art-direction",
+        "brand",
+        "minimax-m3-high",
+        "photography",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/bychudy.html",
+      "description": "A studio working across album covers, stage visuals, merch, and brand campaigns for the Polish music industry and beyond.",
+      "thumb": "thumbs/minimax-m3-high-bychudy.png",
+      "originalUrl": "https://www.bychudy.com/",
+      "title": "bychudy — art direction & photography",
+      "headings": [
+        "art direction & photography for music.",
+        "Selected work",
+        "Kacperczyk 2024",
+        "Ryk × Fantasmagorie",
+        "Wszyscy Jesteśmy Kacperczyk",
+        "AlboAlbo"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-caffe-design",
+      "collection": "minimax-m3-high",
+      "name": "Caffè Design (recreation)",
+      "tags": [
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/caffe-design.html",
+      "description": "Io sarò la tua guida, ascoltami! GALLERIA BISCOTTINI OGGETTO DATA ☐ Apple si è persa? ★ Biscottini #98 2026/06/09 ☐ Jony Ive ha cambiato Ferrari per sempre ★ Biscottini #97 2026/06/01 ☐ Google è in crisi? ★ Biscottini #96 2026/05/25 ☐ No…",
+      "thumb": "thumbs/minimax-m3-high-caffe-design.png",
+      "originalUrl": "https://www.caffe.design/",
+      "title": "Caffè Design (recreation)",
+      "headings": [
+        "Io sarò la tua guida, ascoltami!",
+        "GALLERIA",
+        "BISCOTTINI",
+        "FACCIAMO COSE",
+        "LIBRELLO",
+        "PODCAST"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-cappen",
+      "collection": "minimax-m3-high",
+      "name": "Cappen — Award-Winning Interactive Studio",
+      "tags": [
+        "awards",
+        "brand",
+        "experiences",
+        "interactive",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/cappen.html",
+      "description": "A multi-awarded interactive digital studio crafting immersive & interactive experiences for global brands since 2006.",
+      "thumb": "thumbs/minimax-m3-high-cappen.png",
+      "originalUrl": "https://cappen.com/",
+      "title": "Cappen — Award-Winning Interactive Studio",
+      "headings": [
+        "Human Thinkers , Digital Makers.",
+        "Handcrafted experiences for brands of all sizes, worldwide.",
+        "Amanda Braga",
+        "Credit Genie",
+        "JCPM Malls",
+        "Ministry of Supply"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-chipsa-design",
+      "collection": "minimax-m3-high",
+      "name": "Chipsa — WebGL & 3D studio (recreation)",
+      "tags": [
+        "3d",
+        "minimax-m3-high",
+        "motion",
+        "studio",
+        "template",
+        "webgl"
+      ],
+      "sourcePath": "samples/minimax-m3-high/chipsa-design.html",
+      "description": "Websites, digital spaces, AI and CGI graphics",
+      "thumb": "thumbs/minimax-m3-high-chipsa-design.png",
+      "originalUrl": "https://chipsa.design/",
+      "title": "Chipsa — WebGL & 3D studio (recreation)",
+      "headings": [
+        "We evoke emotions through aesthetics, WebGL and 3D",
+        "[ studio karo ] tour",
+        "Best works",
+        "Concept in 5 days",
+        "Major services",
+        "Sites"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-clayboan",
+      "collection": "minimax-m3-high",
+      "name": "Clay Boan — Multidisciplinary Designer",
+      "tags": [
+        "brand",
+        "design",
+        "minimax-m3-high",
+        "motion",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/clayboan.html",
+      "description": "Clay is a multidisciplinary designer working across brand, motion, and product. He has spent 10+ years shipping work with Apple, Google, Nike, Gucci, and a long list of friends.",
+      "thumb": "thumbs/minimax-m3-high-clayboan.png",
+      "title": "Clay Boan — Multidisciplinary Designer",
+      "headings": [
+        "C L A Y",
+        "YOOO, I'M CLAY ."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-cyphr-studio",
+      "collection": "minimax-m3-high",
+      "name": "Cyphr — Shaping the future of brand experience",
+      "tags": [
+        "brand",
+        "experiences",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/cyphr-studio.html",
+      "description": "Shaping the Future of Brand Experience .",
+      "thumb": "thumbs/minimax-m3-high-cyphr-studio.png",
+      "title": "Cyphr — Shaping the future of brand experience",
+      "headings": [
+        "Shaping the Future of Brand Experience .",
+        "Selected Work .",
+        "Insights & Opinions ."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-des-obys",
+      "collection": "minimax-m3-high",
+      "name": "DES® — Design Education Series® by Obys®",
+      "tags": [
+        "creative",
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/des-obys.html",
+      "description": "Creative Web Design Practice",
+      "thumb": "thumbs/minimax-m3-high-des-obys.png",
+      "title": "DES® — Design Education Series® by Obys®",
+      "headings": [
+        "Creative Web Design Practice",
+        "Colors Combinations"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-doubleplay-studio",
+      "collection": "minimax-m3-high",
+      "name": "Double Play — Studio (study)",
+      "tags": [
+        "brand",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/doubleplay-studio.html",
+      "description": "Double Play Contact Game-changing Design Studio DE · GERMANY EST 2020 Game-changing Play. / Mission",
+      "thumb": "thumbs/minimax-m3-high-doubleplay-studio.png",
+      "title": "Double Play — Studio (study)",
+      "headings": [
+        "Game-changing",
+        "Play.",
+        "We craft digital experiences that move the needle for ambitious brands.",
+        "Selected work",
+        "Strategy, design and development — three disciplines, one studio.",
+        "Strategy"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-eduard-bodak",
+      "collection": "minimax-m3-high",
+      "name": "Eduard Bodak — Webdesigner aus Köln",
+      "tags": [
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/eduard-bodak.html",
+      "description": "↗ ENTWURF DESIGN BUILD ↗ ✕ ◯ FLOW Pro Monat € 3.245,- Klick mit Wirkung Gute Websites sehen nicht nur gut aus – sie fühlen sich auch gut an. Kleine Bewegungen, durchdachte Übergänge, subtile Reaktionen: Das macht aus einem Klick ein gute…",
+      "thumb": "thumbs/minimax-m3-high-eduard-bodak.png",
+      "originalUrl": "https://www.eduardbodak.com/",
+      "title": "Eduard Bodak — Webdesigner aus Köln",
+      "headings": [
+        "Einfache Websites",
+        "Wenn alles gleich ist, ist es die größte Chance, anders zu sein.",
+        "Mein Pr zess"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-firstframe",
+      "collection": "minimax-m3-high",
+      "name": "First Frame — Creative Production & Post-Production (Recreation)",
+      "tags": [
+        "creative",
+        "film",
+        "minimax-m3-high",
+        "production",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/firstframe.html",
+      "description": "DISCOVER DISCOVER 05/06 Our universe Production & Post-Production uncompromising, creative, human. FIRST FRAME WAS BORN OF AN OBSESSION: COMPELLING VISUAL NARRATIVES, ADAPTIVE AND RIGOROUS, AND A CREATIVE ECOSYSTEM DELIVERING FILMS THAT …",
+      "thumb": "thumbs/minimax-m3-high-firstframe.png",
+      "originalUrl": "https://firstframe.fr/",
+      "title": "First Frame — Creative Production & Post-Production (Recreation)",
+      "headings": [
+        "Production & Post-Production uncompromising, creative, human.",
+        "We support the new generation of talents across different creative territories.",
+        "Resolutely committed to an eco-responsible approach, eco-production is at the heart of our reflections and actions.",
+        "From concept to delivery, we orchestrate the entire production chain, supported by an extended network of partners in France and internationally.",
+        "F(r)ame",
+        "About"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-geex-arts",
+      "collection": "minimax-m3-high",
+      "name": "Geex — Designing Future® Digital Experiences™ (recreation)",
+      "tags": [
+        "brand",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/geex-arts.html",
+      "description": "Designing Future ® Digital Experiences ™ What we offer 1 Branding 2 Developing 3 Design Featured works Learn on CGI · UI/UX Eyeball Sites · Branding Verdant Brand · Web Embers CGI · Site My industry AI & ML Smart AI-driven apps",
+      "thumb": "thumbs/minimax-m3-high-geex-arts.png",
+      "originalUrl": "https://www.geex-arts.com/",
+      "title": "Geex — Designing Future® Digital Experiences™ (recreation)",
+      "headings": [
+        "Designing Future ® Digital Experiences ™",
+        "What we offer",
+        "Featured works",
+        "My industry",
+        "AI & ML",
+        "SaaS"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-generalcondition",
+      "collection": "minimax-m3-high",
+      "name": "General Condition — recreation",
+      "tags": [
+        "brand",
+        "creative",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/generalcondition.html",
+      "description": "O. WORK ABOUT MOOD STORIES LET'S TALK This might be a design See the work But it probably isn’t what you’re expecting.",
+      "thumb": "thumbs/minimax-m3-high-generalcondition.png",
+      "originalUrl": "https://generalcondition.com/",
+      "title": "General Condition — recreation",
+      "headings": [
+        "This might be a design",
+        "What we do (when we stop thinking in circles):",
+        "So check out the featured work below.",
+        "Honors",
+        "Since this might be a design studio meet the minds behind the madness.",
+        "What started as a space for wild ideas has evolved into a creative design studio. Our mission is clear: to build bold brands and digital experiences that really work and feel like they belong."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-grit-pictures",
+      "collection": "minimax-m3-high",
+      "name": "GRiT Pictures — production company you've never heard of",
+      "tags": [
+        "minimax-m3-high",
+        "production",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/grit-pictures.html",
+      "description": "T MENU GR T GR T PICTURES ™ [grit pic·tures li·mi·ted] probably the best video production company you've never heard of",
+      "thumb": "thumbs/minimax-m3-high-grit-pictures.png",
+      "originalUrl": "https://grit.pictures/",
+      "title": "GRiT Pictures — production company you've never heard of",
+      "headings": [
+        "CHECK OUT OUR WORK",
+        "CONCEPT IS KING",
+        "YOUR MOVE",
+        "CONNECT WITH US",
+        "STUDIO"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-hnine-interaction",
+      "collection": "minimax-m3-high",
+      "name": "Hnine Interaction",
+      "tags": [
+        "brand",
+        "design",
+        "experiences",
+        "interactive",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/hnine-interaction.html",
+      "description": "We design and build interactive experiences, brand systems, and the websites that hold them together. Below is a quick look at our favourite projects.",
+      "thumb": "thumbs/minimax-m3-high-hnine-interaction.png",
+      "title": "Hnine Interaction",
+      "headings": [
+        "h , Interaction",
+        "Reasoning. We approach problems with logic, empathy & curiosity."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-jensbosman-nl",
+      "collection": "minimax-m3-high",
+      "name": "Jens Bosman — Director (study)",
+      "tags": [
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/jensbosman-nl.html",
+      "description": "J / About jens",
+      "thumb": "thumbs/minimax-m3-high-jensbosman-nl.png",
+      "title": "Jens Bosman — Director (study)",
+      "headings": [
+        "Jens Bosman",
+        "Building Frame by Frame"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-jordan-delcros",
+      "collection": "minimax-m3-high",
+      "name": "Jordan Delcros — Creative Developer",
+      "tags": [
+        "creative",
+        "developer",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/jordan-delcros.html",
+      "description": "COASTAL WORLD DRAW IT YOURSELF QUATRE JORDAN Creative Developer",
+      "thumb": "thumbs/minimax-m3-high-jordan-delcros.png",
+      "title": "Jordan Delcros — Creative Developer",
+      "headings": [
+        "JORDAN"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-joseph-san",
+      "collection": "minimax-m3-high",
+      "name": "Creative Software Engineer — Portfolio",
+      "tags": [
+        "brand",
+        "creative",
+        "design",
+        "developer",
+        "experiences",
+        "interactive",
+        "minimax-m3-high",
+        "portfolio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/joseph-san.html",
+      "description": "Based in Ecuador /// Creative Developer at [OFF+BRAND] Joseph Santamaria is a software engineer focused on web experiences that feel cinematic.",
+      "thumb": "thumbs/minimax-m3-high-joseph-san.png",
+      "originalUrl": "https://joseph-san.com/",
+      "title": "Creative Software Engineer — Portfolio",
+      "headings": [
+        "Architect of immersive dimensions High-end fullstack development & AI Integrations",
+        "Creative Software Engineer & UI/UX designer, follower of Jesus Christ †",
+        "Featured Work & Projects",
+        "Thanks for visiting",
+        "Featured Projects",
+        "Tiny Whale — Interactive Story"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-karim-saab",
+      "collection": "minimax-m3-high",
+      "name": "Karim Saab — Art Director & Web Developer (recreation)",
+      "tags": [
+        "brand",
+        "developer",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/karim-saab.html",
+      "description": "UNLOCK Your Brand's Personality",
+      "thumb": "thumbs/minimax-m3-high-karim-saab.png",
+      "originalUrl": "https://www.karim-saab.com/",
+      "title": "Karim Saab — Art Director & Web Developer (recreation)",
+      "headings": [
+        "UNLOCK",
+        "FEATURED PROJECTS",
+        "IN A WORLD FULL OF NOISE",
+        "Let Your Brand",
+        "Stand Out"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-karocrafts",
+      "collection": "minimax-m3-high",
+      "name": "KARO | NYC Artist & Designer (recreation)",
+      "tags": [
+        "design",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/karocrafts.html",
+      "description": "Store Store Karoverse Karoverse Contact Contact Search Search Bag — 0 Bag — 0 [ NYC, EST. ] [ 2023 ] Inspired by lucid dreams & celestial intervention. Bright blues, chrome detailing, poetry, & soft vintage washes.",
+      "thumb": "thumbs/minimax-m3-high-karocrafts.png",
+      "originalUrl": "https://www.karocrafts.com/",
+      "title": "KARO | NYC Artist & Designer (recreation)",
+      "headings": [
+        "Inspired by lucid dreams & celestial intervention.",
+        "Hand-crafted wearables & weird little things.",
+        "[ studio karo ] tour"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-laxspace",
+      "collection": "minimax-m3-high",
+      "name": "Lax Chee — Digital Creative Director + Developer (recreation)",
+      "tags": [
+        "creative",
+        "design",
+        "developer",
+        "minimax-m3-high",
+        "motion",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/laxspace.html",
+      "description": "Digital Creative Director + Developer crafting bold, thoughtful design.",
+      "thumb": "thumbs/minimax-m3-high-laxspace.png",
+      "originalUrl": "https://www.laxspace.co/",
+      "title": "Lax Chee — Digital Creative Director + Developer (recreation)",
+      "headings": [
+        "Digital Creative Director + Developer crafting bold, thoughtful design.",
+        "Stamped",
+        "Fukuda",
+        "Motion Blue",
+        "Sake of Nada",
+        "Utsubo"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-leoleo-studio",
+      "collection": "minimax-m3-high",
+      "name": "LEOLEO — Brand design, identity & custom websites (recreation)",
+      "tags": [
+        "3d",
+        "brand",
+        "design",
+        "minimax-m3-high",
+        "motion",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/leoleo-studio.html",
+      "description": "Combining creativity and expertise, we reveal the character of brands that stand out in their time.",
+      "thumb": "thumbs/minimax-m3-high-leoleo-studio.png",
+      "originalUrl": "https://www.leoleo.studio/en-gb",
+      "title": "LEOLEO — Brand design, identity & custom websites (recreation)",
+      "headings": [
+        "Combining creativity and expertise, we reveal the character of brands that stand out in their time.",
+        "Web experiment E-commerce 3D & motion",
+        "At the crossroads of craft and innovation, we help brands connect with their audience in a meaningful way.",
+        "Got a project in mind? We're listening :)"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-letude-group",
+      "collection": "minimax-m3-high",
+      "name": "L'Étude — Modular Creative Studio",
+      "tags": [
+        "creative",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/letude-group.html",
+      "description": "Étude · noun | [e.tyd] From French \"study\". A methodical application of the mind in pursuit of learning and understanding.",
+      "thumb": "thumbs/minimax-m3-high-letude-group.png",
+      "originalUrl": "https://letude.group/",
+      "title": "L'Étude — Modular Creative Studio",
+      "headings": [
+        "L'ÉTUDE",
+        "ÉTUDE",
+        "L'ÉTUDE GROUP"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-lisovskiy-work",
+      "collection": "minimax-m3-high",
+      "name": "The studio of (placeholder) — recreation",
+      "tags": [
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/lisovskiy-work.html",
+      "description": "Crafting unique experiences with the power of identity and tech",
+      "thumb": "thumbs/minimax-m3-high-lisovskiy-work.png",
+      "originalUrl": "https://lisovskiy.work/",
+      "title": "The studio of (placeholder) — recreation",
+      "headings": [
+        "The studio of Studio Placeholder",
+        "About",
+        "Clients",
+        "Fields",
+        "Values",
+        "All projects"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-madebynull",
+      "collection": "minimax-m3-high",
+      "name": "Studio Null — Craft-focused Digital Design & Development (Recreation)",
+      "tags": [
+        "collective",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/madebynull.html",
+      "description": "Toggle sound Null is a digital experience studio designing spaces for fun, commerce & conversation. Studio Null EST. 2021 The Studio Null is a digital experience studio designing spaces for fun, commerce and conversation on the web.",
+      "thumb": "thumbs/minimax-m3-high-madebynull.png",
+      "originalUrl": "https://www.madebynull.com/",
+      "title": "Studio Null — Craft-focused Digital Design & Development (Recreation)",
+      "headings": [
+        "Craft-focused Digital Design & Development Collective",
+        "Null is a digital experience studio designing spaces for fun, commerce & conversation.",
+        "Studio Null EST. 2021",
+        "The Studio",
+        "Our Ethos",
+        "Focus"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-madeinux-miux",
+      "collection": "minimax-m3-high",
+      "name": "MIUX Studio — Seattle UX Studio (study)",
+      "tags": [
+        "awards",
+        "brand",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/madeinux-miux.html",
+      "description": "MIUX Studio is an award-winning brand and digital design studio based in Seattle, creating strategy-led websites, UX/UI experiences, brand identities, and packaging for founders and growing businesses.",
+      "thumb": "thumbs/minimax-m3-high-madeinux-miux.png",
+      "title": "MIUX Studio — Seattle UX Studio (study)",
+      "headings": [
+        "Premium design for brands ready to be trusted, chosen, and remembered",
+        "To give founders the clarity, support, and confidence to build brands they're proud to grow.",
+        "Latest Achievements",
+        "Their expertise transformed our digital presence.",
+        "Let's bring your vision to life."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-mikkisindhunata",
+      "collection": "minimax-m3-high",
+      "name": "Mikki Sindhunata — Director (Recreation)",
+      "tags": [
+        "film",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/mikkisindhunata.html",
+      "description": "Rooted in the dance world, she has developed a sensitive directing style and a performative film language. Moving beyond dance as pure form to embrace its power as a narrative tool.",
+      "thumb": "thumbs/minimax-m3-high-mikkisindhunata.png",
+      "originalUrl": "https://mikkisindhunata.com/",
+      "title": "Mikki Sindhunata — Director (Recreation)",
+      "headings": [
+        "MIKKI",
+        "SINDHUNATA",
+        "WORKS",
+        "OVERVIEW",
+        "VIDEO",
+        "ARCHIVE"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-nuageboi-hugobaron",
+      "collection": "minimax-m3-high",
+      "name": "Hugo Baron — Portfolio",
+      "tags": [
+        "3d",
+        "design",
+        "minimax-m3-high",
+        "motion",
+        "portfolio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/nuageboi-hugobaron.html",
+      "description": "Passionate about imagery and movement, I create unique visual universes that combine artistic direction, 3D, and motion design.",
+      "thumb": "thumbs/minimax-m3-high-nuageboi-hugobaron.png",
+      "title": "Hugo Baron — Portfolio",
+      "headings": [
+        "RON HUGOBARON",
+        "Paris based",
+        "ART DIRECTOR /",
+        "3D ARTIST /",
+        "SHOWREEL / 2025",
+        "SELECTED"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-olha-lazarieva",
+      "collection": "minimax-m3-high",
+      "name": "Olha Lazarieva · Creative Designer",
+      "tags": [
+        "creative",
+        "design",
+        "experiences",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/olha-lazarieva.html",
+      "description": "A SENIOR UX/UI DESIGNER WITH OVER 7 YEARS OF EXPERIENCE IN CREATING DIGITAL PRODUCTS FOR INTERNATIONAL COMPANIES. A SENIOR UX/UI DESIGNER WITH OVER 7 YEARS OF EXPERIENCE IN CREATING DIGITAL PRODUCTS FOR INTERNATIONAL COMPANIES.",
+      "thumb": "thumbs/minimax-m3-high-olha-lazarieva.png",
+      "originalUrl": "https://www.olhalazarieva.com/",
+      "title": "Olha Lazarieva · Creative Designer",
+      "headings": [
+        "CREATIVE DESIGNER"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-orage-studio",
+      "collection": "minimax-m3-high",
+      "name": "Orage studio — recreation",
+      "tags": [
+        "3d",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/orage-studio.html",
+      "description": "C: \\Orage \\Home PROJECT_001 3D, Color Grading, VFX Next 001 /009 Home Works About Studio Contact Video ID / aaN 541gaqzrfazgA / POK5 XFRK YV7C Viewport / Frames 1920x1080*1.20 / 0 dropped of 85454 Current / Optimal Res 1920x1080@30 / 384…",
+      "thumb": "thumbs/minimax-m3-high-orage-studio.png",
+      "originalUrl": "https://orage.studio/",
+      "title": "Orage studio — recreation",
+      "headings": [
+        "Console setup",
+        "Welcome to Orage",
+        "Parsing data",
+        "Studio",
+        "Working with us",
+        "Selected projects"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-phantom-studios",
+      "collection": "minimax-m3-high",
+      "name": "Phantom Studios — Technology Creative Agency",
+      "tags": [
+        "agency",
+        "brand",
+        "creative",
+        "experiences",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/phantom-studios.html",
+      "description": "SOUND [OFF] PHANTOM IS A TECHNOLOGY-LED CREATIVE AGENCY CRAFTING EXPERIENCES FOR GLOBAL BRANDS.",
+      "thumb": "thumbs/minimax-m3-high-phantom-studios.png",
+      "title": "Phantom Studios — Technology Creative Agency",
+      "headings": [
+        "All Projects · 91"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-portalone-studio",
+      "collection": "minimax-m3-high",
+      "name": "Portal-1 — Creative Gateway (recreation)",
+      "tags": [
+        "creative",
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/portalone-studio.html",
+      "description": "SERVICES · BOOK A CALL ✦ ✦ ✦ ✦ ✦ ● Real businesses. Real websites. Real impact. 📄 Great design isn't just about looks /// it's about results. ▣ THE PATHWAY TO MEANINGFUL DESIGN $ Real businesses. Real websites. Real impact. 🔔 Great des…",
+      "thumb": "thumbs/minimax-m3-high-portalone-studio.png",
+      "originalUrl": "https://www.portalone.studio/",
+      "title": "Portal-1 — Creative Gateway (recreation)",
+      "headings": [
+        "WHY PORTAL-1?",
+        "Think Bigger",
+        "Build Smarter",
+        "Connect Deeper",
+        "STUFF WE'VE BUILT IT (AND YOU'LL LOVE IT TOO)"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-ragged-edge",
+      "collection": "minimax-m3-high",
+      "name": "Ragged Edge — A global branding agency proudly based in London",
+      "tags": [
+        "agency",
+        "brand",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/ragged-edge.html",
+      "description": "Ragged Edge is a brand company for people who refuse to settle for average. It's time to commit to a different reality.",
+      "thumb": "thumbs/minimax-m3-high-ragged-edge.png",
+      "originalUrl": "https://raggededge.com/",
+      "title": "Ragged Edge — A global branding agency proudly based in London",
+      "headings": [
+        "Ragged Edge",
+        "Never be the same again",
+        "Wise",
+        "Papier",
+        "Palmetto",
+        "Marshmallow"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-reform-collective",
+      "collection": "minimax-m3-high",
+      "name": "Reform Collective — Digital Design Agency",
+      "tags": [
+        "agency",
+        "collective",
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/reform-collective.html",
+      "description": "REFORM CO©",
+      "thumb": "thumbs/minimax-m3-high-reform-collective.png",
+      "title": "Reform Collective — Digital Design Agency",
+      "headings": [
+        "REFORM CO©",
+        "Our featured Work",
+        "Circle",
+        "Enzo Health",
+        "Runway",
+        "Campfire"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-robot-tv",
+      "collection": "minimax-m3-high",
+      "name": "Robot — Southern Africa Production Specialists",
+      "tags": [
+        "creative",
+        "experiences",
+        "minimax-m3-high",
+        "production",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/robot-tv.html",
+      "description": "Trusted by top production companies and creative agencies worldwide, we deliver bold, world-class work at any scale. With years of hands-on experience, deep respect for the creative process, and unmatched local knowledge backed by global…",
+      "thumb": "thumbs/minimax-m3-high-robot-tv.png",
+      "originalUrl": "https://www.therobot.tv/",
+      "title": "Robot — Southern Africa Production Specialists",
+      "headings": [
+        "R b t",
+        "And relentlessly get it right.",
+        "Featured Directors"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-samsy-ninja",
+      "collection": "minimax-m3-high",
+      "name": "SMSY-Gen02 · Award Winning Creative Graphics Engineer",
+      "tags": [
+        "awards",
+        "creative",
+        "experiences",
+        "minimax-m3-high",
+        "template",
+        "webgl"
+      ],
+      "sourcePath": "samples/minimax-m3-high/samsy-ninja.html",
+      "description": "↑ ← → ↓ S MS Y Connected: 1 Engine: WebGL Frame: 16.7 ms 60 FPS ↑ ← ↓ → SPACE JUMP EXPLOR チ WORKS ABOUT CLONEX MONTH DAY SOLD OUT PUBLIC SALE RTFKT AND NIKE, INC. × CLONEX NFT PHASE ROYAL STAKE 1.Clonex WATCH ME SMSY BACKGROUND My projec…",
+      "thumb": "thumbs/minimax-m3-high-samsy-ninja.png",
+      "originalUrl": "https://samsy.ninja/",
+      "title": "SMSY-Gen02 · Award Winning Creative Graphics Engineer",
+      "headings": [
+        "BACKGROUND",
+        "EXPERIENCE",
+        "TODAY",
+        "プロジェクトについて",
+        "対応可能"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-stiff-films",
+      "collection": "minimax-m3-high",
+      "name": "Working Stiff Films — recreation",
+      "tags": [
+        "brand",
+        "film",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/stiff-films.html",
+      "description": "Stiff Stiff Work News About Capabilities Contact We make Laughs That look Damn Go od Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Work Astrology RE/MAX Astrology Rich Edward Jones Rich Ru…",
+      "thumb": "thumbs/minimax-m3-high-stiff-films.png",
+      "originalUrl": "https://stiff.madebybuzzworthy.com/",
+      "title": "Working Stiff Films — recreation",
+      "headings": [
+        "We make Laughs That look Damn",
+        "For twenty years, we've been collaborating, shaping stories, sweating details, solving problems, and crafting relatable humor for big ass (and tiny ass) brands.",
+        "In Your Feed",
+        "Hit us Up",
+        "Stiff Films",
+        "Matthew Pittroff"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-studioherrstrom",
+      "collection": "minimax-m3-high",
+      "name": "Studio Herrström — Design Studio for Brands Who Move Culture (recreation)",
+      "tags": [
+        "brand",
+        "design",
+        "film",
+        "minimax-m3-high",
+        "studio",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/studioherrstrom.html",
+      "description": "Consumer Electronics Reimagining Discord as a limitless home for every community → H. Marketplace B Back Market Circular tech brand identity Marketplace Shaping a visual world for circular tech with Back Market → Filmhub Media and Entert…",
+      "thumb": "thumbs/minimax-m3-high-studioherrstrom.png",
+      "originalUrl": "https://www.studioherrstrom.com/",
+      "title": "Studio Herrström — Design Studio for Brands Who Move Culture (recreation)",
+      "headings": [
+        "A DESIGN STUDIO FOR BRANDS WHO MOVE CULTURE",
+        "Our three step process",
+        "Listen",
+        "Define",
+        "Deliver",
+        "PRESS, FEATURES AND STUDIO NEWS"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-sunhung-net",
+      "collection": "minimax-m3-high",
+      "name": "Sun Hung — Designer (study)",
+      "tags": [
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/sunhung-net.html",
+      "description": "\");background-size:cover;background-repeat:no-repeat} .work-explosion h1{position:relative;z-index:2;font-size:clamp(160px,28vw,440px);line-height:.85;color:#fff;letter-spacing:-0.04em;text-align:center} /* project cards */ .project{posi…",
+      "thumb": "thumbs/minimax-m3-high-sunhung-net.png",
+      "title": "Sun Hung — Designer (study)",
+      "headings": [
+        "head of design. uiux designer.",
+        "and teacher.",
+        "(base in Vietnam)",
+        "work",
+        "start something great together"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-supersolid-agency",
+      "collection": "minimax-m3-high",
+      "name": "Supersolid — Creative Agency (study)",
+      "tags": [
+        "agency",
+        "brand",
+        "creative",
+        "experiences",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/supersolid-agency.html",
+      "description": "We believe creativity is the most powerful lever in business. Our seamless agency structure and a highly experienced senior team mean every brief lands with the people who'll actually do the work — no layers, no layers of account manager…",
+      "thumb": "thumbs/minimax-m3-high-supersolid-agency.png",
+      "title": "Supersolid — Creative Agency (study)",
+      "headings": [
+        "We're a creative-owned agency that specialises in Super × Solid outcomes.",
+        "We work with some of the world's biggest brands and next big things.",
+        "ROIdeas ®",
+        "Supersolid's registered trademark is the unrivalled Return On Ideas we deliver for our clients.",
+        "Testimonials"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-t-ko-space",
+      "collection": "minimax-m3-high",
+      "name": "T-KO™ /www",
+      "tags": [
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/t-ko-space.html",
+      "description": "Initializing Drivers...",
+      "thumb": "thumbs/minimax-m3-high-t-ko-space.png",
+      "originalUrl": "https://t-ko.space/",
+      "title": "T-KO™ /www"
+    },
+    {
+      "id": "minimax-m3-high-thingy-and-thingy",
+      "collection": "minimax-m3-high",
+      "name": "Thingy & Thingy® — The anti-advertising agency, advertising agency",
+      "tags": [
+        "agency",
+        "brand",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/thingy-and-thingy.html",
+      "description": "Because life's too short to take everything so seriously.",
+      "thumb": "thumbs/minimax-m3-high-thingy-and-thingy.png",
+      "originalUrl": "https://www.thingyandthingy.com/",
+      "title": "Thingy & Thingy® — The anti-advertising agency, advertising agency",
+      "headings": [
+        "The Microsoft Windows 95 of Advertising.",
+        "Bang. And the Dirt is Gone.",
+        "Inspiring Brands to Fart About a Bit.",
+        "A Multinational Network of Idiots.",
+        "WHATEVER! WHATEVER?!",
+        "A network of some of the best ADVERTISING talent in the world."
+      ]
+    },
+    {
+      "id": "minimax-m3-high-tux-co",
+      "collection": "minimax-m3-high",
+      "name": "TUX CREATIVE HOUSE — Plan / Make / Launch",
+      "tags": [
+        "creative",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/tux-co.html",
+      "description": "Work .",
+      "thumb": "thumbs/minimax-m3-high-tux-co.png",
+      "title": "TUX CREATIVE HOUSE — Plan / Make / Launch",
+      "headings": [
+        "Work .",
+        "Latest News .",
+        "Honoring The Rebels this Pride 2026 with Levi's",
+        "Bonafide's Retail Breakthrough with TUX",
+        "TUX Brings a Fresh Spin to Maybelline's Eraser",
+        "GLCOzzy: A Collection Celebrating a Timeless Legacy"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-twicetwice",
+      "collection": "minimax-m3-high",
+      "name": "twice — recreation",
+      "tags": [
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/twicetwice.html",
+      "description": "twice — recreation",
+      "thumb": "thumbs/minimax-m3-high-twicetwice.png",
+      "originalUrl": "https://www.twicetwice.tv/",
+      "title": "twice — recreation"
+    },
+    {
+      "id": "minimax-m3-high-weareexample",
+      "collection": "minimax-m3-high",
+      "name": "We Are Example — Brand Strategy, PR & Placemaking (Recreation)",
+      "tags": [
+        "brand",
+        "design",
+        "minimax-m3-high",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/weareexample.html",
+      "description": "Brand Strategy, Design and PR for Hospitality, F&B and consumer brands across Australia, the Middle East and the UK.",
+      "thumb": "thumbs/minimax-m3-high-weareexample.png",
+      "originalUrl": "https://www.weareexample.com/",
+      "title": "We Are Example — Brand Strategy, PR & Placemaking (Recreation)",
+      "headings": [
+        "We make BRANDS AND PLACES FAMOUS",
+        "DESTINATIONS & PLACEMAKING",
+        "HOSPITALITY",
+        "CONSUMER BRANDS",
+        "PATRÓN TEQUILA × SOLE DXB",
+        "ADDMIND × DUBAI HARBOUR"
+      ]
+    },
+    {
+      "id": "minimax-m3-high-wearestokt",
+      "collection": "minimax-m3-high",
+      "name": "Stōkt — Moving brands forward",
+      "tags": [
+        "brand",
+        "design",
+        "minimax-m3-high",
+        "motion",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-high/wearestokt.html",
+      "description": "S t ō k t b u i l d s m o t i o n - d r i v e n b r a n d s y s t e m s , u n i f y i n g b r a n d i n g , w e b , a n d m o t i o n i n t o a s i n g l e e v o l v i n g e x e c u t i o n .",
+      "thumb": "thumbs/minimax-m3-high-wearestokt.png",
+      "originalUrl": "https://wearestokt.com/",
+      "title": "Stōkt — Moving brands forward",
+      "headings": [
+        "( WE ARE STŌKT ) MOVING BRANDS FORWARD",
+        "( Recent ) brand systems.",
+        "( Digital ) design powerhouse.",
+        "Brand Identity",
+        "Web Design & Dev",
+        "Motion Systems"
+      ]
+    },
+    {
+      "id": "minimax-m3-medium-bruno-simon-portfolio",
+      "collection": "minimax-m3-medium",
+      "name": "Bruno Simon — Creative Developer",
+      "tags": [
+        "creative",
+        "developer",
+        "minimax-m3-medium",
+        "template"
+      ],
+      "sourcePath": "samples/minimax-m3-medium/bruno-simon-portfolio.html",
+      "description": "Creative Developer",
+      "thumb": "thumbs/minimax-m3-medium-bruno-simon-portfolio.png",
+      "originalUrl": "https://bruno-simon.com/",
+      "title": "Bruno Simon — Creative Developer",
+      "headings": [
+        "BRUNO SIMON",
+        "BRUNO SIMON",
+        "Use arrow keys to drive"
+      ]
+    }
+  ]
+}
