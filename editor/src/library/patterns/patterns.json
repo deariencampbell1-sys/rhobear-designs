@@ -1,0 +1,4149 @@
+{
+  "generatedAt": null,
+  "samplesDir": "samples/minimax-m3-high",
+  "templateCount": 65,
+  "templates": [
+    {
+      "id": "109ichiki",
+      "file": "samples/minimax-m3-high/109ichiki.html",
+      "sizeBytes": 28806,
+      "scroll": {
+        "techniques": [
+          "css-sticky"
+        ],
+        "markers": {
+          "stickySelectors": [
+            {
+              "line": 116,
+              "text": ".nav{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:3px solid var(--ink)}"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 4,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "home",
+          "works",
+          "profile",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 2,
+        "articles": 6
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "14islands",
+      "file": "samples/minimax-m3-high/14islands.html",
+      "sizeBytes": 27783,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 460,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "studio",
+          "services",
+          "contact",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 6
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "abhishekjha",
+      "file": "samples/minimax-m3-high/abhishekjha.html",
+      "sizeBytes": 23743,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.5"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "CylinderGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 616,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "active-theory",
+      "file": "samples/minimax-m3-high/active-theory.html",
+      "sizeBytes": 16300,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": true,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "adrienlamy",
+      "file": "samples/minimax-m3-high/adrienlamy.html",
+      "sizeBytes": 15899,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "alche-studio",
+      "file": "samples/minimax-m3-high/alche-studio.html",
+      "sizeBytes": 25823,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [],
+        "materials": [
+          "MeshBasicMaterial",
+          "ShaderMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 294,
+            "text": "const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "aristidebenoist",
+      "file": "samples/minimax-m3-high/aristidebenoist.html",
+      "sizeBytes": 17403,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": true,
+        "sections": 1,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "bindery",
+      "file": "samples/minimax-m3-high/bindery.html",
+      "sizeBytes": 25425,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "intersection-observer",
+          "css-sticky",
+          "parallax",
+          "raw-scroll-listener"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": null,
+            "register": null,
+            "calls": []
+          },
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 505,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.18"
+            ],
+            "rootMargins": []
+          },
+          "stickySelectors": [
+            {
+              "line": 161,
+              "text": "position: sticky; top: 0; height: 100vh;"
+            }
+          ],
+          "scrollListener": [
+            {
+              "line": 529,
+              "text": "window.addEventListener('scroll', () => {"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 1,
+        "uniqueAnchorIds": 1,
+        "samples": [
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 7
+      },
+      "libs": [
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "brand-appart",
+      "file": "samples/minimax-m3-high/brand-appart.html",
+      "sizeBytes": 28752,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-sticky"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.1"
+            ],
+            "rootMargins": [
+              "rootMargin: '0px 0px -40px 0px'"
+            ]
+          },
+          "stickySelectors": [
+            {
+              "line": 102,
+              "text": ".nav{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid rgba(17,17,17,.06)}"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 9,
+        "uniqueAnchorIds": 3,
+        "samples": [
+          "work",
+          "about",
+          "contact",
+          "contact",
+          "contact",
+          "work",
+          "contact",
+          "work",
+          "about"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 12
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "buildinamsterdam",
+      "file": "samples/minimax-m3-high/buildinamsterdam.html",
+      "sizeBytes": 33107,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 523,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "work",
+          "services",
+          "studio",
+          "news",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 7
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "bychudy",
+      "file": "samples/minimax-m3-high/bychudy.html",
+      "sizeBytes": 20468,
+      "scroll": {
+        "techniques": [
+          "css-sticky"
+        ],
+        "markers": {
+          "stickySelectors": [
+            {
+              "line": 90,
+              "text": ".nav{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--hairline);backdrop-filter:blur(8px)}"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 1,
+        "uniqueAnchorIds": 1,
+        "samples": [
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "caffe-design",
+      "file": "samples/minimax-m3-high/caffe-design.html",
+      "sizeBytes": 32541,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.5"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 10,
+        "uniqueAnchorIds": 9,
+        "samples": [
+          "galleria",
+          "biscottini",
+          "facciamo",
+          "librello",
+          "podcast",
+          "prodotti",
+          "tlif",
+          "retro",
+          "brand",
+          "galleria"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 11,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "cappen",
+      "file": "samples/minimax-m3-high/cappen.html",
+      "sizeBytes": 28189,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "raw-scroll-listener",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.12"
+            ],
+            "rootMargins": [
+              "rootMargin: '0px 0px -60px 0px'"
+            ]
+          },
+          "scrollListener": [
+            {
+              "line": 500,
+              "text": "document.addEventListener('scroll', onScroll, {passive:true});"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "works",
+          "about",
+          "updates",
+          "start",
+          "works"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 6
+      },
+      "libs": [
+        "tailwind-cdn",
+        "jquery"
+      ]
+    },
+    {
+      "id": "chipsa-design",
+      "file": "samples/minimax-m3-high/chipsa-design.html",
+      "sizeBytes": 25436,
+      "scroll": {
+        "techniques": [
+          "css-smooth-scroll"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "BoxGeometry",
+          "IcosahedronGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 721,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "works",
+          "about",
+          "services",
+          "contacts",
+          "tour"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior: smooth; }"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "clayboan",
+      "file": "samples/minimax-m3-high/clayboan.html",
+      "sizeBytes": 17454,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 360,
+                "text": "const io = new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting) e.target.style.opacity=1;}),{threshold:.1});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "TorusGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 284,
+            "text": "const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "cuberto",
+      "file": "samples/minimax-m3-high/cuberto.html",
+      "sizeBytes": 27826,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "raw-scroll-listener",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 424,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          },
+          "scrollListener": [
+            {
+              "line": 480,
+              "text": "window.addEventListener('scroll',()=>{scrollProg=Math.min(1,window.scrollY/(window.innerHeight*1.5))},{passive:true});"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "IcosahedronGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "PointsMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 434,
+            "text": "const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "work",
+          "services",
+          "studio",
+          "news",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "cyphr-studio",
+      "file": "samples/minimax-m3-high/cyphr-studio.html",
+      "sizeBytes": 15387,
+      "scroll": {
+        "techniques": [
+          "parallax",
+          "raw-scroll-listener"
+        ],
+        "markers": {
+          "scrollListener": [
+            {
+              "line": 296,
+              "text": "window.addEventListener('scroll', ()=>{"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "des-obys",
+      "file": "samples/minimax-m3-high/des-obys.html",
+      "sizeBytes": 19746,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "lenis",
+          "js-smooth-scroll"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 48,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 350,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 6,
+        "uniqueAnchorIds": 3,
+        "samples": [
+          "practice",
+          "seasons",
+          "about",
+          "practice",
+          "seasons",
+          "about"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          {
+            "line": 377,
+            "text": "if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });"
+          }
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 7,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "lenis",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "dogstudio",
+      "file": "samples/minimax-m3-high/dogstudio.html",
+      "sizeBytes": 26122,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 478,
+                "text": "const io = new IntersectionObserver((entries)=>{"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.12"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "doubleplay-studio",
+      "file": "samples/minimax-m3-high/doubleplay-studio.html",
+      "sizeBytes": 18648,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "intersection-observer"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 25,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 305,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          },
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 306,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.12"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 4,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "work",
+          "about",
+          "work",
+          "about"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 8,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "eduard-bodak",
+      "file": "samples/minimax-m3-high/eduard-bodak.html",
+      "sizeBytes": 33358,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll",
+          "js-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 731,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0"
+            ],
+            "rootMargins": [
+              "rootMargin: '-40% 0px -50% 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 10,
+        "uniqueAnchorIds": 6,
+        "samples": [
+          "top",
+          "service",
+          "prozess",
+          "preis",
+          "kontakt",
+          "feed",
+          "top",
+          "prozess",
+          "preis",
+          "kontakt"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          {
+            "line": 714,
+            "text": "target.scrollIntoView({ behavior:'smooth', block:'start' });"
+          }
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 7
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "exoape",
+      "file": "samples/minimax-m3-high/exoape.html",
+      "sizeBytes": 29368,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 443,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "studio",
+          "awards",
+          "contact",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 4
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "firstframe",
+      "file": "samples/minimax-m3-high/firstframe.html",
+      "sizeBytes": 27541,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 566,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.16"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 8,
+        "uniqueAnchorIds": 7,
+        "samples": [
+          "advertisement",
+          "originals",
+          "corporate",
+          "music",
+          "studio",
+          "about",
+          "contact",
+          "advertisement"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 8,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "geex-arts",
+      "file": "samples/minimax-m3-high/geex-arts.html",
+      "sizeBytes": 19029,
+      "scroll": {
+        "techniques": [
+          "css-sticky",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "stickySelectors": [
+            {
+              "line": 75,
+              "text": "position: sticky; top: 0; z-index: 30;"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "TorusGeometry",
+          "IcosahedronGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 468,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 6,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "works",
+          "services",
+          "industries",
+          "about",
+          "contact",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior: smooth; }"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "generalcondition",
+      "file": "samples/minimax-m3-high/generalcondition.html",
+      "sizeBytes": 38233,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 556,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.1"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 6,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "work",
+          "about",
+          "mood",
+          "stories",
+          "contact",
+          "work"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 8,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "grit-pictures",
+      "file": "samples/minimax-m3-high/grit-pictures.html",
+      "sizeBytes": 32140,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 2,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "circlePath",
+          "r1"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "hellomonday",
+      "file": "samples/minimax-m3-high/hellomonday.html",
+      "sizeBytes": 26986,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 441,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "studio",
+          "careers",
+          "contact",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 4
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "hnine-interaction",
+      "file": "samples/minimax-m3-high/hnine-interaction.html",
+      "sizeBytes": 24513,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BoxGeometry",
+          "TorusGeometry",
+          "CylinderGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 274,
+            "text": "const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "immersive-garden",
+      "file": "samples/minimax-m3-high/immersive-garden.html",
+      "sizeBytes": 24648,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 2,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "about",
+          "projects"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "jensbosman-nl",
+      "file": "samples/minimax-m3-high/jensbosman-nl.html",
+      "sizeBytes": 24484,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "lenis",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 25,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 392,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 12,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "brands",
+          "about",
+          "brands",
+          "about",
+          "contact",
+          "work",
+          "about",
+          "work",
+          "brands"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 7,
+        "articles": 5
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "lenis",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "jordan-delcros",
+      "file": "samples/minimax-m3-high/jordan-delcros.html",
+      "sizeBytes": 17776,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": false,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "TorusGeometry",
+          "IcosahedronGeometry",
+          "PlaneGeometry",
+          "TorusKnotGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "MeshPhysicalMaterial",
+          "MeshBasicMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight",
+          "RoomEnvironment",
+          "PMREMGenerator"
+        ],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 360,
+              "text": "c.rotation.x += c.userData.rot;"
+            },
+            {
+              "line": 361,
+              "text": "c.rotation.y += c.userData.rot * 0.6;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 241,
+            "text": "renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 1,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "joseph-san",
+      "file": "samples/minimax-m3-high/joseph-san.html",
+      "sizeBytes": 37098,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BoxGeometry",
+          "IcosahedronGeometry",
+          "PlaneGeometry",
+          "BufferGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "MeshBasicMaterial",
+          "ShaderMaterial",
+          "PointsMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight",
+          "PointLight"
+        ],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 687,
+              "text": "stars.rotation.y += dt * 0.012;"
+            },
+            {
+              "line": 689,
+              "text": "crystal.rotation.y += dt * 0.35;"
+            },
+            {
+              "line": 694,
+              "text": "cube.rotation.y += dt * 0.4;"
+            },
+            {
+              "line": 695,
+              "text": "cube.rotation.x += dt * 0.18;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 468,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 6,
+        "articles": 6
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "karim-saab",
+      "file": "samples/minimax-m3-high/karim-saab.html",
+      "sizeBytes": 19144,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.1"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "MeshBasicMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 367,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "karocrafts",
+      "file": "samples/minimax-m3-high/karocrafts.html",
+      "sizeBytes": 20755,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BoxGeometry",
+          "TorusGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 522,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "laxspace",
+      "file": "samples/minimax-m3-high/laxspace.html",
+      "sizeBytes": 28231,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BoxGeometry",
+          "TorusGeometry",
+          "PlaneGeometry",
+          "CylinderGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "MeshBasicMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 664,
+              "text": "paper.rotation.y += (targetRot.y - paper.rotation.y) * 0.08;"
+            },
+            {
+              "line": 665,
+              "text": "paper.rotation.x += (targetRot.x - paper.rotation.x) * 0.08;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 416,
+            "text": "const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });"
+          },
+          {
+            "line": 557,
+            "text": "const sbR = new THREE.WebGLRenderer({ canvas: sb, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "leoleo-studio",
+      "file": "samples/minimax-m3-high/leoleo-studio.html",
+      "sizeBytes": 20097,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 48,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 424,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 4,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "services",
+          "about",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 7,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger"
+      ]
+    },
+    {
+      "id": "letude-group",
+      "file": "samples/minimax-m3-high/letude-group.html",
+      "sizeBytes": 30325,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "raw-scroll-listener",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 634,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.2"
+            ],
+            "rootMargins": []
+          },
+          "scrollListener": [
+            {
+              "line": 622,
+              "text": "window.addEventListener('scroll', () => {"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 9,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "lisovskiy-work",
+      "file": "samples/minimax-m3-high/lisovskiy-work.html",
+      "sizeBytes": 27156,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 378,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.18"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "jsdelivr-three",
+        "canvas": false,
+        "webglRenderer": true,
+        "geometries": [
+          "BoxGeometry",
+          "PlaneGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 498,
+              "text": "root.rotation.y += baseSpin + boost;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 395,
+            "text": "const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 1,
+        "uniqueAnchorIds": 1,
+        "samples": [
+          "about"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "locomotive",
+      "file": "samples/minimax-m3-high/locomotive.html",
+      "sizeBytes": 23223,
+      "scroll": {
+        "techniques": [
+          "raw-scroll-listener",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "scrollListener": [
+            {
+              "line": 423,
+              "text": "window.addEventListener('scroll', update, { passive: true });"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "lusion",
+      "file": "samples/minimax-m3-high/lusion.html",
+      "sizeBytes": 21604,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 414,
+                "text": "const io = new IntersectionObserver((entries)=>{"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.15"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": false,
+        "webglRenderer": true,
+        "geometries": [
+          "BoxGeometry",
+          "CylinderGeometry"
+        ],
+        "materials": [
+          "MeshPhysicalMaterial"
+        ],
+        "lights": [
+          "DirectionalLight",
+          "RoomEnvironment",
+          "PMREMGenerator"
+        ],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 362,
+              "text": "crosses.rotation.y += 0.0015;"
+            },
+            {
+              "line": 368,
+              "text": "c.rotation.y += c.userData.spin;"
+            },
+            {
+              "line": 369,
+              "text": "c.rotation.x += c.userData.spin*0.4;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 307,
+            "text": "const renderer = new THREE.WebGLRenderer({ antialias: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 3,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "contact",
+          "menu",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "madebynull",
+      "file": "samples/minimax-m3-high/madebynull.html",
+      "sizeBytes": 31555,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 459,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.14"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "BufferGeometry"
+        ],
+        "materials": [
+          "PointsMaterial"
+        ],
+        "lights": [],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 558,
+              "text": "points.rotation.y += 0.0008;"
+            },
+            {
+              "line": 559,
+              "text": "points.rotation.x += (my * 0.2 - points.rotation.x) * 0.02;"
+            },
+            {
+              "line": 560,
+              "text": "points.rotation.z += (mx * 0.2 - points.rotation.z) * 0.02;"
+            },
+            {
+              "line": 598,
+              "text": "points.rotation.y += 0.0006;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 530,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas: c, alpha: true });"
+          },
+          {
+            "line": 570,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas: c, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 3,
+        "uniqueAnchorIds": 3,
+        "samples": [
+          "studio",
+          "work",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": true,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "madeinux-miux",
+      "file": "samples/minimax-m3-high/madeinux-miux.html",
+      "sizeBytes": 20956,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "intersection-observer",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 28,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 315,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          },
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 316,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.12"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 7,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "projects",
+          "about",
+          "feedback",
+          "contact",
+          "about",
+          "feedback",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 7,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "makemepulse",
+      "file": "samples/minimax-m3-high/makemepulse.html",
+      "sizeBytes": 23557,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 467,
+                "text": "const io = new IntersectionObserver((entries)=>{"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.12"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 3
+      },
+      "libs": [
+        "three"
+      ]
+    },
+    {
+      "id": "mikkisindhunata",
+      "file": "samples/minimax-m3-high/mikkisindhunata.html",
+      "sizeBytes": 33144,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 497,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.14"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 2,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "archive",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "nuageboi-hugobaron",
+      "file": "samples/minimax-m3-high/nuageboi-hugobaron.html",
+      "sizeBytes": 20621,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 42,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 374,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 6,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "olha-lazarieva",
+      "file": "samples/minimax-m3-high/olha-lazarieva.html",
+      "sizeBytes": 25843,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "about",
+          "works",
+          "services",
+          "connect",
+          "connect"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "orage-studio",
+      "file": "samples/minimax-m3-high/orage-studio.html",
+      "sizeBytes": 38706,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "jsdelivr-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "PlaneGeometry",
+          "BufferGeometry"
+        ],
+        "materials": [
+          "MeshBasicMaterial",
+          "PointsMaterial"
+        ],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 527,
+            "text": "const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 3,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "phantom-studios",
+      "file": "samples/minimax-m3-high/phantom-studios.html",
+      "sizeBytes": 18746,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 45,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": null,
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "portalone-studio",
+      "file": "samples/minimax-m3-high/portalone-studio.html",
+      "sizeBytes": 41874,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "css-sticky",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 35,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 876,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          },
+          "stickySelectors": [
+            {
+              "line": 66,
+              "text": "position: sticky; top: 0; z-index: 30;"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unpkg-three-module",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BufferGeometry"
+        ],
+        "materials": [
+          "MeshBasicMaterial",
+          "PointsMaterial"
+        ],
+        "lights": [],
+        "spin": {
+          "kind": "rotation-increment",
+          "samples": [
+            {
+              "line": 810,
+              "text": "stars.rotation.z += 0.0006;"
+            }
+          ]
+        },
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 741,
+            "text": "const pr = new THREE.WebGLRenderer({ canvas: portalCanvas, antialias: true, alpha: true });"
+          },
+          {
+            "line": 822,
+            "text": "const br = new THREE.WebGLRenderer({ canvas: bhCanvas, antialias: true, alpha: true });"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "studio",
+          "works",
+          "contact",
+          "services",
+          "works"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 12,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "three"
+      ]
+    },
+    {
+      "id": "ragged-edge",
+      "file": "samples/minimax-m3-high/ragged-edge.html",
+      "sizeBytes": 23318,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax",
+          "js-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 513,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.18"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 13,
+        "uniqueAnchorIds": 6,
+        "samples": [
+          "home",
+          "partners",
+          "approach",
+          "happenings",
+          "join",
+          "contact",
+          "join",
+          "home",
+          "partners",
+          "approach"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          {
+            "line": 507,
+            "text": "if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });"
+          }
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 2,
+        "articles": 6
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "reform-collective",
+      "file": "samples/minimax-m3-high/reform-collective.html",
+      "sizeBytes": 25517,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 39,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 444,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "resn",
+      "file": "samples/minimax-m3-high/resn.html",
+      "sizeBytes": 25969,
+      "scroll": {
+        "techniques": [
+          "intersection-observer"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 408,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.12"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 6,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "studio",
+          "awards",
+          "contact",
+          "contact",
+          "work"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 4,
+        "articles": 4
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "robin-noguier",
+      "file": "samples/minimax-m3-high/robin-noguier.html",
+      "sizeBytes": 25694,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "lenis",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 419,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.1"
+            ],
+            "rootMargins": [
+              "rootMargin:'0px 0px -60px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 8,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "work",
+          "about",
+          "lab",
+          "contact",
+          "work",
+          "about",
+          "lab",
+          "contact"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "lenis",
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "robot-tv",
+      "file": "samples/minimax-m3-high/robot-tv.html",
+      "sizeBytes": 27885,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 625,
+                "text": "const observer = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0"
+            ],
+            "rootMargins": [
+              "rootMargin: '-10% 0px -85% 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 3,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "directors",
+          "about",
+          "directors"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 8
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "samsy-ninja",
+      "file": "samples/minimax-m3-high/samsy-ninja.html",
+      "sizeBytes": 28278,
+      "scroll": {
+        "techniques": [
+          "parallax"
+        ],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "unknown",
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 3,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "stiff-films",
+      "file": "samples/minimax-m3-high/stiff-films.html",
+      "sizeBytes": 29147,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-sticky"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 435,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.15"
+            ],
+            "rootMargins": []
+          },
+          "stickySelectors": [
+            {
+              "line": 129,
+              "text": "position:sticky; top:120px; align-self:start; height:calc(100vh - 200px); overflow:hidden;"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 7,
+        "uniqueAnchorIds": 7,
+        "samples": [
+          "work",
+          "news",
+          "about",
+          "capabilities",
+          "contact",
+          "circ",
+          "circ2"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": false,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "studioherrstrom",
+      "file": "samples/minimax-m3-high/studioherrstrom.html",
+      "sizeBytes": 19562,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-sticky"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.1"
+            ],
+            "rootMargins": []
+          },
+          "stickySelectors": [
+            {
+              "line": 52,
+              "text": "position: sticky; top: 0; z-index: 30;"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 4,
+        "uniqueAnchorIds": 4,
+        "samples": [
+          "process",
+          "work",
+          "about",
+          "contact"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 7,
+        "articles": 0
+      },
+      "libs": []
+    },
+    {
+      "id": "sunhung-net",
+      "file": "samples/minimax-m3-high/sunhung-net.html",
+      "sizeBytes": 21587,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "intersection-observer",
+          "parallax"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 27,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": null,
+            "calls": []
+          },
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 335,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.15});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.15"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 4,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "about",
+          "about",
+          "about",
+          "work"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": true,
+        "main": false,
+        "sections": 10,
+        "articles": 0
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "supersolid-agency",
+      "file": "samples/minimax-m3-high/supersolid-agency.html",
+      "sizeBytes": 18379,
+      "scroll": {
+        "techniques": [
+          "gsap-scrolltrigger",
+          "intersection-observer"
+        ],
+        "markers": {
+          "gsapScrollTrigger": {
+            "src": {
+              "line": 26,
+              "text": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>"
+            },
+            "register": {
+              "line": 282,
+              "text": "gsap.registerPlugin(ScrollTrigger);"
+            },
+            "calls": []
+          },
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 285,
+                "text": "const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.12"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 5,
+        "uniqueAnchorIds": 2,
+        "samples": [
+          "work",
+          "about",
+          "work",
+          "work",
+          "about"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 6
+      },
+      "libs": [
+        "gsap",
+        "gsap-scrolltrigger",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "t-ko-space",
+      "file": "samples/minimax-m3-high/t-ko-space.html",
+      "sizeBytes": 20716,
+      "scroll": {
+        "techniques": [],
+        "markers": {}
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "SphereGeometry",
+          "BoxGeometry",
+          "IcosahedronGeometry",
+          "CylinderGeometry",
+          "TorusKnotGeometry",
+          "BufferGeometry"
+        ],
+        "materials": [
+          "MeshStandardMaterial",
+          "MeshBasicMaterial",
+          "PointsMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight",
+          "PointLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 340,
+            "text": "const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "thingy-and-thingy",
+      "file": "samples/minimax-m3-high/thingy-and-thingy.html",
+      "sizeBytes": 25938,
+      "scroll": {
+        "techniques": [
+          "css-sticky",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "stickySelectors": [
+            {
+              "line": 41,
+              "text": "- Cross-section pill ticker using position:sticky on the parent"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 1,
+        "uniqueAnchorIds": 1,
+        "samples": [
+          "top"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": false,
+        "footer": false,
+        "main": false,
+        "sections": 5,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "tux-co",
+      "file": "samples/minimax-m3-high/tux-co.html",
+      "sizeBytes": 25017,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "css-smooth-scroll"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 414,
+                "text": "const io = new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('in')),{threshold:.15});"
+              }
+            ],
+            "thresholds": [
+              "threshold:.15"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 3,
+        "uniqueAnchorIds": 3,
+        "samples": [
+          "work",
+          "news",
+          "cta"
+        ],
+        "smoothScroll": true,
+        "smoothScrollEvidence": [
+          "scroll-behavior:smooth;}"
+        ]
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 3,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "twicetwice",
+      "file": "samples/minimax-m3-high/twicetwice.html",
+      "sizeBytes": 15202,
+      "scroll": {
+        "techniques": [
+          "parallax",
+          "raw-scroll-listener"
+        ],
+        "markers": {
+          "scrollListener": [
+            {
+              "line": 312,
+              "text": "window.addEventListener('scroll', onScroll, { passive: true });"
+            }
+          ]
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": false,
+        "nav": true,
+        "footer": false,
+        "main": true,
+        "sections": 0,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "weareexample",
+      "file": "samples/minimax-m3-high/weareexample.html",
+      "sizeBytes": 22714,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [
+              {
+                "line": 423,
+                "text": "const io = new IntersectionObserver((entries) => {"
+              }
+            ],
+            "thresholds": [
+              "threshold: 0.14"
+            ],
+            "rootMargins": []
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": false,
+        "loader": null,
+        "canvas": false,
+        "webglRenderer": false,
+        "geometries": [],
+        "materials": [],
+        "lights": [],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": []
+      },
+      "links": {
+        "anchors": 0,
+        "uniqueAnchorIds": 0,
+        "samples": [],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 10,
+        "articles": 0
+      },
+      "libs": [
+        "tailwind-cdn"
+      ]
+    },
+    {
+      "id": "wearestokt",
+      "file": "samples/minimax-m3-high/wearestokt.html",
+      "sizeBytes": 36860,
+      "scroll": {
+        "techniques": [
+          "intersection-observer",
+          "parallax"
+        ],
+        "markers": {
+          "intersectionObserver": {
+            "opts": [],
+            "thresholds": [
+              "threshold: 0.1",
+              "threshold: 0.3"
+            ],
+            "rootMargins": [
+              "rootMargin: '0px 0px -40px 0px'"
+            ]
+          }
+        }
+      },
+      "threeD": {
+        "usesThree": true,
+        "loader": "cdnjs-three",
+        "canvas": true,
+        "webglRenderer": true,
+        "geometries": [
+          "IcosahedronGeometry"
+        ],
+        "materials": [
+          "MeshBasicMaterial",
+          "ShaderMaterial"
+        ],
+        "lights": [
+          "AmbientLight",
+          "DirectionalLight"
+        ],
+        "spin": null,
+        "autoRotate": false,
+        "evidence": [
+          {
+            "line": 514,
+            "text": "const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});"
+          }
+        ]
+      },
+      "links": {
+        "anchors": 8,
+        "uniqueAnchorIds": 5,
+        "samples": [
+          "work",
+          "services",
+          "about",
+          "motion",
+          "cta",
+          "work",
+          "services",
+          "about"
+        ],
+        "smoothScroll": false,
+        "smoothScrollEvidence": []
+      },
+      "structure": {
+        "header": true,
+        "nav": true,
+        "footer": true,
+        "main": false,
+        "sections": 5,
+        "articles": 6
+      },
+      "libs": [
+        "three",
+        "tailwind-cdn"
+      ]
+    }
+  ],
+  "summary": {
+    "byTechnique": {
+      "gsap-scrolltrigger": 12,
+      "intersection-observer": 36,
+      "locomotive-data-scroll": 0,
+      "locomotive-script": 0,
+      "lenis": 3,
+      "css-sticky": 9,
+      "aos": 0,
+      "css-scroll-driven": 0,
+      "parallax": 23,
+      "raw-scroll-listener": 7,
+      "css-smooth-scroll": 17,
+      "js-smooth-scroll": 3,
+      "three-uses": 25
+    },
+    "byLib": {
+      "tailwind-cdn": 48,
+      "three": 25,
+      "gsap-scrolltrigger": 12,
+      "jquery": 1,
+      "gsap": 11,
+      "lenis": 3
+    },
+    "structureCounts": {
+      "header": 38,
+      "nav": 45,
+      "footer": 48,
+      "main": 3
+    },
+    "threeDCounts": {
+      "usesThree": 25,
+      "withCanvas": 17,
+      "withWebGL": 19,
+      "withSpin": 7,
+      "withAutoRotate": 0,
+      "roughnessSet": 14
+    },
+    "linkStats": {
+      "totalAnchors": 208,
+      "filesWithAnchors": 40,
+      "filesWithSmoothScroll": 19,
+      "topAnchorFiles": [
+        {
+          "id": "ragged-edge",
+          "anchors": 13
+        },
+        {
+          "id": "jensbosman-nl",
+          "anchors": 12
+        },
+        {
+          "id": "caffe-design",
+          "anchors": 10
+        },
+        {
+          "id": "eduard-bodak",
+          "anchors": 10
+        },
+        {
+          "id": "brand-appart",
+          "anchors": 9
+        }
+      ]
+    }
+  }
+}
