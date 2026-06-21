@@ -94,10 +94,9 @@ export function createLiveMode(refs) {
     doc.addEventListener('contextmenu', onContext, true);
     doc.addEventListener('focusout', onFocusOut, true);
     doc.addEventListener('input', () => { dirty = true; }, true);
-    doc.addEventListener('dragstart', onDragStart, true);
+    doc.addEventListener('pointerdown', onPointerDown, true);
     doc.addEventListener('dragover', onDragOver, true);
     doc.addEventListener('drop', onDrop, true);
-    doc.addEventListener('dragend', onDragEnd, true);
     win.addEventListener('scroll', reposition, true);
     refreshOutline();
     history = []; hi = -1; snap(); startObserving();
@@ -189,9 +188,7 @@ export function createLiveMode(refs) {
   function selectElement(el) {
     // never select/drag the page itself — that's what dragged "everything"
     if (!el || el.nodeType !== 1 || el === doc.body || el === doc.documentElement) return;
-    if (selectedEl && selectedEl !== el) selectedEl.draggable = false;
     selectedEl = el;
-    el.draggable = true;
     try { selectedPath = computeSelectorPath(el, doc.documentElement); } catch (_e) { selectedPath = ''; }
     overlay && overlay.showSelection(rectOf(el));
     positionFloatbar(el);
@@ -234,7 +231,7 @@ export function createLiveMode(refs) {
     if (overlay) overlay.showSelection(rectOf(selectedEl));
   }
 
-  // ---- HTML5 drag: reorder existing + insert from stash ----
+  // ---- drag a stash card onto the canvas (HTML5 DnD from the rail) ----
   function showDropLine(target, e) {
     if (!dropLine || !target || target === dropLine) return;
     const r = target.getBoundingClientRect();
@@ -245,51 +242,60 @@ export function createLiveMode(refs) {
     dropLine.style.top = `${(after ? r.bottom : r.top) - 1}px`;
   }
   function hideDropLine() { if (dropLine) { dropLine.style.display = 'none'; dropLine._target = null; } }
-
-  function onDragStart(e) {
-    const el = e.target;
-    if (dragPayload) return;
-    if (!el || el.nodeType !== 1) return;
-    if (el === doc.body || el === doc.documentElement) { e.preventDefault(); return; }
-    if (el.getAttribute('contenteditable') === 'true') { e.preventDefault(); return; }
-    draggingEl = el; selectElement(el);
-    try {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', 'rb-move');
-      // small drag image so we don't drag a giant semi-transparent ghost of the whole block
-      const ghost = doc.createElement('div');
-      ghost.textContent = (el.tagName || 'el').toLowerCase();
-      ghost.style.cssText = 'position:absolute;top:-1000px;left:-1000px;padding:4px 9px;background:#2dd4bf;color:#04110f;font:600 12px sans-serif;border-radius:6px';
-      doc.body.appendChild(ghost);
-      e.dataTransfer.setDragImage(ghost, 0, 0);
-      setTimeout(() => ghost.remove(), 0);
-    } catch (_e) {}
-  }
   function onDragOver(e) {
-    if (!dragPayload && !draggingEl) return;
+    if (!dragPayload) return;
     e.preventDefault();
-    try { e.dataTransfer.dropEffect = dragPayload ? 'copy' : 'move'; } catch (_e) {}
+    try { e.dataTransfer.dropEffect = 'copy'; } catch (_e) {}
     const t = e.target;
-    if (t && t.nodeType === 1 && t !== draggingEl && t !== dropLine) showDropLine(t, e);
+    if (t && t.nodeType === 1 && t !== dropLine) showDropLine(t, e);
   }
   function onDrop(e) {
-    if (dragPayload) {
-      e.preventDefault();
-      const target = dropLine && dropLine._target ? dropLine._target : (e.target && e.target.nodeType === 1 ? e.target : null);
-      insertElement(dragPayload, target, dropLine && dropLine._after);
-      dragPayload = null; hideDropLine(); return;
-    }
-    if (draggingEl) {
-      e.preventDefault();
-      const t = dropLine && dropLine._target ? dropLine._target : null;
-      if (t && t !== draggingEl && t.parentNode && !draggingEl.contains(t)) {
-        t.parentNode.insertBefore(draggingEl, dropLine._after ? t.nextSibling : t);
-        dirty = true; setStatus('Moved element'); reposition(); refreshOutline();
-      }
-      draggingEl = null; hideDropLine();
-    }
+    if (!dragPayload) return;
+    e.preventDefault();
+    const target = dropLine && dropLine._target ? dropLine._target : (e.target && e.target.nodeType === 1 ? e.target : null);
+    insertElement(dragPayload, target, dropLine && dropLine._after);
+    dragPayload = null; hideDropLine();
   }
-  function onDragEnd() { draggingEl = null; hideDropLine(); }
+
+  // ---- FREE MOVE: pointer-drag any element to place it ANYWHERE (transform) ----
+  // Infinite-canvas feel — drag to the side, overlap, arrange. Non-destructive
+  // (a CSS translate), exported as-is. Click without moving still just selects.
+  let mvStart = null, mvBase = null, mvEl = null, mvMoved = false;
+  function parseTranslate(el) {
+    const m = (el.style.transform || '').match(/translate\(\s*([-\d.]+)px\s*,\s*([-\d.]+)px/);
+    return m ? { x: +m[1], y: +m[2] } : { x: 0, y: 0 };
+  }
+  function onPointerDown(e) {
+    if (pickTargetLink || e.button !== 0) return;
+    const el = e.target;
+    if (!el || el.nodeType !== 1 || el === dropLine) return;
+    if (el === doc.body || el === doc.documentElement) return;
+    if (el.getAttribute('contenteditable') === 'true') return;
+    mvEl = el; mvStart = { x: e.clientX, y: e.clientY }; mvBase = parseTranslate(el); mvMoved = false;
+    doc.addEventListener('pointermove', onPointerMove, true);
+    doc.addEventListener('pointerup', onPointerUp, true);
+  }
+  function onPointerMove(e) {
+    if (!mvStart) return;
+    const dx = e.clientX - mvStart.x, dy = e.clientY - mvStart.y;
+    if (!mvMoved && Math.hypot(dx, dy) < 4) return; // movement threshold (so clicks still select)
+    if (!mvMoved) {
+      mvMoved = true;
+      if (selectedEl !== mvEl) selectElement(mvEl);
+      mvEl.style.willChange = 'transform';
+      setStatus('Moving — drop it anywhere');
+    }
+    e.preventDefault();
+    mvEl.style.transform = `translate(${mvBase.x + dx}px, ${mvBase.y + dy}px)`;
+    if (overlay) overlay.showSelection(rectOf(mvEl));
+    positionFloatbar(mvEl);
+  }
+  function onPointerUp() {
+    doc.removeEventListener('pointermove', onPointerMove, true);
+    doc.removeEventListener('pointerup', onPointerUp, true);
+    if (mvMoved && mvEl) { mvEl.style.willChange = ''; dirty = true; snap(); setStatus('Placed'); }
+    mvStart = null; mvEl = null; mvMoved = false;
+  }
 
   // ---- insert / replace from element library ----
   let pendingReplace = false;
@@ -342,8 +348,10 @@ export function createLiveMode(refs) {
   function duplicateSelected() {
     if (!selectedEl || !selectedEl.parentNode) return;
     const clone = selectedEl.cloneNode(true); clone.removeAttribute('contenteditable');
+    const t = parseTranslate(selectedEl);
+    clone.style.transform = `translate(${t.x + 24}px, ${t.y + 24}px)`; // offset so the copy is visible
     selectedEl.parentNode.insertBefore(clone, selectedEl.nextSibling);
-    dirty = true; setStatus('Duplicated element'); selectElement(clone); refreshOutline();
+    dirty = true; setStatus('Duplicated (offset so you can see it)'); selectElement(clone); refreshOutline(); snap();
   }
   function deleteSelected() {
     if (!selectedEl || !selectedEl.parentNode) return;

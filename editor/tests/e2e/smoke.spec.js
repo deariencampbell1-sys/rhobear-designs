@@ -203,6 +203,32 @@ test.describe('RHOBEAR Designs — UX smoke (Aurora Teal)', () => {
     expect(await frame.locator('a').first().getAttribute('href')).toBe('#contact');
   });
 
+  test('free move: dragging an element places it anywhere (transform applied)', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    const h1 = frame.locator('h1');
+    await h1.waitFor();
+    const box = await h1.boundingBox();
+    await page.mouse.move(box.x + 20, box.y + 8);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 140, box.y + 90, { steps: 10 });
+    await page.mouse.up();
+    const t = await h1.evaluate((e) => e.style.transform);
+    expect(t).toContain('translate');
+  });
+
+  test('duplicate offsets the copy so it is visible', async ({ page }) => {
+    await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
+    const frame = page.frameLocator('[data-testid="live-frame"]');
+    await frame.locator('h1').waitFor();
+    await frame.locator('h1').click();
+    const before = await frame.locator('h1').count();
+    await page.getByTestId('float-duplicate').click();
+    await expect(frame.locator('h1')).toHaveCount(before + 1);
+    const t = await frame.locator('h1').nth(1).evaluate((e) => e.style.transform);
+    expect(t).toContain('translate');
+  });
+
   test('rail toggles collapse', async ({ page }) => {
     await page.getByTestId('btn-toggle-rail').click();
     await expect(page.getByTestId('rail')).toHaveClass(/is-collapsed/);
