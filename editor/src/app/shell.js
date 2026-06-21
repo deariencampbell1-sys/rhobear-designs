@@ -14,7 +14,7 @@ import elementsManifest from '../library/elements/manifest.json';
 
 import { createTemplatesGallery } from './templates-gallery.js';
 import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
-import { chat as aiChat, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS } from '../ai/llm-client.js';
+import { chat as aiChat, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS, testConnection } from '../ai/llm-client.js';
 import { createThreeMode } from './three-mode.js';
 
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
@@ -25,7 +25,10 @@ const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 
 // User stash — items the user saved (e.g. a 3D scene), kept locally + shown in the Add panel.
 function userStash() { try { return JSON.parse(localStorage.getItem('rb-user-stash') || '[]'); } catch (_e) { return []; } }
-function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) {} }
+function writeUserStash(a) { try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); return true; } catch (_e) { return false; } }
+function addUserStash(el) { const a = userStash(); a.unshift(el); return writeUserStash(a); }
+function updateUserStash(id, patch) { const a = userStash(); const i = a.findIndex((x) => x.id === id); if (i < 0) return false; a[i] = { ...a[i], ...patch }; return writeUserStash(a); }
+function removeUserStash(id) { return writeUserStash(userStash().filter((x) => x.id !== id)); }
 // Drop stale pre-fix 3D saves (old format had no data-rb-3d + an opaque bg + a runtime that no longer mounts).
 function migrateUserStash() {
   try {
@@ -96,6 +99,7 @@ export function bootShell() {
   let mode = 'live';
   let docTitleStr = 'Untitled page';
   let loadedAny = false;
+  let zoomBar = null;
 
   const setStatus = (m) => { if (refs.statusMsg) refs.statusMsg.textContent = m; };
   let toastEl = null; let toastTimer = null;
@@ -126,7 +130,62 @@ export function bootShell() {
     onStatus: setStatus,
     onSelectionChange,
     onEdit3D: (json) => { setMode('3d'); three.loadScene(json); },
+    onZoomGesture: (deltaY, ix, iy) => { if (viewport) viewport.zoomFromWheel(deltaY, ix, iy); },
+    onPanGesture: (dx, dy) => { if (viewport) viewport.pan(dx, dy); },
+    onLoad: () => { if (viewport) viewport.reset(); },
   });
+
+  // ---- canvas viewport: endless zoom-out + pan, an infinite-whiteboard feel ----
+  // We scale #live-host (iframe + selection overlay together) so selection stays
+  // pixel-aligned at any zoom. Pinch / Ctrl+wheel zoom around the cursor; space- or
+  // middle-drag pans. Zoom out far enough to park pieces aside and work elsewhere.
+  const viewport = (() => {
+    const host = refs.liveHost;
+    const canvas = host && host.parentElement; // .rb-canvas
+    if (canvas) canvas.style.overflow = 'hidden';
+    let z = 1, panX = 0, panY = 0, pill = null;
+    const MIN = 0.05, MAX = 3;
+    const clamp = (v) => Math.max(MIN, Math.min(MAX, v));
+    function apply() {
+      if (host) { host.style.transformOrigin = '0 0'; host.style.transform = `translate(${panX}px, ${panY}px) scale(${z})`; }
+      live.setViewportScale(z);
+      if (pill) pill.textContent = `${Math.round(z * 100)}%`;
+    }
+    function zoomAt(factor, fx, fy) {
+      const nz = clamp(z * factor); const f = nz / z;
+      panX = fx - f * (fx - panX); panY = fy - f * (fy - panY); z = nz; apply();
+    }
+    const center = () => (canvas ? [canvas.clientWidth / 2, canvas.clientHeight / 2] : [0, 0]);
+    return {
+      zoomFromWheel(deltaY, ix, iy) { zoomAt(deltaY < 0 ? 1.1 : 1 / 1.1, panX + z * ix, panY + z * iy); },
+      zoomButtons(factor) { const c = center(); zoomAt(factor, c[0], c[1]); },
+      pan(dx, dy) { panX += dx; panY += dy; apply(); },
+      reset() { z = 1; panX = 0; panY = 0; apply(); },
+      get scale() { return z; },
+      setPill(el) { pill = el; },
+      apply,
+    };
+  })();
+
+  // On-screen zoom control (bottom-left of the canvas; hidden outside live mode).
+  (function buildZoomControl() {
+    const wrap = refs.liveHost && refs.liveHost.closest('.rb-canvas-wrap');
+    if (!wrap) return;
+    const bar = document.createElement('div');
+    bar.className = 'rb-zoombar'; bar.setAttribute('data-testid', 'zoombar');
+    bar.style.cssText = 'position:absolute;left:14px;bottom:14px;z-index:30;display:flex;gap:4px;align-items:center;background:var(--rb-panel,#10151c);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:4px;box-shadow:0 6px 20px rgba(0,0,0,.35)';
+    const mk = (txt, title, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rb-btn rb-btn--icon rb-btn--ghost'; b.textContent = txt; b.title = title; b.addEventListener('click', fn); return b; };
+    const pill = document.createElement('button');
+    pill.type = 'button'; pill.className = 'rb-btn rb-btn--ghost'; pill.textContent = '100%'; pill.title = 'Reset zoom (Ctrl/⌘ 0)'; pill.style.minWidth = '52px'; pill.setAttribute('data-testid', 'zoom-pill');
+    pill.addEventListener('click', () => viewport.reset());
+    bar.appendChild(mk('−', 'Zoom out (Ctrl/⌘ -)', () => viewport.zoomButtons(1 / 1.2)));
+    bar.appendChild(pill);
+    bar.appendChild(mk('+', 'Zoom in (Ctrl/⌘ +)', () => viewport.zoomButtons(1.2)));
+    wrap.appendChild(bar);
+    viewport.setPill(pill);
+    zoomBar = bar;
+  })();
+  viewport.apply();
 
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
   const three = createThreeMode({
@@ -205,6 +264,7 @@ export function bootShell() {
       else if (!loadedAny) showEmpty(); else hideEmpty();
       setStatus(next === 'live' ? 'Edit Live Site — open a page to begin' : 'Build from scratch');
     }
+    if (zoomBar) zoomBar.style.display = next === 'live' ? 'flex' : 'none';
   }
 
   function showEmpty() { refs.emptyState.classList.add('is-active'); }
@@ -305,6 +365,7 @@ export function bootShell() {
       if ($('ai-baseurl')) $('ai-baseurl').value = c.baseUrl || '';
       if ($('ai-model')) $('ai-model').value = c.model || '';
       syncProviderFields();
+      if ($('ai-test-result')) $('ai-test-result').textContent = '';
       refs.aiPanel.classList.remove('is-open'); refs.settingsModal.showModal();
     },
     'settings-close': () => refs.settingsModal.close(),
@@ -320,6 +381,17 @@ export function bootShell() {
       refs.settingsModal.close();
       aiRefresh();
       setStatus('LLM key saved locally');
+    },
+    'settings-test': () => {
+      const result = $('ai-test-result');
+      const provider = $('ai-provider').value;
+      const key = $('ai-key').value;
+      const baseUrl = $('ai-baseurl') ? $('ai-baseurl').value.trim() : '';
+      const model = $('ai-model') ? $('ai-model').value.trim() : '';
+      if (result) { result.textContent = 'Testing…'; result.style.color = ''; }
+      testConnection({ provider, apiKey: key, model, baseUrl }).then((r) => {
+        if (result) { result.textContent = r.message; result.style.color = r.ok ? '#2dd4bf' : '#ff6b6b'; }
+      });
     },
   };
 
@@ -401,6 +473,10 @@ export function bootShell() {
     function renderGrid() {
       grid.innerHTML = '';
       const els = active === 'saved' ? userStash() : listElements(active);
+      if (active === 'saved' && !els.length) {
+        grid.innerHTML = '<p class="rb-lib-hint">Nothing saved yet — build something in 3D Studio, then ★ Save scene to stash.</p>';
+        return;
+      }
       for (const el of els) {
         const card = document.createElement('button');
         card.type = 'button'; card.className = 'rb-lib-card';
@@ -409,7 +485,27 @@ export function bootShell() {
         card.draggable = true;
         card.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/plain', el.id); live.beginDragInsert(el); });
         card.addEventListener('click', () => live.insertElement(el));
-        grid.appendChild(card);
+        // Saved items get rename + remove controls (a card can't nest buttons,
+        // so wrap the card and the controls in a flex row).
+        if (active === 'saved') {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;gap:4px;align-items:center;margin-bottom:6px';
+          card.style.flex = '1';
+          const ren = document.createElement('button');
+          ren.type = 'button'; ren.className = 'rb-btn rb-btn--icon rb-btn--ghost'; ren.textContent = '✎'; ren.title = 'Rename';
+          ren.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const nn = prompt('Rename this saved item:', el.name || '');
+            if (nn !== null && nn.trim()) { updateUserStash(el.id, { name: nn.trim() }); renderElementLibrary(); }
+          });
+          const del = document.createElement('button');
+          del.type = 'button'; del.className = 'rb-btn rb-btn--icon rb-btn--ghost'; del.textContent = '🗑'; del.title = 'Remove from stash';
+          del.addEventListener('click', (e) => { e.stopPropagation(); removeUserStash(el.id); renderElementLibrary(); });
+          row.appendChild(card); row.appendChild(ren); row.appendChild(del);
+          grid.appendChild(row);
+        } else {
+          grid.appendChild(card);
+        }
       }
     }
     for (const c of cats) {
@@ -468,7 +564,15 @@ export function bootShell() {
   function aiRefresh() {
     const c = aiConfig(); const ok = !!(c.key && c.provider);
     if (refs.aiStatus) refs.aiStatus.textContent = ok ? (PROVIDER_LABELS[c.provider] || c.provider) : 'offline';
-    if (refs.aiPrompt) refs.aiPrompt.disabled = !ok;
+    // The chat input is ALWAYS typeable — never disable it. A disabled field
+    // reads as "the chat is dead"; instead we let the user type freely and ask
+    // for a key at send time. Calm + forgiving, and no way to get a stuck input.
+    if (refs.aiPrompt) {
+      refs.aiPrompt.disabled = false;
+      refs.aiPrompt.placeholder = ok
+        ? 'Ask AI to change the selected element…'
+        : 'Type a request — I’ll ask for your key when you send…';
+    }
     if (refs.aiMessages && !refs.aiMessages.dataset.greeted) {
       refs.aiMessages.dataset.greeted = '1';
       addAiMsg('assistant', ok
@@ -497,7 +601,18 @@ export function bootShell() {
   refs.aiForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const p = (refs.aiPrompt.value || '').trim();
-    if (p) { refs.aiPrompt.value = ''; sendAi(p); }
+    if (!p) return;
+    const c = aiConfig();
+    if (!c.key || !c.provider) {
+      // Don't drop what they typed — keep it in the field, tell them once,
+      // and open Connect. After saving a key they reopen the panel (the text
+      // is still there) and press Send again.
+      addAiMsg('assistant', 'Add an API key first — opening Connect. Your message stays in the box; press Send again once you’re connected.');
+      actions['open-settings']();
+      return;
+    }
+    refs.aiPrompt.value = '';
+    sendAi(p);
   });
   if ($('ai-provider')) $('ai-provider').addEventListener('change', syncProviderFields);
 
@@ -508,6 +623,14 @@ export function bootShell() {
     const t = e.target;
     const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t.getAttribute && t.getAttribute('contenteditable') === 'true'));
     if (e.key === 'Escape' && !typing) { if (mode === '3d') three.deselect(); else if (mode === 'live') live.deselect(); return; }
+    // Canvas zoom shortcuts (live mode): Ctrl/⌘ +/-/0. Work regardless of focus.
+    if ((e.ctrlKey || e.metaKey) && mode === 'live' && ['=', '+', '-', '_', '0'].includes(e.key)) {
+      e.preventDefault();
+      if (e.key === '0') viewport.reset();
+      else if (e.key === '-' || e.key === '_') viewport.zoomButtons(1 / 1.2);
+      else viewport.zoomButtons(1.2);
+      return;
+    }
     if (typing) return; // let native text undo work in fields
     const z = e.key === 'z' || e.key === 'Z';
     const y = e.key === 'y' || e.key === 'Y';

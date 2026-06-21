@@ -41,7 +41,12 @@ const SHADOWS = [
 ];
 
 export function createLiveMode(refs) {
-  const { frame, overlayEl, inspectorBody, inspectorTag, floatbar, onStatus, onSelectionChange, onEdit3D } = refs;
+  const { frame, overlayEl, inspectorBody, inspectorTag, floatbar, onStatus, onSelectionChange, onEdit3D, onZoomGesture, onPanGesture, onLoad } = refs;
+  // Canvas zoom: the parent scales #live-host (iframe + overlay together), so the
+  // overlay stays aligned. We only need the scale here to place the screen-space
+  // chrome (floatbar / context menu / text bar) at the right spot.
+  let viewportScale = 1;
+  let spaceHeld = false;
 
   let store = createOverrideStore();
   let overlay = null;
@@ -102,9 +107,49 @@ export function createLiveMode(refs) {
     doc.addEventListener('dragover', onDragOver, true);
     doc.addEventListener('drop', onDrop, true);
     win.addEventListener('scroll', reposition, true);
+    // Canvas zoom/pan gestures originate INSIDE the iframe (events there don't
+    // bubble to the parent), so we capture them here and forward to the shell.
+    doc.addEventListener('wheel', onWheelGesture, { passive: false });
+    doc.addEventListener('keydown', onSpaceKeyDown, true);
+    doc.addEventListener('keyup', onSpaceKeyUp, true);
     refreshOutline();
     history = []; hi = -1; snap(); startObserving();
+    onLoad && onLoad();
   }
+
+  // ---- canvas zoom / pan (gestures forwarded to the shell viewport) ----
+  function isTypingTarget(el) {
+    return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || (el.getAttribute && el.getAttribute('contenteditable') === 'true'));
+  }
+  function onWheelGesture(e) {
+    // Trackpad pinch arrives as a wheel event with ctrlKey set; Ctrl/Cmd+wheel too.
+    if (!(e.ctrlKey || e.metaKey) || !onZoomGesture) return;
+    e.preventDefault();
+    onZoomGesture(e.deltaY, e.clientX, e.clientY);
+  }
+  function onSpaceKeyDown(e) { if (e.code === 'Space' && !editing && !isTypingTarget(e.target)) { spaceHeld = true; if (doc.body) doc.body.style.cursor = 'grab'; } }
+  function onSpaceKeyUp(e) { if (e.code === 'Space') { spaceHeld = false; if (doc.body) doc.body.style.cursor = ''; } }
+  let panLast = null;
+  function startPan(e) {
+    e.preventDefault();
+    panLast = { x: e.clientX, y: e.clientY };
+    if (doc.body) doc.body.style.cursor = 'grabbing';
+    doc.addEventListener('pointermove', onPanMove, true);
+    doc.addEventListener('pointerup', onPanUp, true);
+  }
+  function onPanMove(e) {
+    if (!panLast || !onPanGesture) return;
+    // iframe-internal deltas → screen px = ×scale (the host is scaled by `viewportScale`).
+    onPanGesture((e.clientX - panLast.x) * viewportScale, (e.clientY - panLast.y) * viewportScale);
+    panLast = { x: e.clientX, y: e.clientY };
+  }
+  function onPanUp() {
+    panLast = null;
+    if (doc.body) doc.body.style.cursor = spaceHeld ? 'grab' : '';
+    doc.removeEventListener('pointermove', onPanMove, true);
+    doc.removeEventListener('pointerup', onPanUp, true);
+  }
+  function setViewportScale(z) { viewportScale = z || 1; reposition(); if (selectedEl) positionFloatbar(selectedEl); }
 
   // ---- undo / redo (snapshot the page, cleaned of editor-only attrs) ----
   function cleanBodyHtml() {
@@ -289,6 +334,7 @@ export function createLiveMode(refs) {
     return m ? { x: +m[1], y: +m[2] } : { x: 0, y: 0 };
   }
   function onPointerDown(e) {
+    if (e.button === 1 || (e.button === 0 && spaceHeld)) { startPan(e); return; } // middle-drag / space-drag = pan
     if (pickTargetLink || e.button !== 0) return;
     const el = e.target;
     if (!el || el.nodeType !== 1 || el === dropLine) return;
@@ -430,15 +476,15 @@ export function createLiveMode(refs) {
       b.addEventListener('click', (ev) => { ev.stopPropagation(); hideCtx(); fn(); });
       m.appendChild(b);
     }
-    m.style.left = `${fr.left + e.clientX}px`; m.style.top = `${fr.top + e.clientY}px`; m.classList.add('is-open');
+    m.style.left = `${fr.left + e.clientX * viewportScale}px`; m.style.top = `${fr.top + e.clientY * viewportScale}px`; m.classList.add('is-open');
   }
 
   // ---- floating select bar ----
   function positionFloatbar(el) {
     if (!floatbar) return;
     const fr = frame.getBoundingClientRect(); const r = el.getBoundingClientRect();
-    floatbar.style.top = `${Math.max(fr.top + 6, fr.top + r.top - 44)}px`;
-    floatbar.style.left = `${fr.left + r.left}px`;
+    floatbar.style.top = `${Math.max(fr.top + 6, fr.top + r.top * viewportScale - 44)}px`;
+    floatbar.style.left = `${fr.left + r.left * viewportScale}px`;
     floatbar.classList.add('is-visible');
   }
   function hideFloatbar() { if (floatbar) floatbar.classList.remove('is-visible'); }
@@ -507,7 +553,7 @@ export function createLiveMode(refs) {
     const ital = mkBtn('i', () => { doc.execCommand('italic'); dirty = true; }); ital.style.fontStyle = 'italic';
     bar.appendChild(font); bar.appendChild(size); bar.appendChild(color); bar.appendChild(bold); bar.appendChild(ital);
     const fr = frame.getBoundingClientRect(); const r = el.getBoundingClientRect();
-    bar.style.top = `${Math.max(56, fr.top + r.top - 46)}px`; bar.style.left = `${fr.left + r.left}px`;
+    bar.style.top = `${Math.max(56, fr.top + r.top * viewportScale - 46)}px`; bar.style.left = `${fr.left + r.left * viewportScale}px`;
     bar.classList.add('is-open');
   }
   function hideTextbar() { if (textbar) textbar.classList.remove('is-open'); }
@@ -689,6 +735,7 @@ export function createLiveMode(refs) {
     setOutlineHandler, getOutline, selectNode, undo, redo,
     getSelectionHtml, applyAIEdit,
     getExport, isDirty: () => dirty, hasSelection: () => !!selectedEl, reposition,
+    setViewportScale,
   };
 }
 

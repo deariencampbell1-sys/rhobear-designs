@@ -124,10 +124,13 @@ export function createThreeMode(refs) {
     if (!scene) return;
     const json = JSON.parse(scene.toJSON());
     if (!(json.objects || []).length) { setStatus('Add an object first, then save'); return; }
+    // Name reflects what it actually is (the object's name, its primitive type, or
+    // a scene summary). No blocking dialog — rename it any time with the ✎ control
+    // in the Saved stash. This keeps saving instant and fully headless-testable.
+    const name = suggestSceneName(json);
     const html = buildEmbedHtml(json);
-    const name = `3D scene (${json.objects.length} obj)`;
-    onSaveToStash && onSaveToStash({ id: `u3d-${Date.now()}`, category: 'saved', name, html });
-    setStatus('Saved to stash — find it under "Saved" in the Add panel (Edit Live Site), then drop it on a page');
+    onSaveToStash && onSaveToStash({ id: `u3d-${Date.now()}`, category: 'saved', kind: '3d', name, html });
+    setStatus(`Saved "${name}" to stash — find it under "Saved" in Edit Live Site (rename with ✎), then drop it on a page`);
   }
 
   function field(label, control) {
@@ -156,6 +159,18 @@ export function createThreeMode(refs) {
 function deg(d) { return (d * Math.PI) / 180; }
 function hex6(v) { const s = String(v || ''); return /^#[0-9a-f]{6}$/i.test(s) ? s : '#2dd4bf'; }
 function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function cap(s) { s = String(s || ''); return s ? s[0].toUpperCase() + s.slice(1) : s; }
+/** A human default name for a saved scene — the object's own name, else its
+ * primitive type ("Box", "Sphere"…), else a count summary for multi-object scenes. */
+function suggestSceneName(json) {
+  const objs = (json && json.objects) || [];
+  if (!objs.length) return '3D object';
+  if (objs.length === 1) {
+    const o = objs[0];
+    return (o.name && String(o.name).trim()) || cap(o.type) || '3D object';
+  }
+  return `3D scene (${objs.length} objects)`;
+}
 
 /** A self-contained 3D embed. The scene data rides in a `data-rb-3d` attribute and
  * a constant runtime scans for any unmounted `.rb-3d-embed` and mounts it — so it
@@ -185,13 +200,18 @@ for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data
     if (o.scale) mesh.scale.set(o.scale[0],o.scale[1],o.scale[2]);
     scene.add(mesh);
   }
-  const ctr = new OrbitControls(cam, renderer.domElement); ctr.enableDamping = true;
+  const ctr = new OrbitControls(cam, renderer.domElement); ctr.enableDamping = true; ctr.enableZoom = false; ctr.enablePan = false;
   new ResizeObserver(()=>{ const w=host.clientWidth,h=host.clientHeight; if(w&&h){ renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); } }).observe(host);
   (function loop(){ requestAnimationFrame(loop); ctr.update(); renderer.render(scene,cam); })();
 }`;
 
-function buildEmbedHtml(json) {
+function buildEmbedHtml(json, size) {
   const attr = JSON.stringify(json).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="width:100%;height:520px;position:relative;background:transparent;overflow:hidden">` +
+  const px = Math.max(120, Math.min(900, Math.round(size || 360)));
+  // A contained, free-standing object — NOT a full-width slab. `inline-block` so it
+  // sits inline like an image (you can move / duplicate / delete it like any element),
+  // a modest default footprint so it never blankets the page, and a transparent
+  // background so only the object shows. Resize via the inspector's Width/Height.
+  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="display:inline-block;width:${px}px;height:${px}px;max-width:100%;position:relative;background:transparent;overflow:hidden;vertical-align:middle;cursor:grab">` +
     `<script type="module">${EMBED_RUNTIME}</script></div>`;
 }

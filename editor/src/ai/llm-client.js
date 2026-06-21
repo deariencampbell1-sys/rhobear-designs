@@ -39,6 +39,49 @@ export async function chat({ provider, apiKey, model, system, user, baseUrl }) {
   throw new Error(`Unknown provider: ${provider}`);
 }
 
+/** The effective API root for a provider (so the test can reason about it). */
+export function effectiveBaseUrl(provider, baseUrl) {
+  if (provider === 'openai') return (baseUrl || PROVIDER_BASE_URLS.openai).replace(/\/+$/, '');
+  if (provider === 'compatible') return (baseUrl || PROVIDER_BASE_URLS.compatible).replace(/\/+$/, '');
+  if (provider === 'anthropic') return 'https://api.anthropic.com';
+  if (provider === 'google') return 'https://generativelanguage.googleapis.com';
+  return baseUrl || '';
+}
+
+/**
+ * Probe the provider with a tiny real request and return a plain-language verdict
+ * the settings UI can show. Never throws — always resolves to {ok, message}.
+ * @returns {Promise<{ok:boolean, message:string}>}
+ */
+export async function testConnection({ provider, apiKey, model, baseUrl }) {
+  if (!apiKey) return { ok: false, message: 'Add an API key first, then test.' };
+  const root = effectiveBaseUrl(provider, baseUrl);
+  // Mixed-content is invisible in the network tab and the #1 reason a self-hosted
+  // IP endpoint "returns nothing" — catch it before the fetch so we can explain it.
+  if (typeof location !== 'undefined' && location.protocol === 'https:' && /^http:\/\//i.test(root)) {
+    return {
+      ok: false,
+      message: `This page is HTTPS but the endpoint is HTTP (${root}). Browsers silently block that ("mixed content") — nothing comes back. Serve the endpoint over HTTPS (or test with the editor opened at http://localhost).`,
+    };
+  }
+  try {
+    const reply = await chat({
+      provider, apiKey, model, baseUrl,
+      system: 'Connection test. Reply with the single word: ok.',
+      user: 'ping',
+    });
+    const sample = String(reply || '').trim().slice(0, 60);
+    return { ok: true, message: `Connected ✓ — the model replied${sample ? `: “${sample}”` : ' (empty reply, but the endpoint answered)'}.` };
+  } catch (e) {
+    const m = String(e && e.message || e);
+    // A bare "Failed to fetch" from a reachable-looking URL is almost always CORS.
+    const extra = /could not reach|failed to fetch/i.test(m)
+      ? ' If the server IS up, this is usually CORS — the endpoint must send Access-Control-Allow-Origin for browser calls.'
+      : '';
+    return { ok: false, message: m + extra };
+  }
+}
+
 async function anthropic(key, model, system, user) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -73,7 +116,13 @@ async function openai(key, model, system, user, baseUrl) {
     );
   }
   const d = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((d.error && d.error.message) || `Provider error ${res.status}`);
+  if (!res.ok) {
+    const base = (d.error && d.error.message) || `Provider error ${res.status}`;
+    const hint = (res.status === 401 || res.status === 403) ? ' — check your API key.'
+      : res.status === 404 ? ` — check the Base URL: it should be the API root ending in /v1 (we add /chat/completions), not the full path.`
+      : '';
+    throw new Error(base + hint);
+  }
   return d.choices && d.choices[0] && d.choices[0].message ? d.choices[0].message.content : '';
 }
 

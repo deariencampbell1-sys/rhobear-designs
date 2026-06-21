@@ -213,8 +213,10 @@
           <input type="password" class="rb-input" id="ai-key" placeholder="sk-…" data-testid="ai-key" />
           <span class="rb-setting__hint">Or use OAuth where the provider supports it (coming with the AI release).</span>
         </div>
+        <p class="rb-setting__hint" id="ai-test-result" data-testid="ai-test-result" style="min-height:1.2em;margin:6px 0 0"></p>
         <div class="rb-modal__actions">
           <button type="button" class="rb-btn" data-action="settings-close">Cancel</button>
+          <button type="button" class="rb-btn" data-action="settings-test" data-testid="btn-settings-test">Test connection</button>
           <button type="button" class="rb-btn rb-btn--primary" data-action="settings-save" data-testid="btn-settings-save">Save locally</button>
         </div>
       </div>
