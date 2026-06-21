@@ -1,14 +1,44 @@
+# ── Dependencies ─────────────────────────────────────────────────────────────
 node_modules/
+
+# ── Build output ─────────────────────────────────────────────────────────────
 dist/
+
 # Re-include the vendored GrapesJS dist/ folders under src/vendor/.
 # They contain the upstream build artifacts that ship with the
 # vendored engine and must be committed (otherwise the editor has no
 # engine to load).
 !src/vendor/**/dist/
 !src/vendor/**/dist/**
+
+# ── Test output ──────────────────────────────────────────────────────────────
 test-results/
 playwright-report/
 blob-report/
+
+# ── OS / editor noise ────────────────────────────────────────────────────────
 .DS_Store
-*.log_shot-*.png
+Thumbs.db
+*.log
+
+# ── Local scratch / debug artifacts ──────────────────────────────────────────
+# Screenshots dumped while poking at the editor in dev.
+_shot*
+_shot-*.png
+_shot-*.jpg
+_shots/
 _shots.mjs
+
+# One-off debug scripts / pages written into the editor root.
+_dbg*
+_dbg*.js
+_dbg*.html
+_dbg*.mjs
+
+# Vite cache (regenerated automatically).
+.vite/
+
+# ── Local env / secrets (should never be committed) ──────────────────────────
+.env
+.env.*
+!.env.example
