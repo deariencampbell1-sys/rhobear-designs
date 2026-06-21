@@ -9,3 +9,6 @@ FLAG: verify-gate (build/tests + path check, as W1 needed) + W3 dispatch DEFERRE
 ## 2026-06-20T23:14:37Z -- wave_done -- w3-roundout: all 3 lanes merged (PRs #8/#9/#10: mode-b, import/export, fidelity-tests). VERIFY GATE: ci=ok build=ok core=ok engine=ok fidelity=ok. LAST swarm wave done -- UX phase (owner+Iron Man, by hand) is next.
 
 ## 2026-06-21T00:47:45Z -- review_closed -- w-gen-samples: gen-b-craft PR #15 MERGED (7 new templates: Resn, Hello Monday, Build in Amsterdam, Cuberto, 14islands, Exo Ape, Robin Noguier). gen-a/gen-c still in flight. Expected.
+
+##  -- review_closed -- gen-a
+gen-a-studios PR #16 MERGED into build/editor-v1 (7 template recreations: Lusion, Active Theory, Locomotive, Immersive Garden, makemepulse, Aristide Benoist, Dogstudio). Expected — part of the dispatched generation wave; now in the template gallery. Nothing open/bounced.
