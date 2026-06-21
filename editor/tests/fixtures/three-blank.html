@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Engine — blank fixture</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #f0f0f5; font-family: system-ui, sans-serif; }
+    #stage { position: absolute; inset: 0; }
+    #stage > canvas { width: 100% !important; height: 100% !important; }
+    .badge {
+      position: absolute; top: 12px; left: 12px; z-index: 10;
+      background: #04110f; color: #2dd4bf;
+      padding: 6px 10px; border-radius: 8px; font-size: 12px;
+      font-family: ui-monospace, monospace; letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage" data-testid="three-stage"></div>
+  <div class="badge" data-testid="three-badge">3D Engine · blank fixture</div>
+
+  <script type="module">
+    import { create3DScene } from '/src/3d/index.js';
+
+    const stage = document.getElementById('stage');
+    const handle = create3DScene(stage, {
+      background: null,
+      showGround: true,
+      showGrid: true,
+      shadows: true,
+    });
+
+    // Expose the handle for the Playwright spec. We also expose a
+    // tiny `__THREE__` namespace with the THREE module so the spec
+    // can verify things like material color changes if needed.
+    window.__RB_3D__ = {
+      handle,
+      stage,
+      ready: true,
+    };
+  </script>
+</body>
+</html>
