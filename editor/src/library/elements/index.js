@@ -95,8 +95,14 @@ export function _resetManifestCache() {
 /**
  * Canonical category order. Must match the order `dissect.mjs` uses so
  * UIs that render a category grid get a stable, intuitive sequence.
+ *
+ * The 20 categories here are the full DoD-defined spread: the original
+ * 12 (nav, hero, button, chip, card, badge, cta, section, footer, form,
+ * gallery, testimonial) plus 8 added in the le2-stash-expand lane
+ * (pricing, faq, feature, stats, logos, contact, banner, divider).
  */
 export const CATEGORIES = [
+  // Original 12
   'nav',
   'hero',
   'button',
@@ -109,6 +115,15 @@ export const CATEGORIES = [
   'form',
   'gallery',
   'testimonial',
+  // Added in le2-stash-expand
+  'pricing',
+  'faq',
+  'feature',
+  'stats',
+  'logos',
+  'contact',
+  'banner',
+  'divider',
 ];
 
 /**
