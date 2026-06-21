@@ -1,0 +1,570 @@
+<!doctype html>
+<!--
+  Original URL:  https://www.basicagency.com/
+  Filename:      basic-dept.html
+  Model:         MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: a quiet, paper-white studio portfolio. The hero is a centered
+  white "browser card" floating on a slate-blue page background — the card
+  rotates through a carousel of real client case studies (KFC, Google Store,
+  Wilson, Patagonia, AT&T) and each slide is a tiny faithful reproduction of
+  the client's own website chrome (top nav, hero copy, product imagery).
+  Outside the card, the slate-blue "matte" frames the brand. The page feels
+  like a portfolio case study being shown to you through a window.
+
+  Layout / hierarchy:
+    - Top-left wordmark: BASIC/DEPT® in a custom serif, white on the slate.
+    - Top-right: 3-dot menu indicator.
+    - Center: a wide white card with rounded corners showing one client at a
+      time — page-chrome navigation on top, hero copy + media in the body,
+      pagination chips at the bottom.
+    - "Watch Reel" floating circle sits over the lower edge of the card, with
+      the caption "BASIC/DEPT® 2010-∞" beneath.
+    - Below the card: an awards row (AdAge, Webby, Campaign) with their
+      accolades underneath.
+    - Then a typographic statement ("BASIC/DEPT® is a global branding and
+      digital design agency…") with a giant B/D® lockup to the right.
+    - 3-column featured projects (Patagonia / Wilson / Google Store).
+    - "Featured Engagements" — large client logos (Google, KFC, Wilson, AT&T,
+      Dropbox, NBCU) with short case-study blurbs.
+    - "Featured News" — stacked press rows with arrow CTAs and PRESS dates.
+    - Dark footer: contact email, newsletter, social, initiatives, offices,
+      and the tagline "EASY TO UNDERSTAND, IMPOSSIBLE TO IGNORE.™".
+
+  Motion / interaction:
+    - Carousel auto-advances every ~5s; can be paused via the watch-reel pill.
+    - Hover on featured project cards reveals the underline + a slight lift.
+    - News rows underline their headlines on hover.
+    - Cookie banner dismisses to reveal the page cleanly.
+
+  Color system (extracted from screenshots):
+    --slate        #5b6b7a   page background
+    --slate-2      #6c7a87   used for inner shading
+    --ink          #111111   body type
+    --paper        #f4f4f0   card body
+    --paper-2      #ffffff   card panels
+    --line         #e8e6df   dividers
+    --accent       #d62828   KFC red
+    --accent-2     #1a73e8   Google blue
+    --accent-3     #ffd335   KFC yellow accent (used sparingly)
+
+  CHALLENGES SOLVED
+  -----------------
+    - The "white card inside a frame" is the soul of the site. Recreated with
+      a single .frame element + nested .card with rounded corners and a soft
+      inner shadow so the card looks like it's floating.
+    - Client case studies inside the card are NOT original assets — each slide
+      is a clean, generic recreation of the brand chrome (logo wordmark +
+      product chip + a tasteful gradient plate where the photo would be).
+    - Carousel rotates the .slide children via JS setInterval; pagination dots
+      mirror the active slide; pause on hover.
+    - Award lockups use generic typographic placeholders matching the real
+      publications' wordmarks but stripped of proprietary glyphs.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BASIC/DEPT® — Digital Branding & Product Design Agency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --slate:#5b6b7a;
+      --slate-2:#6c7a87;
+      --slate-3:#4a5867;
+      --ink:#111111;
+      --ink-2:#1a1a1a;
+      --paper:#f4f4f0;
+      --paper-2:#ffffff;
+      --paper-3:#fafaf6;
+      --line:#e8e6df;
+      --line-2:#d8d6cf;
+      --accent:#d62828;
+      --accent-2:#1a73e8;
+      --accent-3:#ffd335;
+      --font-serif:"DM Serif Display", "Times New Roman", serif;
+      --font-ui:"Inter", "Helvetica Neue", system-ui, sans-serif;
+      --font-mono:"JetBrains Mono", ui-monospace, monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--slate);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit}
+    ::selection{background:var(--accent);color:#fff}
+
+    /* ───── Wordmark ───── */
+    .wordmark{font-family:var(--font-ui);font-weight:800;letter-spacing:-.02em;font-size:22px;color:#fff}
+    .wordmark sup{font-size:11px;font-weight:500;vertical-align:super;margin-left:1px}
+
+    /* ───── Top chrome ───── */
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:28px 36px;pointer-events:none}
+    .topbar > *{pointer-events:auto}
+    .dots{display:inline-flex;gap:5px;align-items:center;padding:10px}
+    .dots span{width:6px;height:6px;background:#fff;border-radius:50%;display:inline-block;opacity:.9}
+
+    /* ───── Hero frame + card ───── */
+    .hero{padding:120px 24px 60px;display:flex;flex-direction:column;align-items:center}
+    .card{
+      position:relative;width:min(1240px,100%);
+      aspect-ratio:16/9;
+      background:var(--paper);
+      border-radius:18px;
+      box-shadow:0 50px 100px -20px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.04);
+      overflow:hidden;
+    }
+    .slides{position:absolute;inset:0;display:flex;transition:transform .9s cubic-bezier(.7,.0,.2,1)}
+    .slide{flex:0 0 100%;height:100%;display:flex;flex-direction:column}
+    .slide .browser-chrome{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--paper-2)}
+    .browser-chrome .nav-left{display:flex;align-items:center;gap:28px}
+    .browser-chrome .nav-left .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink)}
+    .browser-chrome .nav-left .brand-mark{width:28px;height:28px;display:inline-grid;place-items:center;font-weight:800}
+    .browser-chrome .nav-left nav{display:flex;gap:22px;font-size:13px;color:#333}
+    .browser-chrome .nav-right{display:flex;align-items:center;gap:12px;color:#444;font-size:13px}
+    .browser-chrome .nav-right .btn-cta{padding:7px 14px;border-radius:999px;color:#fff;font-weight:600;font-size:12px}
+
+    .slide .body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .slide .body .copy{padding:46px 44px 30px;display:flex;flex-direction:column;justify-content:space-between}
+    .slide .body .copy .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#666;font-weight:600}
+    .slide .body .copy h2{font-family:var(--font-serif);font-size:clamp(34px,4.2vw,58px);line-height:1.02;color:var(--ink);margin:14px 0 18px;font-weight:400}
+    .slide .body .copy p{color:#333;font-size:14px;line-height:1.5;max-width:34ch}
+    .slide .body .copy .learnmore{align-self:flex-start;background:#1a1a1a;color:#fff;border-radius:999px;padding:11px 22px;font-size:13px;font-weight:600}
+    .slide .body .media{position:relative;background:linear-gradient(135deg,var(--mc1, #b9c4cf),var(--mc2,#8d99a8));overflow:hidden}
+    .slide .body .media::before{content:"";position:absolute;inset:0;background:
+      radial-gradient(120% 80% at 30% 30%, rgba(255,255,255,.35), transparent 60%),
+      linear-gradient(180deg, transparent 60%, rgba(0,0,0,.18) 100%);}
+    .media-tag{position:absolute;left:24px;bottom:24px;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;mix-blend-mode:difference}
+
+    /* Pagination chips */
+    .pager{position:absolute;left:30px;bottom:22px;display:flex;gap:8px;z-index:4}
+    .pager button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line-2);background:#fff;font-family:var(--font-mono);font-size:11px;color:#666}
+    .pager button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+    /* Watch reel circle + caption */
+    .watch{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);width:170px;height:170px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center;box-shadow:0 18px 40px -10px rgba(0,0,0,.25);z-index:6}
+    .watch b{font-size:14px;letter-spacing:.12em;font-weight:600;color:var(--ink)}
+    .watch small{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:#888;margin-top:8px}
+    .cap{position:absolute;left:50%;bottom:-128px;transform:translateX(-50%);font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:#fff;opacity:.85;white-space:nowrap}
+
+    /* Awards row */
+    .awards{margin-top:200px;padding:80px 36px;display:grid;grid-template-columns:repeat(3,1fr);gap:48px;color:var(--ink)}
+    .awards .pub{text-align:center;font-family:var(--font-serif);font-size:clamp(28px,3vw,40px);color:var(--ink);font-style:italic}
+    .awards .pub.sans{font-family:var(--font-ui);font-weight:800;font-style:normal;letter-spacing:-.02em}
+    .awards .accolade{text-align:center;margin-top:18px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#2b2b2b;font-weight:600;line-height:1.5}
+
+    /* Statement band */
+    .statement{padding:80px 36px 100px;display:grid;grid-template-columns:1.2fr 1fr;gap:80px;align-items:center;color:var(--ink)}
+    .statement h3{font-family:var(--font-serif);font-size:clamp(32px,3.6vw,52px);line-height:1.05;color:var(--ink);font-weight:400}
+    .statement .bd{font-family:var(--font-ui);font-weight:800;font-size:clamp(72px,11vw,180px);letter-spacing:-.04em;color:var(--ink);text-align:center;line-height:.95}
+    .statement .bd .slash{padding:0 .06em;color:var(--slate-3)}
+    .statement .bd .circle{display:inline-grid;place-items:center;width:.8em;height:.8em;border:.1em solid var(--ink);border-radius:50%;vertical-align:middle;font-size:.4em;font-weight:800;margin-left:.06em}
+
+    /* Featured projects */
+    .featured-projects{padding:40px 36px 80px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .fp-card{color:var(--ink)}
+    .fp-card .ph{aspect-ratio:1/1.05;border-radius:4px;background:linear-gradient(135deg,var(--mc1,#a8b3bd),var(--mc2,#7d8a96));position:relative;overflow:hidden}
+    .fp-card .ph::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 30% 30%, rgba(255,255,255,.3), transparent 65%)}
+    .fp-card .ph .photo-tag{position:absolute;left:18px;bottom:18px;font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:#fff;mix-blend-mode:difference;text-transform:uppercase}
+    .fp-card h4{margin:22px 0 8px;font-family:var(--font-ui);font-weight:800;font-size:18px;letter-spacing:.02em}
+    .fp-card p{margin:0;font-size:13px;line-height:1.5;color:#2a2a2a;text-transform:uppercase;letter-spacing:.04em}
+
+    /* Featured Engagements */
+    .eng{padding:100px 36px 60px;border-top:1px solid #48566a}
+    .eng .title{font-family:var(--font-ui);font-weight:800;font-size:clamp(28px,3vw,40px);line-height:1;letter-spacing:-.01em;color:var(--ink);max-width:8ch}
+    .eng-grid{margin-top:60px;display:grid;grid-template-columns:repeat(4,1fr);gap:36px 32px}
+    .eng-card{color:var(--ink)}
+    .eng-card .logo{height:64px;display:flex;align-items:center;color:var(--ink);font-family:var(--font-ui);font-weight:700;font-size:24px;letter-spacing:-.02em;border-bottom:1px solid #48566a;padding-bottom:16px}
+    .eng-card .logo.kfc{font-style:italic;font-weight:900}
+    .eng-card .logo.wilson{font-family:var(--font-serif);font-style:italic}
+    .eng-card .logo.att{display:flex;align-items:center;gap:6px}
+    .eng-card .logo.att::before{content:"";width:24px;height:24px;border-radius:50%;background:
+      repeating-linear-gradient(0deg, var(--ink) 0 2px, transparent 2px 5px);
+      border:1px solid var(--ink)}
+    .eng-card h5{margin:24px 0 12px;font-size:12px;letter-spacing:.16em;font-weight:700;text-transform:uppercase}
+    .eng-card p{margin:0;font-size:13px;line-height:1.55;color:#1f1f1f}
+
+    /* Featured News */
+    .news{padding:80px 36px;display:flex;justify-content:space-between;align-items:flex-end}
+    .news h3{font-family:var(--font-ui);font-weight:800;font-size:clamp(28px,3vw,40px);line-height:1;letter-spacing:-.01em}
+    .viewall{padding:11px 22px;border:1px solid #48566a;border-radius:999px;font-size:12px;letter-spacing:.06em;font-weight:600;color:var(--ink)}
+    .news-list{padding:0 36px 120px}
+    .news-row{display:grid;grid-template-columns:380px 1fr 60px;gap:36px;align-items:center;padding:36px 0;border-top:1px solid #48566a;color:var(--ink)}
+    .news-row:last-child{border-bottom:1px solid #48566a}
+    .news-row .thumb{aspect-ratio:16/10;border-radius:2px;background:linear-gradient(135deg,var(--mc1,#8c7baa),var(--mc2,#5e3f76));position:relative;overflow:hidden}
+    .news-row .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,.25), transparent 70%)}
+    .news-row .thumb .press{position:absolute;left:14px;top:14px;background:#fff;color:#111;padding:4px 10px;font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+    .news-row h6{margin:0;font-family:var(--font-ui);font-weight:600;font-size:clamp(18px,1.6vw,26px);line-height:1.18;letter-spacing:-.01em;text-decoration:underline;text-underline-offset:5px}
+    .news-row .date{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2a2a2a;margin-top:18px}
+    .news-row .arrow{justify-self:end;font-size:30px}
+
+    /* Footer */
+    footer{background:var(--ink);color:#fff;padding:90px 36px 30px}
+    .foot-cta{padding-bottom:80px;border-bottom:1px solid #2a2a2a}
+    .foot-cta h4{font-family:var(--font-ui);font-weight:700;font-size:clamp(34px,4.4vw,62px);line-height:1.05;max-width:18ch;margin:0}
+    .foot-cta h4 a{text-decoration:underline;text-underline-offset:6px;color:#fff}
+    .foot-cols{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1.4fr;gap:36px;padding:60px 0 90px;border-bottom:1px solid #2a2a2a}
+    .foot-cols h6{margin:0 0 18px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;display:flex;align-items:center;gap:8px;font-weight:700}
+    .foot-cols h6::before{content:"";width:8px;height:8px;border-radius:50%;background:#fff}
+    .foot-cols a, .foot-cols p{display:block;font-size:14px;color:#cfcfcf;margin:6px 0;line-height:1.7}
+    .foot-cols input{width:100%;background:transparent;border:0;border-bottom:1px solid #2a2a2a;color:#fff;padding:10px 0;font:inherit;outline:0}
+    .foot-cols .arrow-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:22px;color:#fff}
+    .foot-bar{display:flex;justify-content:space-between;align-items:center;padding:30px 0 0;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#888}
+
+    /* Cookie banner */
+    .cookie{position:fixed;left:0;right:0;bottom:0;z-index:80;background:rgba(20,20,20,.94);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 36px;font-size:12px;backdrop-filter:blur(8px)}
+    .cookie a{text-decoration:underline}
+    .cookie .btns{display:flex;gap:10px}
+    .cookie button{padding:9px 18px;border-radius:999px;border:1px solid #fff;font-weight:600;letter-spacing:.05em;font-size:11px}
+
+    /* Responsive */
+    @media (max-width: 920px){
+      .featured-projects, .eng-grid, .foot-cols{grid-template-columns:1fr 1fr}
+      .statement{grid-template-columns:1fr}
+      .statement .bd{text-align:left}
+      .news-row{grid-template-columns:1fr}
+      .news-row .arrow{justify-self:start}
+      .awards{grid-template-columns:1fr}
+    }
+    @media (max-width: 600px){
+      .hero{padding:90px 14px 40px}
+      .featured-projects, .eng-grid, .foot-cols{grid-template-columns:1fr}
+      .news, .foot-cta{padding-left:14px;padding-right:14px}
+      .watch{width:130px;height:130px;bottom:-42px}
+      .watch b{font-size:11px}
+    }
+  </style>
+</head>
+<body>
+  <!-- top chrome -->
+  <header class="topbar">
+    <a class="wordmark" href="#">BASIC/DEPT<sup>®</sup></a>
+    <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="card" id="card">
+      <div class="slides" id="slides">
+
+        <!-- Slide 1: KFC -->
+        <article class="slide" style="--mc1:#f1d6cf;--mc2:#c43a2c">
+          <div class="browser-chrome">
+            <div class="nav-left">
+              <span class="brand"><span class="brand-mark" style="background:#e4002b;color:#fff;border-radius:4px;width:34px;height:24px;display:inline-grid;place-items:center;font-size:14px">K</span><span style="font-style:italic;font-weight:800">Kentucky Fried Chicken</span></span>
+              <nav><span>Menu</span><span>Careers</span><span>About</span><span>Find a KFC</span></nav>
+            </div>
+            <div class="nav-right">
+              <span class="btn-cta" style="background:#e4002b">Start Order</span>
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:11px">★</span>
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:11px">⌂</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="copy">
+              <div>
+                <span class="eyebrow">The all-new KFC app</span>
+                <h2>Home cookin' <em style="font-style:italic">has</em><br/>a new home.</h2>
+                <p>A flagship redesign of the KFC mobile experience, the brand's biggest direct-to-consumer push of the decade. We rebuilt every screen around a faster, friendlier order journey.</p>
+              </div>
+              <a class="learnmore" href="#">Get the App →</a>
+            </div>
+            <div class="media"><span class="media-tag">↘ Project · 2024</span></div>
+          </div>
+        </article>
+
+        <!-- Slide 2: Google Store -->
+        <article class="slide" style="--mc1:#cfe0f3;--mc2:#93b9df">
+          <div class="browser-chrome">
+            <div class="nav-left">
+              <span class="brand"><span style="display:inline-grid;grid-template-columns:repeat(4,6px);gap:1px;width:24px;height:24px;place-items:center"><span style="background:#4285f4;width:6px;height:6px"></span><span style="background:#ea4335;width:6px;height:6px"></span><span style="background:#fbbc04;width:6px;height:6px"></span><span style="background:#34a853;width:6px;height:6px"></span></span><span style="font-family:var(--font-ui);font-weight:500">Google Store</span></span>
+              <nav><span>Pixel ▾</span><span>Nest ▾</span><span>Stadia ▾</span><span>Pixelbook ▾</span><span>Accessories ▾</span><span>Special Offers</span></nav>
+            </div>
+            <div class="nav-right">
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">⌕</span>
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">?</span>
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">⌂</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="copy">
+              <div>
+                <span class="eyebrow">Google Store</span>
+                <h2>The new Pixel phones<br/>are here.</h2>
+                <p>Powered by Tensor, Google's first custom-built processor, they're fast and secure. And they adapt to you.</p>
+              </div>
+              <a class="learnmore" href="#">Learn more →</a>
+            </div>
+            <div class="media"><span class="media-tag">↘ Project · 2021</span></div>
+          </div>
+        </article>
+
+        <!-- Slide 3: Wilson -->
+        <article class="slide" style="--mc1:#1f2329;--mc2:#3b4048">
+          <div class="browser-chrome">
+            <div class="nav-left">
+              <span class="brand"><span style="width:30px;height:30px;border-radius:50%;background:#cc1f1f;display:inline-grid;place-items:center;color:#fff;font-size:14px;font-weight:800;font-style:italic">W</span><span style="font-family:var(--font-serif);font-style:italic;font-size:22px">Wilson</span></span>
+              <nav><span>Sports</span><span>Teams</span><span>Apparel</span><span>Stories</span></nav>
+            </div>
+            <div class="nav-right">
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">⌕</span>
+              <span class="btn-cta" style="background:#cc1f1f">Shop</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="copy">
+              <div>
+                <span class="eyebrow">Wilson — a century-old sports brand</span>
+                <h2>Finding its place<br/>in culture.</h2>
+                <p>An end-to-end rebrand for Wilson that connected heritage craftsmanship with the next generation of athletes — including the launch of the Airless basketball prototype.</p>
+              </div>
+              <a class="learnmore" href="#">Read the case →</a>
+            </div>
+            <div class="media"><span class="media-tag">↘ Project · 2023</span></div>
+          </div>
+        </article>
+
+        <!-- Slide 4: Patagonia -->
+        <article class="slide" style="--mc1:#9eb89d;--mc2:#526e57">
+          <div class="browser-chrome">
+            <div class="nav-left">
+              <span class="brand" style="font-family:var(--font-ui);font-weight:600;letter-spacing:.04em;font-size:18px;text-transform:uppercase">Patagonia</span>
+              <nav><span>Shop</span><span>Activism</span><span>Stories</span><span>Worn Wear</span></nav>
+            </div>
+            <div class="nav-right">
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">⌕</span>
+              <span style="display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#222;color:#fff;font-size:12px">⌂</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="copy">
+              <div>
+                <span class="eyebrow">Patagonia</span>
+                <h2>An eCommerce experience driven by brand mission.</h2>
+                <p>We rebuilt the digital flagship around the brand's environmental mission — every screen, every product story, every CTA points back to the planet.</p>
+              </div>
+              <a class="learnmore" href="#">Read the case →</a>
+            </div>
+            <div class="media"><span class="media-tag">↘ Project · 2022</span></div>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="pager" id="pager">
+        <button class="active" data-i="0">01</button>
+        <button data-i="1">02</button>
+        <button data-i="2">03</button>
+        <button data-i="3">04</button>
+      </div>
+
+      <div class="watch"><b>WATCH<br/>REEL</b></div>
+      <span class="cap">BASIC/DEPT® 2010—∞</span>
+    </div>
+  </section>
+
+  <!-- AWARDS -->
+  <section class="awards">
+    <div>
+      <div class="pub">AdAge</div>
+      <div class="accolade">Design and Branding<br/>Agency of the Year</div>
+    </div>
+    <div>
+      <div class="pub sans" style="font-style:italic">THE<br/><span style="font-weight:900">WEBBY</span> AWARDS</div>
+      <div class="accolade">Agency of the Year</div>
+    </div>
+    <div>
+      <div class="pub" style="font-family:var(--font-ui);font-weight:700;font-size:32px">campaign</div>
+      <div class="accolade">Digital Innovation Agency<br/>of the Year Finalist</div>
+    </div>
+  </section>
+
+  <!-- STATEMENT -->
+  <section class="statement">
+    <h3>BASIC/DEPT<sup style="font-size:.5em;vertical-align:super">®</sup> is a global branding and digital design agency building products, services, and eCommerce experiences that turn cultural undercurrents into obvious advantage.</h3>
+    <div class="bd">B<span class="slash">/</span>D<span class="circle">®</span></div>
+  </section>
+
+  <!-- FEATURED PROJECTS -->
+  <section class="featured-projects">
+    <div class="fp-card" style="--mc1:#5d6f7d;--mc2:#2d3a48">
+      <div class="ph"><span class="photo-tag">↘ Patagonia — Cliff</span></div>
+      <h4>PATAGONIA</h4>
+      <p>An eCommerce experience driven by Patagonia's brand mission</p>
+    </div>
+    <div class="fp-card" style="--mc1:#e8e6df;--mc2:#cfb5a8">
+      <div class="ph"><span class="photo-tag">↘ Wilson — Athlete</span></div>
+      <h4>WILSON</h4>
+      <p>A century-old sports brand finding its place in culture</p>
+    </div>
+    <div class="fp-card" style="--mc1:#f3c8c0;--mc2:#d99080">
+      <div class="ph"><span class="photo-tag">↘ Google — Hardware</span></div>
+      <h4>GOOGLE STORE</h4>
+      <p>An eCommerce experience helping Google bring its hardware to people</p>
+    </div>
+  </section>
+
+  <!-- ENGAGEMENTS -->
+  <section class="eng">
+    <div class="title">FEATURED<br/>ENGAGEMENTS</div>
+    <div class="eng-grid">
+      <div class="eng-card">
+        <div class="logo"><span style="font-family:var(--font-ui);font-weight:500;font-size:28px;letter-spacing:-.01em">Google</span></div>
+        <h5>GOOGLE</h5>
+        <p>Our embedded partnership with Google is as deep as it gets. We're the lead creative agency for Google Store and a launch partner across Pixel, Nest, and Fitbit.</p>
+      </div>
+      <div class="eng-card">
+        <div class="logo kfc" style="font-family:var(--font-serif);font-size:36px;color:var(--accent)">KFC</div>
+        <h5>KFC</h5>
+        <p>An award-winning global, digital transformation engagement spanning eCommerce, mobile app, and the brand's biggest direct-to-consumer push in a decade.</p>
+      </div>
+      <div class="eng-card">
+        <div class="logo wilson">Wilson</div>
+        <h5>WILSON</h5>
+        <p>A reimagining of Wilson's brand visual identity and brand campaign, to support a new generation of athletes and an entire re-platforming of their digital ecosystem.</p>
+      </div>
+      <div class="eng-card">
+        <div class="logo att"><span>AT&T</span></div>
+        <h5>AT&T</h5>
+        <p>Redesign of the consumer experience for the largest telecommunications company in the world — a multi-year, multi-product engagement touching every channel.</p>
+      </div>
+      <div class="eng-card">
+        <div class="logo" style="font-family:var(--font-ui);font-weight:700;font-size:22px">Dropbox</div>
+        <h5>DROPBOX</h5>
+        <p>Long-running product design partnership helping the brand ship category-defining creative tools to millions of users.</p>
+      </div>
+      <div class="eng-card">
+        <div class="logo" style="font-family:var(--font-ui);font-weight:800;letter-spacing:.04em">NBCU</div>
+        <h5>NBCUNIVERSAL</h5>
+        <p>An always-on design system and streaming product work for one of the most-watched media companies on the planet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section class="news">
+    <h3>FEATURED<br/>NEWS</h3>
+    <a class="viewall" href="#">VIEW ALL →</a>
+  </section>
+  <div class="news-list">
+    <div class="news-row">
+      <div class="thumb" style="--mc1:#6b2d65;--mc2:#1e1330">
+        <span class="press">PRESS · 4.16.25</span>
+      </div>
+      <h6>Four nominations for the internet's highest honor.</h6>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="news-row">
+      <div class="thumb" style="--mc1:#1f1f1f;--mc2:#3d3d3d">
+        <span class="press">PRESS · 6.13.24</span>
+      </div>
+      <h6>Glossy sits down with our founder on the future of brand studios.</h6>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="news-row">
+      <div class="thumb" style="--mc1:#9a8870;--mc2:#5a4a32">
+        <span class="press">PRESS · 6.3.24</span>
+      </div>
+      <h6>Retail's new playground: where physical meets digital.</h6>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="news-row">
+      <div class="thumb" style="--mc1:#1a2333;--mc2:#0d1626">
+        <span class="press">PRESS · 4.4.24</span>
+      </div>
+      <h6>The 28th Annual Webby Awards nods are in.</h6>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="news-row">
+      <div class="thumb" style="--mc1:#bba89a;--mc2:#7a6650">
+        <span class="press">PRESS · 3.22.24</span>
+      </div>
+      <h6>Are snacks the new meals in QSR?</h6>
+      <span class="arrow">↗</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-cta">
+      <h4>Ready to build the next chapter of your brand with intentional design? Let's build — <a href="mailto:biz@basicagency.com">biz@basicagency.com</a></h4>
+    </div>
+    <div class="foot-cols">
+      <div>
+        <h6>Stay in the know</h6>
+        <div style="position:relative">
+          <input placeholder="Email Address"/>
+          <span class="arrow-btn">→</span>
+        </div>
+      </div>
+      <div>
+        <h6>Social</h6>
+        <a>Instagram</a><a>Twitter</a><a>LinkedIn</a><a>Facebook</a>
+      </div>
+      <div>
+        <h6>Initiatives</h6>
+        <a>Applied</a><a>Brandbeats</a><a>Moves</a><a>B®/Good</a>
+      </div>
+      <div>
+        <h6>Offices</h6>
+        <p>San Diego — CA</p><p>New York — NY</p><p>Bay Area — CA</p><p>St. Louis — MO</p><p>Amsterdam — NL</p><p>London — EN</p><p>Berlin — GE</p><p>Argentina — AR</p>
+      </div>
+      <div>
+        <h6>Capabilities</h6>
+        <p>Brand</p><p>Product</p><p>eCommerce</p><p>Motion</p><p>Strategy</p><p>Engineering</p>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>BASIC/DEPT®, INC 10 — 20©</span>
+      <span>Easy to understand, impossible to ignore.™</span>
+      <span>Terms · Privacy Policy</span>
+    </div>
+  </footer>
+
+  <!-- Cookie banner -->
+  <div class="cookie" id="cookie">
+    <span>This website uses cookies to ensure you get the best experience. <a href="#">Privacy Policy</a></span>
+    <div class="btns">
+      <button onclick="document.getElementById('cookie').style.display='none'">Accept cookies</button>
+      <button onclick="document.getElementById('cookie').style.display='none'">×</button>
+    </div>
+  </div>
+
+  <script>
+    // ───── Carousel ─────
+    (function(){
+      const slides = document.getElementById('slides');
+      const pager = document.getElementById('pager');
+      const total = slides.children.length;
+      let i = 0, t;
+
+      function go(n){
+        i = (n + total) % total;
+        slides.style.transform = `translateX(-${i*100}%)`;
+        pager.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('active', k===i));
+      }
+      pager.addEventListener('click', e=>{
+        const b = e.target.closest('button'); if(!b) return;
+        clearInterval(t); go(+b.dataset.i);
+      });
+      function tick(){ go(i+1) }
+      t = setInterval(tick, 5000);
+
+      // pause on hover
+      const card = document.getElementById('card');
+      card.addEventListener('mouseenter', ()=>clearInterval(t));
+      card.addEventListener('mouseleave', ()=>t=setInterval(tick, 5000));
+    })();
+
+    // ───── Drag-to-scroll on news / engagement rows ─────
+    document.querySelectorAll('.news-row, .eng-card').forEach(el=>{
+      el.addEventListener('mouseenter', ()=>{
+        el.style.transition='transform .3s';
+      });
+    });
+  </script>
+</body>
+</html>

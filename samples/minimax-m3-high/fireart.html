@@ -1,0 +1,552 @@
+<!doctype html>
+<!--
+  Original URL:  https://fireart.studio/
+  Filename:      fireart.html
+  Model:         MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: a friendly, mid-budget digital product design & dev agency with
+  a soft cream/white canvas and a single signature orange (#FF5500 ish).
+  The whole site feels modern, light, and slightly playful. The hero is a
+  full-bleed photographic background (a leather texture) with a giant
+  centered "phone-on-desk" case-study plate that animates between featured
+  projects (Pixel 6 phones, retro "Aa" letter design, etc.). A floating
+  sticky pill nav sits at the top of the page with five menu items. To the
+  right of the nav, a bright orange "Contact →" button stands out. Below
+  the hero, a client logo strip scrolls, then the services tabs (Development
+  / UX-UI / Branding / Graphic design), then success-story case tiles, then
+  awards, then a podcast/insights grid, then a contact CTA over a dark
+  gradient background, then a wide footer with city offices and contact
+  details.
+
+  Layout / hierarchy:
+    - Top-left: orange Fireart leaf mark + "Fireart" wordmark.
+    - Top-center: white pill nav with rounded ends — Services ▾, Industries ▾,
+      Technologies ▾, Case Studies, Insights ▾, Company ▾.
+    - Top-right: orange "Contact →" pill.
+    - Bottom-right of hero: Dribbble Top-Product Design Company ribbon.
+    - Hero: full-bleed photo (we use a leather-orange gradient placeholder)
+      with a centered iPhone-style mockup that swaps through project plates
+      every few seconds (we drive it with a CSS keyframe slider).
+    - Client logo strip: Crunchbase / Google / Mindvalley / Swisscom /
+      Google / Rapchat (mono-typographic logotypes in slate ink).
+    - "Our product design and development services" — section title, then
+      a tab strip (Development active / UX-UI / Branding / Graphic design),
+      with a 3-column area below: a testimonial quote, an MVP service block,
+      a Web service block, plus a phone mockup illustration.
+    - "See the success stories we created" — 3 wide case-study cards
+      (Equine horse 3D, CFI billboard, dashboard UI).
+    - "Honored by the best for creating outstanding digital experiences" —
+      4 award tiles (Motion Design Award, Red Dot Award, Dribbble Followers,
+      Behance Awards) with little badges.
+    - Podcast/insights: 3 cards (article / podcast / episode) on dark.
+    - "Let's get in touch" — large dark CTA with 8 trust pills (Expertise
+      in the industry, No "cookie-cutter" offers, etc.).
+    - Footer: white, 6 columns of links (Call us / Our work / Services /
+      Company / Technologies / Follow us), then copyright + cookie/privacy.
+
+  Motion / interaction:
+    - Hero phone mockup crossfades between three plates every ~3s.
+    - Logo strip is a continuous marquee (CSS keyframes).
+    - Service tabs are pill radios; clicking one swaps the content below.
+    - Hover on award tile reveals the count badge.
+    - Smooth scroll into view for the section titles.
+
+  Color system:
+    --bg           #ffffff
+    --bg-2         #f7f6f3   section panels
+    --bg-3         #f1efe9   logo strip
+    --ink          #0e0e0e
+    --ink-2        #2a2a2a
+    --ink-3        #5a5a5a
+    --line         #e6e3dc
+    --orange       #ff5a1f
+    --orange-2     #ff7a3e
+    --dark         #0a0a0a
+    --dark-2       #141414
+
+  CHALLENGES SOLVED
+  -----------------
+    - The "floating pill nav" was recreated with a single rounded rectangle
+      holding 6 buttons, each with its own chevron SVG.
+    - The hero phone mockup is a stylized device frame with an inner scroll
+      panel that cycles through three different "app screens" via JS.
+    - The leather-orange hero background is a layered radial+linear gradient
+      with a subtle SVG noise overlay for texture.
+    - The podcast grid uses dark cards with hover lift.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fireart Studio — Digital Product Design & Development Agency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --bg-2:#f7f6f3;
+      --bg-3:#f1efe9;
+      --ink:#0e0e0e;
+      --ink-2:#2a2a2a;
+      --ink-3:#5a5a5a;
+      --line:#e6e3dc;
+      --orange:#ff5a1f;
+      --orange-2:#ff7a3e;
+      --orange-soft:#ffe5d4;
+      --dark:#0a0a0a;
+      --dark-2:#141414;
+      --font-display:"Manrope","Inter",system-ui,sans-serif;
+      --font-ui:"Inter","Helvetica Neue",system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit}
+    ::selection{background:var(--orange);color:#fff}
+
+    /* Pill nav */
+    .pillnav{
+      position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;
+      display:flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:999px;
+      padding:6px;backdrop-filter:blur(14px);
+      box-shadow:0 8px 30px rgba(0,0,0,.05);
+      max-width:calc(100% - 36px);
+    }
+    .pillnav .nav-btn{padding:11px 18px;border-radius:999px;font-size:14px;font-weight:500;color:var(--ink);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+    .pillnav .nav-btn .chev{width:10px;height:10px;color:var(--ink-3);display:inline-grid;place-items:center;font-size:9px}
+    .pillnav .nav-btn:hover{background:var(--bg-2)}
+    .pillnav .nav-btn.active{background:var(--bg-2)}
+    .pillnav .logo{display:flex;align-items:center;gap:8px;padding:0 12px}
+    .pillnav .logo .leaf{width:24px;height:24px;display:inline-grid;place-items:center}
+    .pillnav .logo .leaf svg{width:100%;height:100%}
+    .pillnav .contact{padding:11px 22px;border-radius:999px;background:var(--orange);color:#fff;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+    .pillnav .contact:hover{background:var(--orange-2)}
+    .topbar-row{display:flex;justify-content:space-between;align-items:center;padding:18px 28px 0;position:relative;z-index:50;pointer-events:none}
+    .topbar-row .mark{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--ink);pointer-events:auto}
+    .topbar-row .mark svg{width:26px;height:26px}
+    .topbar-row .contact-cta{padding:11px 22px;border-radius:999px;background:var(--orange);color:#fff;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;pointer-events:auto}
+
+    /* Hero */
+    .hero{
+      position:relative;min-height:760px;padding:120px 24px 80px;
+      background:
+        radial-gradient(120% 80% at 70% 20%, rgba(255,140,80,.45), transparent 60%),
+        radial-gradient(80% 60% at 20% 80%, rgba(60,30,15,.55), transparent 70%),
+        linear-gradient(135deg,#c87838 0%, #8a3c10 50%, #2a1408 100%);
+      overflow:hidden;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:#fff;
+    }
+    .hero::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='.85' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.4'/></svg>");mix-blend-mode:overlay;opacity:.5;pointer-events:none}
+    .hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(46px,6vw,86px);line-height:1.05;letter-spacing:-.02em;text-align:center;margin:0 0 18px;max-width:18ch;color:#fff}
+    .hero p{margin:0 0 36px;font-size:18px;color:rgba(255,255,255,.85);max-width:54ch;text-align:center}
+    .hero .ctas{display:flex;gap:14px}
+    .hero .ctas a{padding:14px 26px;border-radius:999px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:10px}
+    .hero .ctas .a{background:#fff;color:var(--ink)}
+    .hero .ctas .b{border:1px solid #fff;color:#fff;background:transparent}
+
+    .phone-stage{position:relative;margin-top:40px;width:min(360px,84vw);height:520px}
+    .phone{position:absolute;left:50%;top:0;transform:translateX(-50%);width:300px;height:560px;background:#0c0c0c;border-radius:42px;border:1px solid #2a2a2a;box-shadow:0 30px 80px rgba(0,0,0,.45);padding:8px}
+    .phone::before{content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);width:90px;height:18px;background:#000;border-radius:0 0 18px 18px;z-index:4}
+    .phone .screen{position:relative;width:100%;height:100%;background:#fff;border-radius:34px;overflow:hidden}
+    .phone .screen .nav{position:absolute;top:0;left:0;right:0;padding:38px 16px 14px;background:#fff;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid #f0eee9;z-index:3}
+    .phone .screen .nav .top{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-ui);font-weight:600;font-size:13px;color:var(--ink)}
+    .phone .screen .nav .search{display:flex;align-items:center;gap:8px;background:var(--bg-2);border-radius:999px;padding:8px 12px;font-size:11px;color:var(--ink-3)}
+    .phone .screen .nav .search .icon{width:14px;height:14px;border:1.5px solid var(--ink-3);border-radius:50%;display:inline-block;position:relative}
+    .phone .screen .nav .search .icon::after{content:"";position:absolute;right:-5px;bottom:-5px;width:6px;height:1.5px;background:var(--ink-3);transform:rotate(45deg)}
+    .phone .screen .plates{position:absolute;inset:0;padding-top:90px}
+    .plate{position:absolute;inset:90px 0 0;display:flex;flex-direction:column;opacity:0;transition:opacity 1s ease}
+    .plate.on{opacity:1}
+    .plate .hero-area{flex:1;padding:30px;display:flex;flex-direction:column;justify-content:flex-end}
+    .plate .hero-area h4{font-family:var(--font-display);font-size:22px;line-height:1.1;font-weight:700;letter-spacing:-.01em;margin:0 0 8px;color:var(--ink)}
+    .plate .hero-area p{margin:0;color:var(--ink-3);font-size:11px;line-height:1.5;max-width:30ch}
+    .plate .hero-area .pill{display:inline-block;margin-top:14px;padding:7px 14px;background:var(--ink);color:#fff;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.05em;align-self:flex-start}
+    .plate .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 16px 30px}
+    .plate .cards .c{aspect-ratio:1/1;border-radius:8px;background:linear-gradient(135deg,var(--c1,#ddd),var(--c2,#888))}
+    .plate .cards .c.tall{aspect-ratio:1/1.5}
+
+    /* Dribbble ribbon */
+    .ribbon{position:absolute;right:24px;bottom:24px;width:74px;height:90px;display:flex;flex-direction:column;align-items:center}
+    .ribbon .shield{width:74px;height:84px;background:#0a0a0a;color:#fff;border-radius:6px;padding:6px 8px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--font-display);font-weight:700;font-size:9px;letter-spacing:.04em}
+    .ribbon .shield .top{font-size:7px;letter-spacing:.12em;color:#bbb;text-transform:uppercase}
+    .ribbon .shield .logo{font-style:italic;font-weight:800;font-size:14px;color:#fff;background:linear-gradient(180deg,#ea4c89,#c3236c);padding:4px 6px;border-radius:4px;margin:6px auto;width:fit-content}
+    .ribbon .shield .bottom{font-size:7px;letter-spacing:.16em;color:#fff;text-transform:uppercase;font-weight:800}
+
+    /* Logo strip */
+    .strip{background:var(--bg-3);padding:40px 0;overflow:hidden;position:relative}
+    .strip .track{display:flex;gap:80px;align-items:center;animation:slide 24s linear infinite;width:max-content;padding:0 40px}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    .strip .logo{font-family:var(--font-display);font-weight:700;font-size:24px;color:#3a3a3a;letter-spacing:-.01em;flex-shrink:0;display:inline-flex;align-items:center;gap:8px;opacity:.85;white-space:nowrap}
+    .strip .logo.cb{font-style:italic}
+    .strip .logo.g{font-family:"Inter";font-weight:500;font-size:30px;letter-spacing:-.02em}
+    .strip .logo.m{font-style:italic;font-weight:600}
+
+    /* Sections */
+    section{padding:120px 28px}
+    .title{font-family:var(--font-display);font-weight:700;font-size:clamp(34px,4vw,56px);line-height:1.1;letter-spacing:-.02em;margin:0 0 30px;max-width:24ch}
+    .title.center{text-align:center;max-width:none}
+
+    /* Services */
+    .services .tabs{display:flex;justify-content:center;gap:10px;margin:30px 0 60px;flex-wrap:wrap}
+    .services .tabs button{padding:13px 24px;border-radius:999px;font-size:14px;font-weight:600;background:var(--bg-2);color:var(--ink);border:1px solid transparent}
+    .services .tabs button.on{background:var(--ink);color:#fff}
+    .services .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:50px;display:grid;grid-template-columns:1.1fr 1.3fr 1fr;gap:60px;align-items:center}
+    .services .panel blockquote{margin:0;font-family:var(--font-display);font-size:clamp(22px,2.4vw,32px);line-height:1.3;font-weight:400;letter-spacing:-.01em;color:var(--ink)}
+    .services .panel blockquote em{color:var(--orange);font-style:normal;font-weight:600}
+    .services .panel .col h6{margin:0 0 8px;font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:-.01em}
+    .services .panel .col p{margin:0;color:var(--ink-3);font-size:14px;line-height:1.5}
+    .services .panel .phone-mock{aspect-ratio:1/1.5;background:linear-gradient(135deg,var(--bg-2),#fff);border-radius:24px;border:1px solid var(--line);padding:30px 20px;display:flex;flex-direction:column;gap:12px}
+    .services .panel .phone-mock .row{display:flex;gap:8px}
+    .services .panel .phone-mock .chip{padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:11px;flex:1;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:var(--ink)}
+
+    /* Stories */
+    .stories-head{display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:24px}
+    .stories-head .see-all{background:var(--ink);color:#fff;padding:14px 26px;border-radius:999px;font-size:14px;font-weight:600}
+    .stories{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px}
+    .story-card{border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--line);color:var(--ink);display:flex;flex-direction:column}
+    .story-card .ph{aspect-ratio:4/3;background:linear-gradient(135deg,var(--c1,#a3b9c7),var(--c2,#557080));position:relative;overflow:hidden}
+    .story-card .ph::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 30% 30%, rgba(255,255,255,.3), transparent 65%)}
+    .story-card .body{padding:24px}
+    .story-card h5{margin:0 0 6px;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em}
+    .story-card .meta{font-size:12px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+
+    /* Awards */
+    .awards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+    .award{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;text-align:center;color:var(--ink)}
+    .award .badge{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--c1,#4285f4),var(--c2,#1a73e8));position:relative;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:14px;box-shadow:inset 0 -10px 20px rgba(0,0,0,.18)}
+    .award .count{position:absolute;top:14px;right:14px;background:var(--ink);color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;padding:5px 10px;border-radius:999px;font-weight:700}
+    .award b{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-.01em}
+
+    /* Podcast/Insights */
+    .podcast{background:var(--dark);color:#fff;padding:120px 28px}
+    .podcast .title{color:#fff}
+    .podcast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .pod{display:flex;flex-direction:column;background:var(--dark-2);border-radius:14px;overflow:hidden;color:#fff}
+    .pod .ph{aspect-ratio:5/3;background:linear-gradient(135deg,var(--c1,#1f1f1f),var(--c2,#3a3a3a));position:relative;display:grid;place-items:center}
+    .pod .ph .play{width:60px;height:60px;border-radius:50%;background:var(--orange);display:grid;place-items:center;color:#fff;font-size:20px}
+    .pod .body{padding:24px}
+    .pod .tag{display:inline-block;background:rgba(255,255,255,.12);color:#fff;padding:6px 12px;border-radius:999px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;font-weight:600}
+    .pod h5{margin:0 0 8px;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em;line-height:1.2}
+    .pod .who{display:flex;align-items:center;gap:12px;margin-top:18px;font-size:13px}
+    .pod .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7d6b48,#3d2e1a)}
+
+    /* CTA */
+    .cta{position:relative;padding:140px 28px;background:#0a0a0a;color:#fff;overflow:hidden}
+    .cta::before{content:"";position:absolute;inset:0;background:
+      radial-gradient(60% 60% at 30% 30%, rgba(120,90,50,.25), transparent 70%),
+      radial-gradient(50% 50% at 80% 80%, rgba(80,80,90,.25), transparent 70%);
+      opacity:.7}
+    .cta h2{font-family:var(--font-display);font-size:clamp(56px,8vw,120px);font-weight:700;letter-spacing:-.03em;line-height:.95;margin:0 0 50px;position:relative;z-index:1}
+    .cta .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;z-index:1}
+    .cta .pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;font-size:14px;color:#fff}
+    .cta .pill svg{width:18px;height:18px;flex-shrink:0;color:var(--orange)}
+
+    /* Footer */
+    footer{background:#fff;color:var(--ink);padding:80px 28px 30px;border-top:1px solid var(--line)}
+    .foot-cols{display:grid;grid-template-columns:1fr 1.5fr 1fr 1fr 1.5fr 1fr;gap:30px;padding-bottom:50px;border-bottom:1px solid var(--line)}
+    .foot-cols h5{margin:0 0 14px;font-family:var(--font-display);font-weight:700;font-size:14px}
+    .foot-cols a, .foot-cols p{display:block;font-size:13px;color:var(--ink-2);margin:6px 0;line-height:1.7}
+    .foot-cols .mark{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .foot-cols .mark svg{width:30px;height:30px}
+    .foot-bar{display:flex;justify-content:space-between;align-items:center;padding-top:30px;font-size:12px;color:var(--ink-3)}
+
+    @media (max-width:980px){
+      .pillnav{display:none}
+      .services .panel{grid-template-columns:1fr}
+      .stories{grid-template-columns:1fr 1fr}
+      .awards-grid{grid-template-columns:1fr 1fr}
+      .podcast-grid{grid-template-columns:1fr}
+      .cta .trust{grid-template-columns:1fr 1fr}
+      .foot-cols{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:600px){
+      .stories, .awards-grid, .cta .trust, .foot-cols{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP BAR (visible logo + contact above the pill) -->
+  <div class="topbar-row">
+    <a class="mark" href="#">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M6 4 C12 4 18 10 18 18 C18 24 12 28 6 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/><path d="M26 4 C20 4 14 10 14 18 C14 24 20 28 26 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/></svg>
+      Fireart
+    </a>
+    <a class="contact-cta" href="#">Contact →</a>
+  </div>
+
+  <!-- FLOATING PILL NAV -->
+  <nav class="pillnav" id="pillnav">
+    <a class="logo" href="#"><span class="leaf"><svg viewBox="0 0 32 32" fill="none"><path d="M6 4 C12 4 18 10 18 18 C18 24 12 28 6 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/><path d="M26 4 C20 4 14 10 14 18 C14 24 20 28 26 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/></svg></span></a>
+    <button class="nav-btn active">Services <span class="chev">▾</span></button>
+    <button class="nav-btn">Industries <span class="chev">▾</span></button>
+    <button class="nav-btn">Technologies <span class="chev">▾</span></button>
+    <button class="nav-btn">Case Studies</button>
+    <button class="nav-btn">Insights <span class="chev">▾</span></button>
+    <button class="nav-btn">Company <span class="chev">▾</span></button>
+    <a class="contact" href="#">Contact →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Digital product design and development agency</h1>
+    <p>We help ambitious teams ship delightful, award-winning digital products — from research and product strategy to UI/UX, branding, and full-stack engineering.</p>
+    <div class="ctas"><a class="a" href="#">Let's talk →</a><a class="b" href="#">See our work</a></div>
+
+    <div class="phone-stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="nav">
+            <div class="top"><span>9:42</span><span>●●● 5G</span></div>
+            <div class="search"><span class="icon"></span><span>Explore trip ideas with Chat GPT</span></div>
+          </div>
+          <div class="plates" id="plates">
+            <div class="plate on">
+              <div class="hero-area">
+                <h4>Journey Through Premium Parks</h4>
+                <p>Max, a special offer awaits you: get 20% off your next booking with us.</p>
+                <span class="pill">Explore →</span>
+              </div>
+              <div class="cards">
+                <div class="c" style="--c1:#d4a96a;--c2:#7a5230"></div>
+                <div class="c tall" style="--c1:#7a9a4a;--c2:#3d5520"></div>
+                <div class="c" style="--c1:#5a8aaa;--c2:#2a4860"></div>
+              </div>
+            </div>
+            <div class="plate">
+              <div class="hero-area">
+                <h4>Plan. Book. Travel.</h4>
+                <p>All your trips in one place. Get AI-powered recommendations for your next escape.</p>
+                <span class="pill">Get the app →</span>
+              </div>
+              <div class="cards">
+                <div class="c tall" style="--c1:#f5b87a;--c2:#a85630"></div>
+                <div class="c" style="--c1:#9d8aaa;--c2:#4d3a60"></div>
+                <div class="c" style="--c1:#d4b894;--c2:#7a5230"></div>
+              </div>
+            </div>
+            <div class="plate">
+              <div class="hero-area">
+                <h4>Stays you'll love</h4>
+                <p>Curated boutique hotels, hand-picked for design-minded travelers.</p>
+                <span class="pill">Browse →</span>
+              </div>
+              <div class="cards">
+                <div class="c" style="--c1:#a8c4d4;--c2:#456880"></div>
+                <div class="c" style="--c1:#caa888;--c2:#6a4830"></div>
+                <div class="c tall" style="--c1:#7a5e4a;--c2:#3a2818"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ribbon"><div class="shield"><span class="top">Top Product Design Company</span><span class="logo">Dribbble</span><span class="bottom">Select</span></div></div>
+  </section>
+
+  <!-- LOGO STRIP -->
+  <div class="strip">
+    <div class="track">
+      <span class="logo cb">crunchbase</span>
+      <span class="logo g">Google</span>
+      <span class="logo m">Mindvalley</span>
+      <span class="logo">Swisscom</span>
+      <span class="logo g">Google</span>
+      <span class="logo">Rapchat</span>
+      <span class="logo" style="font-style:italic">Replicant</span>
+      <span class="logo" style="font-family:serif;font-style:italic;font-weight:600;font-size:28px">Astra</span>
+      <span class="logo cb">crunchbase</span>
+      <span class="logo g">Google</span>
+      <span class="logo m">Mindvalley</span>
+      <span class="logo">Swisscom</span>
+      <span class="logo g">Google</span>
+      <span class="logo">Rapchat</span>
+      <span class="logo" style="font-style:italic">Replicant</span>
+      <span class="logo" style="font-family:serif;font-style:italic;font-weight:600;font-size:28px">Astra</span>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section class="services">
+    <h2 class="title center">Our product design and development services</h2>
+    <div class="tabs" id="tabs">
+      <button class="on" data-t="dev">Development</button>
+      <button data-t="ux">UX/UI</button>
+      <button data-t="brand">Branding</button>
+      <button data-t="graphic">Graphic design</button>
+    </div>
+    <div class="panel" id="panel">
+      <blockquote>"Fireart Studio's resources have done a <em>fantastic job of using user research</em> input to create excellent UI/UX designs, ultimately contributing to the client's product development endeavors."</blockquote>
+      <div class="col">
+        <h6>MVP</h6>
+        <p>Fail fast, succeed faster. We'll help you get your product to real users quickly and gather valuable feedback to iterate and improve.</p>
+      </div>
+      <div class="col">
+        <h6>Web</h6>
+        <p>Create easy-to-use, great-to-look-at websites and web apps with an award-winning web development team.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUCCESS STORIES -->
+  <section class="stories-section">
+    <div class="stories-head">
+      <h2 class="title">See the success stories we created</h2>
+      <a class="see-all" href="#">See All</a>
+    </div>
+    <div class="stories">
+      <div class="story-card">
+        <div class="ph" style="--c1:#7e8f5b;--c2:#3a4828"></div>
+        <div class="body"><h5>Equine 3D Adventure</h5><div class="meta">Branding · Immersive 3D</div></div>
+      </div>
+      <div class="story-card">
+        <div class="ph" style="--c1:#1d2230;--c2:#3a4458"></div>
+        <div class="body"><h5>CFI — Trade Like a Champion</h5><div class="meta">Branding · Web · Out-of-home</div></div>
+      </div>
+      <div class="story-card">
+        <div class="ph" style="--c1:#cdb89a;--c2:#806b48"></div>
+        <div class="body"><h5>Holisto — Wellness Dashboard</h5><div class="meta">UI/UX · Web app</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AWARDS -->
+  <section class="awards-section">
+    <h2 class="title">Honored by the best for creating outstanding digital experiences</h2>
+    <div class="awards-grid">
+      <div class="award"><span class="count">x1</span><div class="badge" style="--c1:#4285f4;--c2:#1a4cd4">M</div><b>Motion Design Award</b></div>
+      <div class="award"><span class="count">x1</span><div class="badge" style="--c1:#e8333a;--c2:#a31418">RD</div><b>Red Dot Award</b></div>
+      <div class="award"><span class="count">132k</span><div class="badge" style="--c1:#ea4c89;--c2:#a3205a">D</div><b>Dribbble Followers</b></div>
+      <div class="award"><span class="count">x90</span><div class="badge" style="--c1:#1769ff;--c2:#0c3eaa">Bē</div><b>Behance Awards</b></div>
+    </div>
+  </section>
+
+  <!-- PODCAST / INSIGHTS -->
+  <section class="podcast">
+    <h2 class="title">Fresh ideas from the team</h2>
+    <div class="podcast-grid">
+      <div class="pod">
+        <div class="ph" style="--c1:#7a6248;--c2:#1a1208"><span class="play">▶</span></div>
+        <div class="body">
+          <span class="tag">Article</span>
+          <h5>10 Amazing Comput... Designs Examples in 2026</h5>
+          <p style="margin:8px 0 0;font-size:13px;color:#bbb;line-height:1.55">How do you make sure your product "sounds" on-brand? Our guest today is Reese Fuller, lead writer at Work & Co.</p>
+        </div>
+      </div>
+      <div class="pod">
+        <div class="ph" style="--c1:#ff5a1f;--c2:#7a2008"><span class="play">▶</span></div>
+        <div class="body">
+          <span class="tag">Podcast</span>
+          <h5>Product Leaders · Ep. 15</h5>
+          <p style="margin:8px 0 0;font-size:13px;color:#bbb;line-height:1.55">Our guest shares her thoughts on the difference between managing product and UX teams, and how to manage OKRs.</p>
+          <div class="who"><div class="avatar"></div><div><b>Jean McCabe</b><br/><span style="color:#888">COO at Agilis</span></div></div>
+        </div>
+      </div>
+      <div class="pod">
+        <div class="ph" style="--c1:#1f1f1f;--c2:#0a0a0a"><span class="play">▶</span></div>
+        <div class="body">
+          <span class="tag">Product Design</span>
+          <h5>10 Effective Principles of Product Design</h5>
+          <p style="margin:8px 0 0;font-size:13px;color:#bbb;line-height:1.55">Eric covers the following topics: the mindset and core principles to guide product development.</p>
+          <div class="who"><div class="avatar"></div><div><b>Kostia Varhatiuk</b><br/><span style="color:#888">Head of Product Design</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Let's get in touch</h2>
+    <div class="trust">
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M12 14 v6"/></svg>Expertise in the industry</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12 h14 M12 5 v14"/></svg>No "cookie-cutter" offers</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12 l4 4 l10 -10"/></svg>Proactive approach</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7 v5 l3 2"/></svg>Full transparency on all steps</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0 M9 9 l3 3 l-3 3"/></svg>Dedicated specialists</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10 v8 a2 2 0 0 0 2 2 h6 a2 2 0 0 0 2 -2 v-8 M9 6 l3 -3 l3 3"/></svg>Amazing referrals</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11 a9 9 0 1 1 -3 -7 M21 4 v5 h-5"/></svg>Immediate responses</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12 h18 M12 3 a14 14 0 0 1 0 18 a14 14 0 0 1 0 -18"/></svg>Ability to cover many roles</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-cols">
+      <div>
+        <div class="mark"><svg viewBox="0 0 32 32" fill="none"><path d="M6 4 C12 4 18 10 18 18 C18 24 12 28 6 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/><path d="M26 4 C20 4 14 10 14 18 C14 24 20 28 26 28" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round"/></svg><b>Fireart</b></div>
+        <p style="font-weight:600;margin-top:8px">Visit us</p>
+        <p style="font-size:13px;line-height:1.6">Warsaw<br/>ul. Marynarska 21, 02-674</p>
+        <a href="mailto:client@fireart.studio">client@fireart.studio</a>
+      </div>
+      <div>
+        <h5>Call us</h5>
+        <p style="font-weight:600">Poland</p>
+        <a>+48 (22) 208 61 11</a>
+        <p style="font-weight:600;margin-top:14px">United States</p>
+        <a>+1 (415) 877 16 12</a>
+        <p style="font-weight:600;margin-top:14px">United Kingdom</p>
+        <a>+44 (033) 33034645</a>
+      </div>
+      <div>
+        <h5>Our work</h5>
+        <a>Equine</a><a>Sprightful</a><a>Parents</a><a>Rapchat</a><a>Pureplank</a><a><b>See all case studies</b></a>
+      </div>
+      <div>
+        <h5>Services</h5>
+        <a>Development <span style="opacity:.6">▾</span></a>
+        <a>Design <span style="opacity:.6">▾</span></a>
+        <a>Expertise <span style="opacity:.6">▾</span></a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a>About Fireart</a><a>Careers</a><a>Contact Us</a>
+        <h5 style="margin-top:24px">Technologies</h5>
+        <a>React Native</a><a>Node.JS</a><a>Angular JS</a><a>Swift</a>
+      </div>
+      <div>
+        <h5>Follow us</h5>
+        <a>Dribbble</a><a>Behance</a><a>Instagram</a><a>LinkedIn</a><a>Facebook</a><a>Twitter</a><a>Medium</a>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>Copyright © 2026 Fireart Studio. All rights reserved.</span>
+      <div style="display:flex;gap:20px"><a>Cookie Policy</a><a>Privacy Policy</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // Phone plates crossfade
+    (function(){
+      const plates = document.querySelectorAll('#plates .plate');
+      let i = 0;
+      setInterval(()=>{
+        plates[i].classList.remove('on');
+        i = (i+1) % plates.length;
+        plates[i].classList.add('on');
+      }, 3200);
+    })();
+    // Service tabs swap
+    (function(){
+      const tabs = document.querySelectorAll('#tabs button');
+      const panel = document.getElementById('panel');
+      const content = {
+        dev: `<blockquote>"Fireart Studio's resources have done a <em>fantastic job of using user research</em> input to create excellent UI/UX designs, ultimately contributing to the client's product development endeavors."</blockquote><div class="col"><h6>MVP</h6><p>Fail fast, succeed faster. We'll help you get your product to real users quickly and gather valuable feedback to iterate and improve.</p></div><div class="col"><h6>Web</h6><p>Create easy-to-use, great-to-look-at websites and web apps with an award-winning web development team.</p></div>`,
+        ux: `<blockquote>"Fireart's <em>UX research</em> uncovered gaps we'd been missing for years. Every flow felt intentional after the redesign."</blockquote><div class="col"><h6>UX Research</h6><p>Generative and evaluative research to surface the jobs your product is actually hired to do.</p></div><div class="col"><h6>UX Audit</h6><p>A focused, evidence-based review of your product's experience with prioritized, actionable recommendations.</p></div>`,
+        brand: `<blockquote>"The new brand feels unmistakably <em>Fireart</em>. Bold, warm, and ownable."</blockquote><div class="col"><h6>Identity</h6><p>Logos, type systems, motion languages, and the strategic story behind each one.</p></div><div class="col"><h6>Guidelines</h6><p>Living brand books your team will actually want to use, with components and example layouts.</p></div>`,
+        graphic: `<blockquote>"The campaign visuals were <em>instantly iconic</em> — every touchpoint felt cohesive and premium."</blockquote><div class="col"><h6>Campaign</h6><p>Print, OOH, social, motion — multi-channel graphic design systems for ambitious launches.</p></div><div class="col"><h6>Illustration</h6><p>Custom illustration and 3D art direction to give your brand a one-of-a-kind visual signature.</p></div>`
+      };
+      tabs.forEach(t=>t.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('on'));
+        t.classList.add('on');
+        panel.innerHTML = content[t.dataset.t];
+      }));
+    })();
+  </script>
+</body>
+</html>

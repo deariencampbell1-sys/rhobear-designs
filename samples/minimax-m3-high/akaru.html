@@ -1,0 +1,463 @@
+<!doctype html>
+<!--
+  Original URL:  https://akaru.fr/
+  Filename:      akaru.html
+  Model:         MiniMax M3 High
+
+  LIVE-SITE OBSERVATIONS
+  ----------------------
+  Aesthetic: a Lyon-based web & graphic design studio. The whole site feels
+  like a printed art book — flat, blocky, confident. Type is huge. Color
+  panels are huge. The hero is a 50/50 split: white left half holding the
+  massive "AKARU" wordmark and a French tagline; right half is a vertical
+  "color stripe" of project thumbnails (pink, sky blue, magenta graffiti,
+  sage, etc.). The rest of the page reads as a long scroll through case
+  studies, each shown as a big colored panel with a huge project name set
+  into the bottom (bomo, Orlinski, Pikko, etc.) and category tags above.
+
+  Layout / hierarchy:
+    - 4-pill top-left nav (Projects / Expertises / Agence / Contact) with
+      pastel circular icons.
+    - Top-right: black "MENU" pill with a small orange dot.
+    - Hero: white left half (huge AKARU in black extra-bold) + right half
+      a vertical strip of pastel project thumbnails.
+    - Case study sections (each as a colored panel):
+        * bomo       — architectural conception / blue panel
+        * Orlinski   — pink panel / artist sculptor musician
+        * Pikko      — sage green panel / e-commerce for felines
+        * studio header strip (still images)
+    - Projets overview section with project index (00–03) on the right.
+    - Awards section (dark background): (35) headline + table of awards
+      with arrow CTAs (SITE OF THE MONTH / SITE OF THE DAY / DEVELOPER AWARD
+      / MOBILE EXCELLENCE).
+    - Expertises section (orange panel): giant "Expertises" wordmark,
+      sub-section (Stratégie & Conseil, Site Vitrine, Direction Artistique,
+      Site E-commerce, Expérience Digitale), each with a service list.
+    - Footer: dark. Address / contact / social / giant AKARU wordmark.
+
+  Motion / interaction:
+    - Right-side color stripe thumbnails animate on scroll into view.
+    - Each project panel has a circular arrow CTA that rotates on hover.
+    - Marquee-like panning on the projects overview.
+
+  Color system (extracted):
+    --bg           #f4f1ed    paper-cream
+    --bg-card      #ffffff
+    --ink          #0a0a0a
+    --ink-2        #6b6b6b
+    --orange       #ee7733   nav icon accent (Projects)
+    --olive        #7a8f5d   Expertises icon
+    --mauve        #b6738e   Agence icon
+    --sky          #c2d1de   Contact icon
+    --panel-pink   #ec5e91   right stripe
+    --panel-blue   #cee3eb   right stripe (bomo)
+    --panel-mag    #d33f7d   right stripe
+    --panel-sage   #98a886   right stripe (Pikko)
+    --panel-orange #ee7733   expertises panel
+    --dark         #0a0a0a   footer
+
+  CHALLENGES SOLVED
+  -----------------
+    - The split 50/50 hero with massive black type on the left and a colored
+      photo stack on the right is recreated with a grid + fixed-aspect panels.
+    - Case study panels are full-width color blocks with a project image
+      plate at the top, a year chip, the category text, and a giant name.
+    - The awards table is a list of rows that animate in on scroll.
+    - The expertises panel is a single orange full-bleed with overlaid type.
+    - The footer ends with a giant white "AKARU" wordmark on black, similar
+      to a magazine cover spread.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AKARU — Agence web & design graphique à Lyon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg:#f4f1ed;
+      --bg-card:#ffffff;
+      --ink:#0a0a0a;
+      --ink-2:#5a5a5a;
+      --line:#d8d6cf;
+      --orange:#ee7733;
+      --olive:#7a8f5d;
+      --mauve:#b6738e;
+      --sky:#c2d1de;
+      --panel-pink:#ec5e91;
+      --panel-blue:#cee3eb;
+      --panel-mag:#d33f7d;
+      --panel-sage:#98a886;
+      --panel-orange:#ee7733;
+      --panel-cream:#f4d6b6;
+      --panel-deep:#3d3a36;
+      --dark:#0a0a0a;
+      --font-display:"Archivo Black", "Inter", system-ui, sans-serif;
+      --font-ui:"Inter", "Helvetica Neue", system-ui, sans-serif;
+      --font-mono:"JetBrains Mono", ui-monospace, monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit}
+    ::selection{background:var(--orange);color:#fff}
+
+    /* Top chrome */
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:flex-start;padding:24px 36px;pointer-events:none}
+    .topbar > *{pointer-events:auto}
+    .pillnav{display:flex;gap:42px;align-items:center;flex-wrap:wrap}
+    .pill{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink);font-weight:500}
+    .pill .icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px}
+    .pill .icon svg{width:14px;height:14px}
+    .pill[data-c="orange"] .icon{background:var(--orange)}
+    .pill[data-c="olive"]  .icon{background:var(--olive)}
+    .pill[data-c="mauve"]  .icon{background:var(--mauve)}
+    .pill[data-c="sky"]    .icon{background:var(--sky);color:#1a1a1a}
+    .menu-btn{display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;padding:14px 22px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:.04em}
+    .menu-btn .dot{width:8px;height:8px;background:var(--orange);border-radius:50%}
+
+    /* Hero split */
+    .hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;padding-top:60px}
+    .hero .left{background:var(--bg);padding:90px 60px 60px;display:flex;flex-direction:column;justify-content:space-between}
+    .hero .wordmark{font-family:var(--font-display);font-size:clamp(120px,21vw,360px);line-height:.78;letter-spacing:-.04em;color:var(--ink)}
+    .hero .tagline{font-size:18px;line-height:1.45;color:#1a1a1a;max-width:48ch;margin-top:auto;font-weight:400}
+    .hero .socials{display:flex;gap:54px;padding-top:40px;border-top:1px solid var(--line);margin-top:34px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+    .hero .right{display:grid;grid-template-columns:repeat(2,1fr);background:var(--bg-card);overflow:hidden}
+    .hero .right .tile{position:relative;overflow:hidden;background:var(--c)}
+    .hero .right .tile::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 30% 30%, rgba(255,255,255,.25), transparent 65%), radial-gradient(60% 40% at 80% 80%, rgba(0,0,0,.18), transparent 70%)}
+    .hero .right .tile .num{position:absolute;left:18px;bottom:18px;font-family:var(--font-mono);font-size:11px;color:rgba(0,0,0,.7);letter-spacing:.12em;z-index:2;mix-blend-mode:multiply}
+
+    /* Case study panels */
+    .case{display:grid;grid-template-columns:1fr 1fr;min-height:90vh}
+    .case .plate{position:relative;overflow:hidden;background:var(--c);min-height:560px}
+    .case .plate::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 30% 30%, rgba(255,255,255,.22), transparent 65%), linear-gradient(180deg, transparent 65%, rgba(0,0,0,.12))}
+    .case .plate .label{position:absolute;left:30px;top:30px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.78);z-index:2;mix-blend-mode:multiply}
+    .case .plate .year{position:absolute;left:30px;bottom:30px;border:1px solid rgba(0,0,0,.4);border-radius:999px;padding:7px 16px;font-family:var(--font-mono);font-size:11px;color:var(--ink);background:rgba(255,255,255,.18);z-index:2}
+    .case .info{background:var(--bg);padding:60px 60px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+    .case .info .cat{display:grid;grid-template-columns:1fr 1.4fr;gap:30px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:auto}
+    .case .info .name{font-family:var(--font-display);font-size:clamp(64px,8.5vw,160px);line-height:.88;letter-spacing:-.04em;color:var(--ink);margin-top:60px}
+    .case .info .arrow-cta{position:absolute;right:50px;bottom:50px;width:74px;height:74px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;font-size:18px;color:var(--ink);transition:transform .35s}
+    .case .info .arrow-cta:hover{transform:rotate(-30deg)}
+
+    /* Projets overview section */
+    .overview{padding:120px 36px;display:grid;grid-template-columns:1.1fr 1fr;gap:80px;background:var(--bg)}
+    .overview .left-panels{display:grid;grid-template-columns:1fr;gap:1px}
+    .overview .panel{aspect-ratio:16/9;background:var(--c);position:relative;overflow:hidden}
+    .overview .panel::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 50% at 30% 30%, rgba(255,255,255,.2), transparent 70%)}
+    .overview .right h2{font-family:var(--font-ui);font-weight:300;font-size:clamp(56px,7.5vw,128px);line-height:1;letter-spacing:-.04em;color:var(--ink);margin:0 0 30px}
+    .overview .right .index{display:flex;flex-direction:column;gap:0;margin-bottom:36px}
+    .overview .right .row{display:grid;grid-template-columns:42px 1fr;gap:30px;align-items:start;padding:22px 0;border-bottom:1px solid var(--ink-2)}
+    .overview .right .row .num{font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+    .overview .right .row .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;text-align:right;color:var(--ink);align-self:end}
+    .overview .right p{font-size:18px;line-height:1.5;color:var(--ink);max-width:48ch}
+
+    /* Awards section (dark) */
+    .awards{background:var(--dark);color:#fff;padding:120px 36px 140px;position:relative;overflow:hidden}
+    .awards .headline{display:grid;grid-template-columns:auto 1fr auto;gap:40px;align-items:end;border-bottom:1px solid #2a2a2a;padding-bottom:60px;margin-bottom:0}
+    .awards .big{font-family:var(--font-ui);font-weight:300;font-size:clamp(80px,12vw,200px);line-height:.95;letter-spacing:-.04em;color:#fff}
+    .awards .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#888}
+    .awards table{width:100%;border-collapse:collapse;margin-top:0}
+    .awards td{padding:30px 0;border-bottom:1px solid #1f1f1f;font-size:13px;color:#cfcfcf}
+    .awards td:first-child{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9a9a9a;width:25%}
+    .awards td:last-child{text-align:right;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#fff;width:30%}
+    .awards td:last-child a{color:#fff;display:inline-flex;align-items:center;gap:14px}
+    .awards td:last-child a::after{content:"↗";font-size:14px}
+    .awards .reveal{opacity:0;transform:translateY(20px);transition:opacity .8s, transform .8s}
+    .awards .reveal.in{opacity:1;transform:none}
+
+    /* Expertises section */
+    .expertises{position:relative;background:var(--panel-orange);color:var(--ink);padding:120px 36px 200px;min-height:90vh;overflow:hidden}
+    .expertises::before{content:"";position:absolute;left:0;top:0;bottom:0;width:240px;background:var(--bg)}
+    .expertises .title{font-family:var(--font-ui);font-weight:300;font-size:clamp(80px,12vw,200px);line-height:.95;letter-spacing:-.04em;position:relative;z-index:1;margin-bottom:120px;padding-left:0}
+    .expertises .strip{display:grid;grid-template-columns:auto 1fr;gap:60px;align-items:end;margin-bottom:80px;position:relative;z-index:1}
+    .expertises .strip .sub{font-family:var(--font-ui);font-weight:500;font-size:clamp(28px,3vw,42px);line-height:1.1;color:var(--ink)}
+    .expertises .strip .list{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+    .expertises .strip .list span{display:inline-block;margin:4px 18px 4px 0;color:var(--ink)}
+    .expertises .strip .list span::before{content:"/ ";color:#1a1a1a;opacity:.55}
+    .expertises .pill-cta{display:inline-flex;align-items:center;gap:14px;border:1px solid var(--ink);border-radius:999px;padding:14px 22px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);position:relative;z-index:1}
+    .expertises .pill-cta::after{content:"●";color:var(--ink);font-size:10px}
+    .expertises .index-strip{border-top:1px solid rgba(0,0,0,.4);border-bottom:1px solid rgba(0,0,0,.4);padding:18px 0;margin-top:120px;display:grid;grid-template-columns:repeat(5,1fr);font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);position:relative;z-index:1}
+    .expertises .index-strip span:first-child{color:var(--ink)}
+    .expertises .index-strip span:not(:first-child){color:var(--ink);text-align:center;opacity:.7}
+
+    /* Footer */
+    footer{background:var(--dark);color:#fff;padding:80px 36px 0}
+    .foot-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:60px;padding-bottom:60px;border-bottom:1px solid #1f1f1f}
+    .foot-top h5{margin:0 0 16px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+    .foot-top p{margin:4px 0;font-size:14px;color:#cfcfcf;line-height:1.7}
+    .foot-top a{display:block;font-size:14px;color:#cfcfcf;margin:6px 0;line-height:1.7}
+    .foot-cta{text-align:center;padding:60px 0}
+    .foot-cta .pill{display:inline-flex;align-items:center;gap:14px;border:1px solid #fff;border-radius:999px;padding:14px 26px;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#fff;background:transparent}
+    .foot-cta .pill::after{content:"●";font-size:10px}
+    .foot-big{font-family:var(--font-display);font-size:clamp(160px,32vw,520px);line-height:.85;letter-spacing:-.04em;color:#fff;text-align:center;padding-bottom:30px;overflow:hidden;white-space:nowrap}
+
+    /* Bottom mini-footer (from "akaru-10") */
+    .mini-foot{background:var(--dark);color:#cfcfcf;padding:30px 36px 50px;display:grid;grid-template-columns:repeat(4,1fr);gap:36px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+    .mini-foot b{display:block;margin-bottom:8px;color:#fff;font-weight:700}
+
+    /* responsive */
+    @media (max-width: 980px){
+      .hero{grid-template-columns:1fr}
+      .case{grid-template-columns:1fr}
+      .overview{grid-template-columns:1fr}
+      .expertises::before{width:0}
+      .expertises .strip{grid-template-columns:1fr}
+      .foot-top{grid-template-columns:1fr 1fr}
+      .mini-foot{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 600px){
+      .pillnav{gap:20px}
+      .topbar{padding:14px 18px}
+      .hero .left{padding:60px 24px 30px}
+      .hero .wordmark{font-size:96px}
+      .hero .right{grid-template-columns:1fr 1fr;min-height:300px}
+      .awards .headline{grid-template-columns:1fr}
+      .foot-top, .mini-foot{grid-template-columns:1fr}
+      .foot-big{font-size:120px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="pillnav">
+      <a class="pill" data-c="orange" href="#projects"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg></span>Projects</a>
+      <a class="pill" data-c="olive"  href="#expertises"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg></span>Expertises</a>
+      <a class="pill" data-c="mauve"  href="#agence"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg></span>Agence</a>
+      <a class="pill" data-c="sky"    href="#contact"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg></span>Contact</a>
+    </nav>
+    <button class="menu-btn"><span>MENU</span><span class="dot"></span></button>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="left">
+      <div class="wordmark">AKARU</div>
+      <div>
+        <p class="tagline">Nous sommes une agence web à Lyon avec un savoir-faire de précision. Pour créer des sites et des designs, nous mobilisons l'audace et notre amour du détail qui tue.</p>
+        <div class="socials">
+          <span>Instagram</span><span>LinkedIn</span><span>Twitter</span><span>Facebook</span>
+        </div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="tile" style="--c:var(--panel-pink)"><span class="num">01</span></div>
+      <div class="tile" style="--c:var(--panel-blue)"><span class="num">02</span></div>
+      <div class="tile" style="--c:var(--panel-mag)"><span class="num">03</span></div>
+      <div class="tile" style="--c:var(--panel-sage)"><span class="num">04</span></div>
+    </div>
+  </section>
+
+  <!-- CASE bomo -->
+  <section class="case">
+    <div class="plate" style="--c:var(--panel-blue)">
+      <span class="label">↗ bomo</span>
+      <span class="year">2025</span>
+    </div>
+    <div class="info">
+      <div class="cat">
+        <div>Conception architecturale<br/>&amp; maîtrise d'oeuvre</div>
+        <div></div>
+      </div>
+      <h3 class="name">bomo</h3>
+      <a class="arrow-cta" href="#">↗</a>
+    </div>
+  </section>
+
+  <!-- CASE Orlinski -->
+  <section class="case">
+    <div class="plate" style="--c:var(--panel-pink)">
+      <span class="label">↗ Orlinski</span>
+      <span class="year">2025</span>
+    </div>
+    <div class="info" style="background:var(--panel-pink);color:var(--ink)">
+      <div class="cat">
+        <div>Artiste, sculpteur, musicien</div>
+        <div></div>
+      </div>
+      <h3 class="name">Orlinski</h3>
+      <a class="arrow-cta" href="#">↗</a>
+    </div>
+  </section>
+
+  <!-- CASE Pikko -->
+  <section class="case">
+    <div class="plate" style="--c:var(--panel-sage)">
+      <span class="label">↗ Pikko</span>
+      <span class="year">2025</span>
+    </div>
+    <div class="info" style="background:var(--panel-sage);color:var(--ink)">
+      <div class="cat">
+        <div>Marque australienne spécialisée<br/>dans la nutrition feline</div>
+        <div>e-commerce</div>
+      </div>
+      <h3 class="name">Pikko</h3>
+      <a class="arrow-cta" href="#">↗</a>
+    </div>
+  </section>
+
+  <!-- Projets overview -->
+  <section class="overview" id="projects">
+    <div class="left-panels">
+      <div class="panel" style="--c:var(--panel-cream)"></div>
+      <div class="panel" style="--c:var(--panel-deep)"></div>
+      <div class="panel" style="--c:var(--panel-blue)"></div>
+    </div>
+    <div class="right">
+      <h2>Projets</h2>
+      <div class="index">
+        <div class="row"><span class="num">00</span><span class="tag">Identité visuelle, charte<br/>graphique, logo</span></div>
+        <div class="row"><span class="num">01</span><span class="tag">Création de site vitrine<br/>sur mesure</span></div>
+        <div class="row"><span class="num">02</span><span class="tag">Direction artistique,<br/>webdesign, UX &amp; UI</span></div>
+        <div class="row"><span class="num">03</span><span class="tag">E-commerce Shopify &amp;<br/>plateforme de vente</span></div>
+      </div>
+      <p>La création et l'innovation sont au cœur de notre processus, avec l'envie de faire les choses différemment, toujours sur mesure. Allègrement, on dit non au déjà fait, au déjà vu, au déjà lu.</p>
+    </div>
+  </section>
+
+  <!-- Awards -->
+  <section class="awards">
+    <div class="headline">
+      <div class="big">(35)</div>
+      <div></div>
+      <div class="label">Awards</div>
+    </div>
+    <table>
+      <tbody>
+        <tr class="reveal"><td>Site of the month</td><td>Akaru V4</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Site of the day</td><td>Akaru — V4</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Developer award</td><td>Akaru V4</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Developer award</td><td>When We Were Kids</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Site of the day</td><td>When We Were Kids</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Site of the day</td><td>Zorba Group</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Mobile excellence</td><td>Zorba Group</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Site of the day</td><td>Quéguina — Look Book Spring Summer 13</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Developer award</td><td>Lookbook Wedze 17-18</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Developer award</td><td>Akaru</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Site of the day</td><td>Olatan — Lookbook Summer 2018</td><td><a>View project</a></td></tr>
+        <tr class="reveal"><td>Honorable mention</td><td>Akaru — V3</td><td><a>View project</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Expertises -->
+  <section class="expertises" id="expertises">
+    <h2 class="title">Expertises</h2>
+    <div class="strip">
+      <div class="sub">Stratégie &amp; Conseil</div>
+      <div class="list">
+        <span>Audit &amp; Benchmark</span>
+        <span>Positionnement</span>
+        <span>Image de marque</span>
+        <span>Stratégie digitale</span>
+        <span>Stratégie éditoriale</span>
+        <span>Accompagnement</span>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="sub">Site Vitrine</div>
+      <div class="list">
+        <span>Conception</span>
+        <span>Webdesign sur mesure</span>
+        <span>Développement</span>
+        <span>Mobile first</span>
+        <span>Performance</span>
+        <span>Accessibilité</span>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="sub">Direction Artistique</div>
+      <div class="list">
+        <span>Identité visuelle</span>
+        <span>Charte graphique</span>
+        <span>Logo &amp; déclinaisons</span>
+        <span>Print &amp; signalétique</span>
+        <span>Direction photo</span>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="sub">E-commerce</div>
+      <div class="list">
+        <span>Shopify Plus</span>
+        <span>UX e-commerce</span>
+        <span>Module sur mesure</span>
+        <span>Paiement</span>
+        <span>Logistique</span>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="sub">Expérience Digitale</div>
+      <div class="list">
+        <span>Landing page</span>
+        <span>Jeux concours</span>
+        <span>Animation</span>
+        <span>Storyboard</span>
+        <span>Direction artistique</span>
+        <span>UX / UI</span>
+        <span>Développement WebGL / 3D</span>
+      </div>
+    </div>
+    <a class="pill-cta" href="#">Voir l'expertise</a>
+
+    <div class="index-strip">
+      <span>01 / Stratégie &amp; Conseil</span>
+      <span>02 / Site Vitrine</span>
+      <span>03 / Direction Artistique</span>
+      <span>04 / E-commerce</span>
+      <span>05 / Expérience Digitale</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="foot-cta">
+      <a class="pill" href="#">Nous contacter</a>
+    </div>
+    <div class="foot-top">
+      <div>
+        <h5>AKARU</h5>
+        <p>9 Quai André Lassagne</p>
+        <p>69001 Lyon</p>
+        <p>France</p>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <a>contact@akaru.fr</a>
+        <a>job@akaru.fr</a>
+        <a>04 82 33 85 10</a>
+      </div>
+      <div>
+        <h5>Social</h5>
+        <a>Instagram</a>
+        <a>LinkedIn</a>
+        <a>Twitter</a>
+        <a>Facebook</a>
+      </div>
+      <div>
+        <h5>Legal</h5>
+        <a>Mentions légales</a>
+        <a>Akaru© 2026</a>
+      </div>
+    </div>
+    <div class="foot-big">AKARU</div>
+    <div class="mini-foot">
+      <div><b>© AKARU 2026</b></div>
+      <div>Lyon · France</div>
+      <div>contact@akaru.fr</div>
+      <div>04 82 33 85 10</div>
+    </div>
+  </footer>
+
+  <script>
+    // Reveal-on-scroll for the awards table
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target)}
+      });
+    },{threshold:0.15});
+    document.querySelectorAll('.awards .reveal').forEach(el=>io.observe(el));
+  </script>
+</body>
+</html>
