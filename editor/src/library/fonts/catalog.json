@@ -1,0 +1,366 @@
+[
+  {
+    "family": "Inter",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "DM Sans",
+    "category": "sans",
+    "weights": [400, 500, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+  },
+  {
+    "family": "Poppins",
+    "category": "sans",
+    "weights": [300, 400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+  },
+  {
+    "family": "Manrope",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Space Grotesk",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Roboto",
+    "category": "sans",
+    "weights": [400, 500, 700],
+    "license": "Apache-2.0",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+  },
+  {
+    "family": "Open Sans",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Lato",
+    "category": "sans",
+    "weights": [400, 700, 900],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap"
+  },
+  {
+    "family": "Montserrat",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Nunito",
+    "category": "sans",
+    "weights": [400, 600, 700, 800],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+  },
+  {
+    "family": "Work Sans",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Source Sans 3",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Outfit",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Plus Jakarta Sans",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Public Sans",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "IBM Plex Sans",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Karla",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Karla:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Figtree",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Geist",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Be Vietnam Pro",
+    "category": "sans",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Playfair Display",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Fraunces",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Lora",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Merriweather",
+    "category": "serif",
+    "weights": [400, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap"
+  },
+  {
+    "family": "PT Serif",
+    "category": "serif",
+    "weights": [400, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&display=swap"
+  },
+  {
+    "family": "Source Serif 4",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Crimson Text",
+    "category": "serif",
+    "weights": [400, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap"
+  },
+  {
+    "family": "Cormorant Garamond",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "EB Garamond",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Bitter",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Bitter:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Spectral",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "IBM Plex Serif",
+    "category": "serif",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Bricolage Grotesque",
+    "category": "display",
+    "weights": [400, 500, 600, 700, 800],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap"
+  },
+  {
+    "family": "Unbounded",
+    "category": "display",
+    "weights": [400, 500, 600, 700, 800],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800&display=swap"
+  },
+  {
+    "family": "Archivo Black",
+    "category": "display",
+    "weights": [900],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Archivo+Black:wght@900&display=swap"
+  },
+  {
+    "family": "Bebas Neue",
+    "category": "display",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Bebas+Neue:wght@400&display=swap"
+  },
+  {
+    "family": "Anton",
+    "category": "display",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Anton:wght@400&display=swap"
+  },
+  {
+    "family": "Oswald",
+    "category": "display",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Abril Fatface",
+    "category": "display",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Abril+Fatface:wght@400&display=swap"
+  },
+  {
+    "family": "Big Shoulders Display",
+    "category": "display",
+    "weights": [400, 700, 900],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;900&display=swap"
+  },
+  {
+    "family": "JetBrains Mono",
+    "category": "mono",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Fira Code",
+    "category": "mono",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Source Code Pro",
+    "category": "mono",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "IBM Plex Mono",
+    "category": "mono",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Roboto Mono",
+    "category": "mono",
+    "weights": [400, 500, 700],
+    "license": "Apache-2.0",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap"
+  },
+  {
+    "family": "Space Mono",
+    "category": "mono",
+    "weights": [400, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
+  },
+  {
+    "family": "Caveat",
+    "category": "handwriting",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Dancing Script",
+    "category": "handwriting",
+    "weights": [400, 500, 600, 700],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap"
+  },
+  {
+    "family": "Pacifico",
+    "category": "handwriting",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Pacifico:wght@400&display=swap"
+  },
+  {
+    "family": "Permanent Marker",
+    "category": "handwriting",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Permanent+Marker:wght@400&display=swap"
+  },
+  {
+    "family": "Indie Flower",
+    "category": "handwriting",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Indie+Flower:wght@400&display=swap"
+  },
+  {
+    "family": "Patrick Hand",
+    "category": "handwriting",
+    "weights": [400],
+    "license": "OFL-1.1",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Patrick+Hand:wght@400&display=swap"
+  }
+]

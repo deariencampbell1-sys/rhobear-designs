@@ -1,0 +1,13 @@
+{
+  "name": "@rhobear/editor-fonts",
+  "version": "0.0.0",
+  "description": "Open-license font catalog + on-demand loader. Headless: pure data plus a tiny stylesheet-injection helper. No UI, no bundled font binaries.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./_entry.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  }
+}
