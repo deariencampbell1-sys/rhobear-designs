@@ -34,8 +34,8 @@ export function createTemplatesGallery({ modal, grid, search, countEl, onOpen, o
       !q || `${e.name} ${(e.tags || []).join(' ')} ${e.description || ''} ${e.collection || ''}`.toLowerCase().includes(q));
     if (countEl) countEl.textContent = String(list.length);
     for (const e of list) {
-      const card = document.createElement('button');
-      card.type = 'button'; card.className = 'rb-tpl-card';
+      const card = document.createElement('div');
+      card.className = 'rb-tpl-card'; card.setAttribute('role', 'button'); card.tabIndex = 0;
       const thumb = thumbFor(e);
       const thumbHtml = thumb
         ? `<span class="rb-tpl-card__thumb" style="background-image:url('${thumb}')"></span>`
