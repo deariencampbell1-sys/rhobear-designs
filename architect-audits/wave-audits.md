@@ -7,3 +7,5 @@ FLAG: verify-gate (build/tests + path check, as W1 needed) + W3 dispatch DEFERRE
 ## 2026-06-20T23:12:42Z -- review_closed -- w3-roundout: w3-modeb-wire PR #8 MERGED (Mode-B mount API over vendored GrapesJS). 1/3 W3 lanes in; w3-import-export + w3-fidelity-tests still pending. NOT advancing -- W3 verify gate runs when all 3 land.
 
 ## 2026-06-20T23:14:37Z -- wave_done -- w3-roundout: all 3 lanes merged (PRs #8/#9/#10: mode-b, import/export, fidelity-tests). VERIFY GATE: ci=ok build=ok core=ok engine=ok fidelity=ok. LAST swarm wave done -- UX phase (owner+Iron Man, by hand) is next.
+
+## 2026-06-21T00:47:45Z -- review_closed -- w-gen-samples: gen-b-craft PR #15 MERGED (7 new templates: Resn, Hello Monday, Build in Amsterdam, Cuberto, 14islands, Exo Ape, Robin Noguier). gen-a/gen-c still in flight. Expected.
