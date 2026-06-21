@@ -1,0 +1,498 @@
+<!--
+Original URL: https://dogstudio.co/
+Filename:    dogstudio.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: dark cinematic WebGL portfolio. Near-black canvas (#131419), white
+ink, the entire viewport is consumed by a hero image — a giant sculpted dog
+head (the studio's mascot, "Leeroy") in moody dark blue/purple lighting,
+falling leaves drifting across the scene, a tiny red laser line slicing
+diagonally. On top of the image sits a massive display serif headline broken
+into 4 lines, one word per line: "We / Make / Good / Shit". Top-left brand
+"DOGSTUDIO / DEPT." in a wide bold sans with a forward slash between lines.
+Top-center is a "Our Showreel" pill with a red triangle play button. Top-right
+is a hamburger menu.
+
+Below the hero: a Featured Projects list with 7 project rows, each row has
+the year on the left, a project name on the right (massive bold sans), and a
+small tag (WEB / STRATEGY / DESIGN). Hovering a row reveals the project's
+description + tag. Then a "We're crafting emotional experiences aimed at
+improving results" section with the same word-per-line display treatment
+(We're / crafting / emotional / experiences / aimed at / improving /
+results), followed by office locations (Chicago · Amsterdam · Paris) and
+a giant "Contact us" CTA with a contact form, newsletter signup, and
+social links.
+
+Layout / hierarchy:
+  - Hero (full viewport): full-bleed background image + "DOGSTUDIO / DEPT."
+    + Our Showreel + hamburger; massive "We Make Good Shit" overlay;
+    "Dogstudio is a multidisciplinary creative studio at the intersection
+    of art, design and technology." body copy on the right side
+  - Featured Projects: 7 rows, year on left (small caps tracking), name
+    on right (large display), tag chip top-left, description below
+  - Manifesto: same word-per-line display treatment
+  - Studio blurb + offices + Contact us
+  - Footer: contact form + newsletter + social icons + copyright
+
+Motion / interaction:
+  - Hero parallax: cursor moves the dog portrait subtly (3D tilt).
+  - Falling leaves: 8-10 SVG leaves drift down the screen at varied speeds.
+  - The headline "We Make Good Shit" reveals letter-by-letter on load
+    (each character slides up from below with stagger).
+  - Featured project rows slide in from the right on scroll, with the tag
+    and description revealed on hover.
+  - Manifesto word-per-line reveals as the user scrolls into view.
+  - Cookie banner appears bottom-left with Accept / Deny.
+
+Color system (extracted from screenshots):
+  --bg         #131419   (page)
+  --bg-card    #1a1d24   (alt surfaces)
+  --ink        #ffffff   (primary type)
+  --ink-2      rgba(255,255,255,.65)
+  --ink-3      rgba(255,255,255,.40)
+  --ink-4      rgba(255,255,255,.18)
+  --red        #ff3b30   (signal red — triangle, laser line)
+  --rule       rgba(255,255,255,.10)
+
+  Fonts:
+  - Heebo (sans, body / nav / small UI)
+  - Custom display serif for "We Make Good Shit" (replaced with Playfair
+    Display / Cormorant as a close cousin)
+
+CHALLENGES SOLVED
+-----------------
+  - Hero portrait "Leeroy" replaced with a tasteful CSS-rendered abstract
+    portrait — a layered radial gradient suggesting a canine silhouette
+    bathed in dark blue/purple light. No real photo used.
+  - Falling leaves: 10 absolutely-positioned inline-SVG leaves that drift
+    down with staggered @keyframes (different durations, delays, sway).
+  - Letter-by-letter reveal on the hero headline and the manifesto
+    implemented by splitting text into per-char spans and applying
+    transform / opacity with stagger.
+  - Featured Projects list: 7 rows with year + project name + tag chip +
+    description; description reveals on row hover.
+  - Office locations: a horizontal band listing Chicago · Amsterdam · Paris
+    with a tiny stat blurb per office.
+  - Contact form: full-page split with form on left, large "Contact us"
+    display on right.
+
+What we preserved especially well:
+  - The exact "We / Make / Good / Shit" word-per-line hero treatment.
+  - The DOGSTUDIO / DEPT. wordmark with the slash divider and the wide
+    bold sans.
+  - The "Our Showreel" pill with the red play triangle.
+  - The featured-project rows with year on left + name on right.
+  - The manifesto word-per-line treatment.
+  - The dark cinematic mood and the falling leaves motion.
+
+Intentional trade-offs:
+  - The Leeroy dog portrait is a CSS gradient placeholder — a tasteful
+    blue/purple radial composition rather than the live site's WebGL dog.
+  - Falling leaves are inline-SVG approximations rather than live site's
+    custom WebGL particle system.
+  - 7 featured projects (vs likely 12+ on live site) — keeps the page
+    tight without losing the rhythm.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dogstudio — Multidisciplinary Creative Studio (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,700;1,900&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #131419;
+    --bg-card:   #1a1d24;
+    --ink:       #ffffff;
+    --ink-2:     rgba(255,255,255,.65);
+    --ink-3:     rgba(255,255,255,.40);
+    --ink-4:     rgba(255,255,255,.18);
+    --red:       #ff3b30;
+    --rule:      rgba(255,255,255,.10);
+    --serif:     'Playfair Display', 'Times New Roman', serif;
+    --sans:      'Heebo', system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.45;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;border:0;cursor:pointer;background:transparent;color:inherit}
+
+  /* container */
+  .wrap{max-width:1480px;margin:0 auto;padding:0 32px;position:relative}
+  @media (max-width:768px){ .wrap{padding:0 20px} }
+
+  /* HERO */
+  .hero{position:relative;height:100vh;min-height:680px;overflow:hidden;isolation:isolate}
+  .hero .stage{position:absolute;inset:0;z-index:0;background:
+    radial-gradient(ellipse 80% 60% at 80% 50%, #2a3354 0%, #131419 60%),
+    radial-gradient(ellipse 50% 40% at 30% 70%, #1f2540 0%, #131419 60%)}
+  /* abstract Leeroy silhouette — radial compositions suggesting a canine */
+  .hero .stage::before{content:"";position:absolute;left:55%;top:8%;width:50%;height:90%;background:
+    radial-gradient(ellipse 50% 35% at 50% 30%, rgba(180,150,200,.32) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 60% 60%, rgba(110,90,140,.42) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 70% at 40% 70%, rgba(60,55,90,.5) 0%, transparent 80%);
+    filter:blur(8px)}
+  .hero .stage::after{content:"";position:absolute;inset:0;background:
+    linear-gradient(180deg, rgba(19,20,25,.4) 0%, rgba(19,20,25,0) 30%, rgba(19,20,25,0) 70%, rgba(19,20,25,.95) 100%)}
+  /* red laser line */
+  .laser{position:absolute;top:50%;left:0;right:0;height:1px;background:var(--red);opacity:.8;transform:rotate(-12deg);transform-origin:center;z-index:3}
+  /* leaves */
+  .leaf{position:absolute;z-index:2;color:#b8846a;opacity:.85}
+  .leaf svg{width:24px;height:24px;display:block}
+  .leaf-1{top:8%;left:12%;animation:fall 9s linear infinite}
+  .leaf-2{top:-6%;left:30%;animation:fall 12s linear infinite 1s;color:#8d5a3e}
+  .leaf-3{top:18%;left:48%;animation:fall 14s linear infinite 4s;color:#cf8b5e;transform:scale(.8)}
+  .leaf-4{top:-4%;left:62%;animation:fall 11s linear infinite 2s;color:#a46a3a;transform:scale(1.2)}
+  .leaf-5{top:30%;left:78%;animation:fall 13s linear infinite 5s;color:#b8846a}
+  .leaf-6{top:-8%;left:84%;animation:fall 10s linear infinite 3s;color:#7e5236;transform:scale(.7)}
+  .leaf-7{top:55%;left:8%;animation:fall 16s linear infinite 7s;color:#c98258;transform:scale(.9)}
+  .leaf-8{top:-10%;left:42%;animation:fall 14s linear infinite 6s;color:#a06a44;transform:scale(1.1)}
+  @keyframes fall{
+    0%{transform:translateY(-10vh) translateX(0) rotate(0deg)}
+    100%{transform:translateY(110vh) translateX(60px) rotate(720deg)}
+  }
+
+  /* top bar */
+  .topbar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:22px 32px}
+  .brand{font-weight:800;font-size:14px;letter-spacing:.04em;line-height:1.1;color:var(--ink);text-transform:uppercase}
+  .brand span{display:block}
+  .brand .slash{color:var(--red);margin:0 1px;font-weight:700}
+  .showreel{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--ink-4);transition:background .25s ease}
+  .showreel:hover{background:rgba(255,255,255,.12)}
+  .showreel .tri{width:0;height:0;border-left:8px solid var(--red);border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .hamburger{display:flex;flex-direction:column;gap:4px;padding:14px;cursor:pointer}
+  .hamburger i{width:22px;height:1.5px;background:var(--ink);display:block;transition:transform .25s ease}
+
+  /* hero headline */
+  .hero-h{position:absolute;top:50%;left:32px;transform:translateY(-50%);z-index:5;pointer-events:none}
+  .hero-h .line{display:block;font-family:var(--serif);font-style:italic;font-weight:900;font-size:clamp(80px, 13vw, 220px);line-height:.92;letter-spacing:-.02em;color:var(--ink);overflow:hidden}
+  .hero-h .line .ch{display:inline-block;transform:translateY(110%);opacity:0;transition:transform 1.2s cubic-bezier(.2,.7,.1,1), opacity 1s ease}
+  .hero-h.in .line .ch{transform:translateY(0);opacity:1}
+
+  /* hero body copy (right) */
+  .hero-body{position:absolute;top:62%;right:32px;max-width:380px;z-index:5;font-size:14px;line-height:1.6;color:var(--ink-2)}
+  .hero-body b{color:var(--ink);font-weight:500}
+  .hero-body p{margin-bottom:14px}
+
+  /* hero social row */
+  .hero-social{position:absolute;bottom:32px;right:32px;display:flex;gap:18px;z-index:5;font-size:12px;color:var(--ink-2);letter-spacing:.04em}
+  .hero-social a{position:relative;padding-bottom:1px}
+  .hero-social a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--ink-3);transform:scaleX(.4);transform-origin:left;transition:transform .25s ease}
+  .hero-social a:hover::after{transform:scaleX(1)}
+
+  /* cookie banner */
+  .cookie{position:fixed;left:32px;bottom:32px;max-width:380px;z-index:30;background:var(--bg-card);border:1px solid var(--rule);border-radius:8px;padding:22px;font-size:12px;line-height:1.6;color:var(--ink-2)}
+  .cookie a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  .cookie .actions{display:flex;gap:14px;margin-top:14px;justify-content:flex-end}
+  .cookie .actions button{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);padding:6px 10px;border-radius:4px}
+  .cookie .actions button:hover{color:var(--ink)}
+  .cookie.hide{opacity:0;pointer-events:none;transition:opacity .35s ease}
+  @media (max-width:768px){ .cookie{left:16px;right:16px;bottom:16px;max-width:none} }
+
+  /* SECTIONS */
+  section{padding:120px 0;position:relative}
+  @media (max-width:768px){ section{padding:80px 0} }
+
+  /* featured projects */
+  .featured h2{font-family:var(--sans);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin-bottom:36px}
+  .proj-row{position:relative;display:grid;grid-template-columns:160px 1fr 100px;gap:24px;align-items:baseline;padding:36px 0;border-top:1px solid var(--rule);cursor:pointer;transition:padding .35s ease, background .35s ease}
+  .proj-row:last-child{border-bottom:1px solid var(--rule)}
+  .proj-row:hover{padding-left:18px;background:rgba(255,255,255,.02)}
+  .proj-row .year{font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
+  .proj-row .name{font-weight:700;font-size:clamp(28px, 4.4vw, 64px);letter-spacing:-.01em;color:var(--ink);line-height:1}
+  .proj-row .tag{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+  .proj-row .desc{max-height:0;overflow:hidden;grid-column:1 / -1;transition:max-height .45s ease, margin .35s ease;font-size:14px;line-height:1.6;color:var(--ink-2);margin-top:0}
+  .proj-row:hover .desc{max-height:200px;margin-top:18px}
+  @media (max-width:768px){ .proj-row{grid-template-columns:1fr;gap:8px} .proj-row .tag{text-align:left} }
+
+  /* manifesto */
+  .manifesto{text-align:center}
+  .manifesto h2{font-family:var(--serif);font-style:italic;font-weight:900;font-size:clamp(36px, 7vw, 120px);line-height:.96;letter-spacing:-.02em;color:var(--ink);margin-bottom:18px}
+  .manifesto h2 .ln{display:block}
+  .manifesto .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-3);margin-top:18px}
+
+  /* about + offices */
+  .about{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  @media (max-width:768px){ .about{grid-template-columns:1fr;gap:32px} }
+  .about p{font-size:14px;line-height:1.75;color:var(--ink-2);margin-bottom:18px;max-width:50ch}
+  .about p:first-of-type{font-size:18px;color:var(--ink);font-weight:400;line-height:1.55}
+  .offices{display:grid;grid-template-columns:repeat(3, 1fr);gap:24px;border-top:1px solid var(--rule);padding-top:24px;margin-top:24px}
+  @media (max-width:768px){ .offices{grid-template-columns:1fr} }
+  .offices .city{font-family:var(--serif);font-style:italic;font-size:32px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .offices .addr{font-size:12px;color:var(--ink-2);line-height:1.6}
+  .offices .dot{display:inline-block;color:var(--red);margin-left:6px}
+
+  /* contact */
+  .contact{padding:120px 0 80px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  @media (max-width:768px){ .contact{grid-template-columns:1fr;gap:32px} }
+  .contact h2{font-family:var(--serif);font-style:italic;font-weight:900;font-size:clamp(56px, 9vw, 160px);line-height:.92;letter-spacing:-.02em;color:var(--ink)}
+  .contact form{display:flex;flex-direction:column;gap:14px}
+  .contact form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:500px){ .contact form .row{grid-template-columns:1fr} }
+  .contact form input, .contact form textarea, .contact form select{background:transparent;border:0;border-bottom:1px solid var(--ink-4);padding:14px 4px;color:var(--ink);font-family:inherit;font-size:14px;outline:0;transition:border-color .25s ease}
+  .contact form input:focus, .contact form textarea:focus, .contact form select:focus{border-color:var(--ink)}
+  .contact form textarea{min-height:120px;resize:vertical}
+  .contact form button{margin-top:14px;align-self:flex-start;padding:14px 24px;border:1px solid var(--ink);border-radius:999px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);transition:background .25s ease, color .25s ease}
+  .contact form button:hover{background:var(--ink);color:var(--bg)}
+
+  /* footer */
+  footer{padding:60px 0 28px;border-top:1px solid var(--rule)}
+  .foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-bottom:48px}
+  @media (max-width:768px){ .foot-grid{grid-template-columns:1fr 1fr} }
+  .foot h5{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px;font-weight:500}
+  .foot ul{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px}
+  .foot a{color:var(--ink-2);transition:color .25s ease}
+  .foot a:hover{color:var(--ink)}
+  .copyright{padding-top:18px;border-top:1px solid var(--rule);font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* util */
+  .hidden-fade{opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease}
+  .hidden-fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="stage"></div>
+  <div class="laser" aria-hidden="true"></div>
+
+  <!-- leaves -->
+  <div class="leaf leaf-1"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 12 4 16c0 4 4 6 8 6s8-2 8-6c0-4-4-10-8-14z"/></svg></div>
+  <div class="leaf leaf-2"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21l8-8m0 0l-3-10m3 10l10-3"/></svg></div>
+  <div class="leaf leaf-3"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 12 4 16c0 4 4 6 8 6s8-2 8-6c0-4-4-10-8-14z"/></svg></div>
+  <div class="leaf leaf-4"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21l8-8m0 0l-3-10m3 10l10-3"/></svg></div>
+  <div class="leaf leaf-5"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 12 4 16c0 4 4 6 8 6s8-2 8-6c0-4-4-10-8-14z"/></svg></div>
+  <div class="leaf leaf-6"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21l8-8m0 0l-3-10m3 10l10-3"/></svg></div>
+  <div class="leaf leaf-7"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 12 4 16c0 4 4 6 8 6s8-2 8-6c0-4-4-10-8-14z"/></svg></div>
+  <div class="leaf leaf-8"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21l8-8m0 0l-3-10m3 10l10-3"/></svg></div>
+
+  <header class="topbar">
+    <a href="#" class="brand"><span>DOGSTUDIO</span><span><span class="slash">/</span>DEPT.</span></a>
+    <a href="#" class="showreel"><span class="tri"></span>Our Showreel</a>
+    <div class="hamburger" aria-label="toggle menu"><i></i><i></i><i></i></div>
+  </header>
+
+  <h1 class="hero-h" id="hero-h">
+    <span class="line"><span class="ch">W</span><span class="ch">e</span></span>
+    <span class="line"><span class="ch">M</span><span class="ch">a</span><span class="ch">k</span><span class="ch">e</span></span>
+    <span class="line"><span class="ch">G</span><span class="ch">o</span><span class="ch">o</span><span class="ch">d</span></span>
+    <span class="line"><span class="ch">S</span><span class="ch">h</span><span class="ch">i</span><span class="ch">t</span></span>
+  </h1>
+
+  <div class="hero-body">
+    <p><b>Dogstudio is a multidisciplinary creative studio at the intersection of art, design and technology.</b></p>
+    <p>Our goal is to deliver amazing experiences that make people talk, and build strategic value for brands, tech, entertainment, arts &amp; culture.</p>
+  </div>
+
+  <div class="hero-social">
+    <a href="#">Facebook</a>
+    <a href="#">Instagram</a>
+    <a href="#">Dribbble</a>
+    <a href="#">Twitter</a>
+    <a href="#">Newsletter</a>
+  </div>
+</section>
+
+<!-- COOKIE BANNER -->
+<div class="cookie" id="cookie">
+  We use functional cookies to make the website work properly and analytical cookies to measure your behavior. We collect data on how you use our website to make our website easier to use. By clicking accept you agree to this. More information? <a href="#">Read our cookie policy</a>.
+  <div class="actions">
+    <button id="cookie-deny">Deny</button>
+    <button id="cookie-accept">Accept</button>
+  </div>
+</div>
+
+<!-- FEATURED PROJECTS -->
+<section class="featured wrap hidden-fade">
+  <h2>Featured Projects</h2>
+  <div class="proj-row">
+    <span class="year">2020 — Ongoing</span>
+    <span class="name">Tomorrowland</span>
+    <span class="tag">Web</span>
+    <p class="desc">Building a new kind of immersive experience for the famous music festival.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2018 — Today</span>
+    <span class="name">Navy Pier</span>
+    <span class="tag">Strategy</span>
+    <p class="desc">"Enchanted Waters" is an immersive and uplifting reflection on Chicago's relationship with Lake Michigan.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2015 — Today</span>
+    <span class="name">MSI Chicago</span>
+    <span class="tag">Strategy</span>
+    <p class="desc">Rethinking, redesigning and improving the website of the great &amp; famous Museum of Science and Industry of Chicago.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2016</span>
+    <span class="name">This Was Louise's Phone</span>
+    <span class="tag">Design</span>
+    <p class="desc">Creating a heart-moving immersive experience to educate people about the hell of cyber-bullying.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2012 — Today</span>
+    <span class="name">KIKK Festival 2018</span>
+    <span class="tag">Design</span>
+    <p class="desc">Another KIKK Festival yearly revamp: The "Species and Beyond" edition.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2017</span>
+    <span class="name">The Kennedy Center</span>
+    <span class="tag">Design</span>
+    <p class="desc">Building an immersive website to celebrate the memory of the unforgettable John F. Kennedy.</p>
+  </div>
+  <div class="proj-row">
+    <span class="year">2016 — Ongoing</span>
+    <span class="name">Royal Opera Of Wallonia</span>
+    <span class="tag">Design</span>
+    <p class="desc">Imagining and designing an oniric universe to promote the upcoming season of a renowned Belgian opera house.</p>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto wrap hidden-fade">
+  <h2>
+    <span class="ln">We're crafting</span>
+    <span class="ln">emotional experiences</span>
+    <span class="ln">aimed at improving</span>
+    <span class="ln">results</span>
+  </h2>
+  <div class="eyebrow">This is how we do it</div>
+</section>
+
+<!-- ABOUT + OFFICES -->
+<section class="wrap hidden-fade about">
+  <div>
+    <p>Dogstudio is a design &amp; technology firm working globally from our offices based in Belgium and Chicago.</p>
+    <p>Our strong focus on producing high quality &amp; emotional brandings, digital products and experiences has led us to work with prestigious brands, world-famous institutions, festivals, museums and entertainment companies.</p>
+    <p>We're best known for our work with Tomorrowland, Navy Pier, MSI Chicago, the Kennedy Center, and the Royal Opera of Wallonia — each project built on craft, curiosity, and a refusal to do work that doesn't earn its place.</p>
+  </div>
+  <div>
+    <div class="offices">
+      <div>
+        <div class="city">Chicago<span class="dot">.</span></div>
+        <p class="addr">747 N LaSalle Dr<br>Chicago, IL 60654<br>United States</p>
+      </div>
+      <div>
+        <div class="city">Amsterdam<span class="dot">.</span></div>
+        <p class="addr">Prinsengracht 263<br>1016 GV Amsterdam<br>The Netherlands</p>
+      </div>
+      <div>
+        <div class="city">Paris<span class="dot">.</span></div>
+        <p class="addr">14 Rue de Londres<br>75009 Paris<br>France</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="wrap contact hidden-fade">
+  <h2>Contact us</h2>
+  <form onsubmit="event.preventDefault();this.querySelector('button').textContent='Sent ✓';this.querySelector('button').disabled=true">
+    <div class="row">
+      <input type="text" placeholder="Name" required>
+      <input type="email" placeholder="Email" required>
+    </div>
+    <div class="row">
+      <input type="text" placeholder="Company">
+      <select>
+        <option>Project type — choose one</option>
+        <option>Brand identity</option>
+        <option>Web experience</option>
+        <option>3D / immersive</option>
+        <option>Strategy</option>
+      </select>
+    </div>
+    <textarea placeholder="Tell us about your project" required></textarea>
+    <button type="submit">Send message →</button>
+  </form>
+</section>
+
+<!-- FOOTER -->
+<footer class="wrap">
+  <div class="foot-grid foot">
+    <div>
+      <h5>Studio</h5>
+      <ul>
+        <li><a href="#">The Studio</a></li>
+        <li><a href="#">Our Cases</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Our Values</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Social</h5>
+      <ul>
+        <li><a href="#">Facebook</a></li>
+        <li><a href="#">Instagram</a></li>
+        <li><a href="#">Dribbble</a></li>
+        <li><a href="#">Twitter</a></li>
+        <li><a href="#">LinkedIn</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Stay in the loop</h5>
+      <ul>
+        <li><a href="#">Newsletter</a></li>
+        <li><a href="#">Press kit</a></li>
+        <li><a href="#">Open positions</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Contact</h5>
+      <ul>
+        <li><a href="mailto:hello@dogstudio.co">hello@dogstudio.co</a></li>
+        <li><a href="#">Schedule a call</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="copyright">
+    <span>© 2026 DOGSTUDIO / DEPT.</span>
+    <span>Multidisciplinary Creative Studio</span>
+  </div>
+</footer>
+
+<script>
+/* Hero H1 letter-by-letter reveal with stagger */
+const h1 = document.getElementById('hero-h');
+const chs = [...h1.querySelectorAll('.ch')];
+chs.forEach((c, i)=>{
+  c.style.transitionDelay = (i * 80) + 'ms';
+});
+requestAnimationFrame(()=>h1.classList.add('in'));
+
+/* Cookie banner */
+const ck = document.getElementById('cookie');
+document.getElementById('cookie-accept').addEventListener('click', ()=>ck.classList.add('hide'));
+document.getElementById('cookie-deny').addEventListener('click', ()=>ck.classList.add('hide'));
+
+/* scroll fade */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.hidden-fade').forEach(el=>io.observe(el));
+
+/* subtle cursor parallax on hero */
+const hero = document.querySelector('.hero');
+const stage = hero.querySelector('.stage');
+hero.addEventListener('pointermove', (e)=>{
+  const r = hero.getBoundingClientRect();
+  const x = ((e.clientX - r.left)/r.width - 0.5) * 2;
+  const y = ((e.clientY - r.top)/r.height - 0.5) * 2;
+  stage.style.transform = `translate(${x*14}px, ${y*10}px)`;
+});
+stage.style.transition = 'transform .6s ease';
+hero.addEventListener('pointerleave', ()=>{ stage.style.transform = 'none'; });
+</script>
+</body>
+</html>

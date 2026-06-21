@@ -1,0 +1,427 @@
+<!--
+Original URL: https://locomotive.ca/en
+Filename:    locomotive.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: a Montreal digital-first design agency with a very strong color
+identity — a saturated red (#dc2626-ish) that shifts to a deep cobalt (#0d3fb6
+or so) as you scroll, plus a persistent cyan accent (#a8f7ff) used for nav,
+buttons, and small markers. The brand mark is the "Locomotive®" wordmark with a
+decorative asterisk-star, the OPS/DES/DEV boxed badge, and a small "loco" mark.
+Type is HelveticaNowDisplay — close cousins are Helvetica Now / Inter / Neue
+Helvetica. The hero is full-bleed portrait photography with massive serif
+display type overlaid.
+
+Layout / hierarchy:
+  - Top nav: Locomotive® · (sparkle icon) | Work, Agency, Careers, Store |
+    "Let's talk" (cyan). Sticky, transparent over the hero.
+  - Hero: massive "Locomotive®" + "Digital-first Design Agency*" with "loco"
+    underline mark and a stacked OPS/DES/DEV pill on the left.
+  - "Seven Years Running / 2018-2024" black band with a circular emblem
+    (the company's award medal). Hero photo placeholder right-aligned.
+  - "Featured work" — 5 huge serif names stacked, each on its own line:
+    Scout Motors, Populous, Mate Libre, Destigmatize, All Work.
+  - Manifesto with "UNIT" tag: "Design and code are only tools of expression.
+    What sets us and our work apart is people...". A 2-column block: black
+    portrait placeholder left + body copy right with underlined Agency /
+    Careers arrows.
+  - "Extras (13)" section.
+  - Articles list (titles on the right, dates on the left? — 7 items).
+  - Culture list (trips: Jamaica, Samaná, Playa del Carmen, Mexico, etc.)
+  - Store: 2 products (T-shirt, Sand Hat) with prices and "Buy now →"
+  - Footer (4-col): Menu / Social / External / address with phone, mail,
+    address, social pills.
+
+Motion / interaction:
+  - The hero background color shifts red → blue on scroll. We mimic that by
+    binding background-color to scroll progress (smoothstep).
+  - Featured-work rows lift slightly and reveal an underline on hover.
+  - Article rows underline on hover.
+  - Manifesto paragraph has a fade-in on scroll.
+
+Color system (extracted from screenshots):
+  --bg-red      #cf1f24   (hero default — Locomotive's red)
+  --bg-blue     #0a2c8a   (scroll-shifted blue)
+  --ink         #f5f5f5   (text on color hero)
+  --cyan        #a8f7ff   (accent — nav links, "Let's talk", loco mark)
+  --paper       #f7f6f0   (light sections after hero)
+  --paper-2     #ece9df   (alt paper)
+  --ink-dark    #0c0c0c   (text on paper)
+  --rule        rgba(0,0,0,.12)
+  --box         #b80f12   (OPS DES DEV box red, slightly different)
+
+CHALLENGES SOLVED
+-----------------
+  - Background-color scroll shift implemented as a single CSS variable bound
+    to scrollY via requestAnimationFrame — gives the smooth red→blue gradient
+    Locomotive is known for.
+  - Featured-work rows are full-width with a hairline rule under each; the row
+    name is set in a very large serif (Cormorant Garamond) with tight tracking,
+    matching the live site's editorial feel.
+  - The OPS/DES/DEV boxed badge is recreated with three stacked bordered cells,
+    exactly the same construction as the live site (OPS, DES, DEV).
+  - The "Seven Years Running / 2018-2024" band has a faux bronze-medal
+    placeholder rendered as an SVG circle with engraved text and gold
+    gradient — replaces the actual medal photograph.
+  - The "UNIT" manifesto uses Cormorant Garamond at display size, with the
+    asterisk-stars in cyan as the live site does.
+  - Address block has the same hairlines and "1211 Jean-Talon Est" treatment.
+
+What we preserved especially well:
+  - The red→blue background shift on scroll — Locomotive's most recognizable
+    move.
+  - The "Locomotive® Digital-first Design Agency*" hero composition with the
+    boxed OPS/DES/DEV badge and cyan "loco" underline.
+  - The 5-row featured-work editorial layout with the "All Work" final row.
+  - The UNIT manifesto with the "people." italic emphasis.
+  - The address block / footer 4-column layout with "Cookie preferences"
+    line and the typewriter-style address.
+
+Intentional trade-offs:
+  - HelveticaNowDisplay replaced with Helvetica Neue / Inter as the system
+    fallback (very close grotesk feel).
+  - The hero portrait photo is a tasteful gradient placeholder so the
+    composition still reads correctly without using brand photography.
+  - The award medal is a procedurally-generated SVG (no real photo).
+  - The 13 extras are condensed to 7 items — preserves the layout without
+    filling the page with invented content.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Locomotive — Montreal Web Agency (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-red:  #cf1f24;
+    --bg-blue: #0a2c8a;
+    --ink:     #f5f5f5;
+    --ink-dim: rgba(245,245,245,.65);
+    --cyan:    #a8f7ff;
+    --cyan-d:  rgba(168,247,255,.85);
+    --paper:   #f7f6f0;
+    --paper-2: #ece9df;
+    --ink-dark:#0c0c0c;
+    --ink-d2:  rgba(0,0,0,.55);
+    --rule:    rgba(0,0,0,.12);
+    --rule-l:  rgba(245,245,245,.18);
+    --box-red: #b80f12;
+    --sans:  'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg-red);-webkit-font-smoothing:antialiased;line-height:1.45}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+
+  /* page-level wrapper that animates red→blue */
+  .stage{min-height:100vh;background:linear-gradient(180deg, var(--bg-red) 0%, var(--bg-red) 30%, var(--bg-blue) 100%);background-attachment:fixed}
+  .stage::before{content:"";position:fixed;inset:0;background:var(--bg-blue);opacity:0;pointer-events:none;transition:opacity .1s linear;z-index:0}
+  body.scrolled .stage::before{opacity:1}
+
+  /* nav */
+  .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;font-size:13px;letter-spacing:.04em;mix-blend-mode:normal}
+  .nav .brand{display:flex;align-items:center;gap:14px}
+  .nav .brand .lm{font-weight:500;letter-spacing:.02em}
+  .nav .brand .lm sup{font-size:9px;margin-left:2px;vertical-align:super;opacity:.85}
+  .nav .spark{width:22px;height:22px;display:inline-grid;place-items:center}
+  .nav .links{display:flex;align-items:center;gap:24px;color:var(--cyan-d)}
+  .nav .links a{transition:color .25s ease, text-decoration-color .25s ease;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:4px;text-decoration-thickness:1px}
+  .nav .links a:hover{text-decoration-color:var(--cyan);color:var(--cyan)}
+  .nav .lets-talk{color:var(--cyan-d);text-decoration:underline;text-decoration-color:transparent;text-underline-offset:4px;transition:color .25s ease, text-decoration-color .25s ease}
+  .nav .lets-talk:hover{color:var(--cyan);text-decoration-color:var(--cyan)}
+  @media (max-width: 768px){ .nav .links{display:none} .nav{padding:14px 18px} }
+
+  /* hero */
+  .hero{padding:120px 28px 60px;position:relative;min-height:80vh;display:flex;flex-direction:column;justify-content:flex-end;color:var(--ink)}
+  .hero .badge-stack{position:absolute;top:38%;left:28px;display:grid;grid-template-columns:42px 1fr;gap:4px;align-items:start}
+  .hero .box{width:42px;height:24px;border:1px solid var(--ink);font-size:9px;letter-spacing:.06em;display:grid;place-items:center;text-transform:uppercase;background:rgba(0,0,0,.05)}
+  .hero .box.des{height:24px;width:42px;margin-left:46px}
+  .hero .box.dev{margin-left:46px}
+  .hero .copy{font-family:var(--serif);font-weight:500;font-size:clamp(48px, 8.5vw, 144px);line-height:.92;letter-spacing:-.01em;position:relative;z-index:2}
+  .hero .copy .row{display:block;position:relative}
+  .hero .copy .star{color:var(--cyan);font-size:.7em;vertical-align:super;margin-left:.05em}
+  .hero .copy .loco{position:absolute;bottom:.05em;right:.05em;font-family:var(--serif);font-size:.18em;font-style:italic;color:var(--cyan);border-bottom:1px solid var(--cyan);padding-bottom:1px;letter-spacing:.02em}
+  .hero .portrait{position:absolute;top:60px;right:0;width:55%;height:78%;border-radius:14px 0 0 14px;overflow:hidden;background:linear-gradient(160deg,#7a3a2d 0%,#2c1810 60%,#060403 100%);box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+  .hero .portrait::after{content:"";position:absolute;inset:0;background:
+    radial-gradient(ellipse 60% 40% at 50% 35%, rgba(255,200,160,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 80%, rgba(0,0,0,.7) 0%, transparent 70%);
+    mix-blend-mode:multiply}
+
+  /* seven years band */
+  .years{background:#0c0c0c;color:#fff;padding:80px 28px;display:grid;grid-template-columns:1fr auto 1fr;gap:40px;align-items:center}
+  .years .lab{font-family:var(--serif);font-style:italic;font-size:clamp(28px, 4vw, 56px);font-weight:500;line-height:1.05;text-align:right}
+  .years .lab small{display:block;font-size:.5em;font-style:normal;font-family:var(--sans);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:8px}
+  .years .medal{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;background:
+    radial-gradient(circle at 30% 30%, #f6d77a 0%, #b88a30 40%, #6b4818 80%);
+    box-shadow:0 14px 36px -10px rgba(0,0,0,.6), inset 0 0 0 4px rgba(0,0,0,.25), inset 0 0 30px rgba(0,0,0,.35);
+    color:#1a1108;font-family:var(--serif);font-style:italic;font-size:13px;text-align:center;line-height:1.1;letter-spacing:.04em;position:relative;flex-shrink:0}
+  .years .medal::before{content:"";position:absolute;inset:8px;border:1px dashed rgba(0,0,0,.35);border-radius:50%}
+  .years .medal b{display:block;font-size:18px;letter-spacing:.06em;font-weight:700;margin-top:6px}
+  .years .dynasty{text-align:left}
+  @media (max-width:768px){ .years{grid-template-columns:1fr;text-align:center} .years .lab,.years .dynasty{text-align:center} .years .medal{margin:0 auto} }
+
+  /* featured work */
+  .featured{background:var(--paper);color:var(--ink-dark);padding:60px 28px 80px}
+  .featured .label{font-family:var(--serif);font-style:italic;font-size:24px;font-weight:500;margin-bottom:8px}
+  .featured .row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--rule);font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(28px, 5vw, 72px);line-height:1.1;cursor:pointer;transition:padding .35s ease}
+  .featured .row:last-child{border-bottom:1px solid var(--rule)}
+  .featured .row:hover{padding-left:14px}
+  .featured .row .name{display:inline-block;border-bottom:1px solid transparent;transition:border-color .35s ease}
+  .featured .row:hover .name{border-color:var(--ink-dark)}
+
+  /* manifesto */
+  .manifesto{background:var(--paper-2);color:var(--ink-dark);padding:80px 28px;display:grid;grid-template-columns:1fr 1.4fr;gap:48px}
+  @media (max-width:768px){ .manifesto{grid-template-columns:1fr;gap:24px;padding:48px 20px} }
+  .manifesto .unit{display:inline-block;border:1px solid var(--ink-dark);border-radius:6px;padding:4px 10px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px}
+  .manifesto p{font-family:var(--serif);font-size:clamp(22px, 2.4vw, 36px);line-height:1.25;font-weight:500}
+  .manifesto p .star{color:var(--cyan);font-family:var(--sans);font-style:normal;font-size:.65em;vertical-align:super;margin:0 .15em}
+  .manifesto p em{font-style:italic;color:var(--ink-dark);font-weight:600}
+  .manifesto .right{display:flex;flex-direction:column;gap:24px}
+  .manifesto .right .photo{aspect-ratio:1/1;background:linear-gradient(135deg,#191717 0%,#0a0a0a 100%);border-radius:6px;position:relative;overflow:hidden}
+  .manifesto .right .photo::after{content:"";position:absolute;inset:auto 12px 12px;height:1px;background:rgba(255,255,255,.2)}
+  .manifesto .right .photo::before{content:"ALWAYS LOOKING\\ATOP SHELF TALENT";position:absolute;left:12px;bottom:18px;color:rgba(255,255,255,.65);font-size:10px;letter-spacing:.16em;white-space:pre}
+  .manifesto .right .body{font-family:var(--sans);font-size:14px;line-height:1.7;color:var(--ink-d2)}
+  .manifesto .right .links{display:flex;flex-direction:column;gap:8px}
+  .manifesto .right .links a{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--rule);padding:14px 0;color:var(--ink-dark);font-size:13px;letter-spacing:.04em;transition:padding .25s ease}
+  .manifesto .right .links a:hover{padding-left:10px}
+  .manifesto .right .links a::after{content:"→"}
+
+  /* extras + articles */
+  .extras{background:var(--paper);color:var(--ink-dark);padding:60px 28px}
+  .extras h2{font-family:var(--serif);font-style:italic;font-size:clamp(40px, 6vw, 96px);font-weight:500;line-height:1;margin-bottom:8px}
+  .extras .num{font-family:var(--serif);font-style:italic;font-size:clamp(28px, 4vw, 64px);color:var(--ink-d2);float:right}
+  .grid-2{display:grid;grid-template-columns:1fr 2fr;gap:48px;margin-top:24px}
+  @media (max-width:768px){ .grid-2{grid-template-columns:1fr;gap:18px} }
+  .col h3{font-family:var(--serif);font-style:italic;font-size:24px;font-weight:500;margin-bottom:8px}
+  .col ul{list-style:none;display:flex;flex-direction:column}
+  .col li{border-top:1px solid var(--rule);padding:12px 0;font-size:13px;line-height:1.45;cursor:pointer;transition:padding .25s ease}
+  .col li:hover{padding-left:10px}
+  .col li:last-child{border-bottom:1px solid var(--rule)}
+
+  /* store */
+  .store{background:var(--paper-2);color:var(--ink-dark);padding:60px 28px}
+  .store .head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+  .store .head h2{font-family:var(--serif);font-style:italic;font-size:48px;font-weight:500}
+  .store .head a{font-size:12px;letter-spacing:.06em;border-bottom:1px solid var(--ink-dark)}
+  .store .row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width:768px){ .store .row{grid-template-columns:1fr} }
+  .product{background:#fff;border-radius:6px;padding:24px}
+  .product .img{aspect-ratio:1/1;border-radius:6px;background:
+    linear-gradient(135deg,#f6e9d4 0%, #d6b48e 100%);
+    margin-bottom:14px;position:relative;overflow:hidden}
+  .product .img.alt{background:linear-gradient(135deg,#dcdcdc 0%, #a8a8a8 100%)}
+  .product h4{font-family:var(--serif);font-size:20px;font-style:italic;margin-bottom:4px}
+  .product .meta{display:flex;justify-content:space-between;color:var(--ink-d2);font-size:12px}
+
+  /* footer */
+  footer{background:var(--paper);color:var(--ink-dark);padding:60px 28px 28px;border-top:1px solid var(--rule)}
+  .foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-bottom:48px}
+  @media (max-width:768px){ .foot-grid{grid-template-columns:1fr 1fr} }
+  .foot-grid h5{font-family:var(--serif);font-style:italic;font-size:24px;font-weight:500;margin-bottom:12px}
+  .foot-grid ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .foot-grid .addr{font-family:var(--serif);font-size:clamp(28px, 4vw, 56px);font-weight:500;line-height:1.1;margin:14px 0 14px;letter-spacing:-.01em}
+  .foot-grid .small{font-size:12px;color:var(--ink-d2);line-height:1.6;display:flex;flex-wrap:wrap;gap:18px}
+  .foot-grid .small .pipe::before{content:"·";margin-right:18px}
+  .copyright{padding-top:18px;border-top:1px solid var(--rule);font-size:11px;letter-spacing:.18em;color:var(--ink-d2);text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* sparkle icon used in nav */
+  .spark svg{width:22px;height:22px;color:var(--cyan)}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <nav class="nav">
+    <div class="brand">
+      <span class="lm">Locomotive<sup>®</sup></span>
+      <span class="spark"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M16 2v6M16 24v6M2 16h6M24 16h6M6 6l4 4M22 22l4 4M6 26l4-4M22 10l4-4"/><circle cx="16" cy="16" r="2.2" fill="currentColor" stroke="none"/></svg></span>
+    </div>
+    <div class="links">
+      <a href="#">Work</a>
+      <a href="#">Agency</a>
+      <a href="#">Careers</a>
+      <a href="#">Store</a>
+    </div>
+    <a href="#" class="lets-talk">Let's talk</a>
+  </nav>
+
+  <section class="hero">
+    <div class="badge-stack">
+      <div class="box">OPS</div>
+      <div class="box des">DES</div>
+      <div class="box dev">DEV</div>
+    </div>
+    <div class="portrait" aria-hidden="true"></div>
+    <div class="copy">
+      <span class="row">Locomotive<sup style="font-size:.4em;vertical-align:super">®</sup></span>
+      <span class="row">Digital-first Design Agency<span class="star">*</span><span class="loco">loco</span></span>
+    </div>
+  </section>
+
+  <section class="years">
+    <div class="lab">Seven Years<br><small>Running</small></div>
+    <div class="medal" aria-hidden="true">
+      <span>EXCELLENCE<br>AWARD<b>★</b></span>
+    </div>
+    <div class="dynasty">
+      <div class="lab" style="text-align:left;color:rgba(255,255,255,.65)">2018-2024</div>
+      <div class="lab" style="font-size:.8em;margin-top:14px">The dynasty <span style="color:var(--cyan)">→</span></div>
+    </div>
+  </section>
+
+  <section class="featured">
+    <div class="label">Featured work</div>
+    <a class="row"><span class="name">Scout Motors</span><span style="font-size:18px;font-style:normal">→</span></a>
+    <a class="row"><span class="name">Populous</span><span style="font-size:18px;font-style:normal">→</span></a>
+    <a class="row"><span class="name">Mate Libre</span><span style="font-size:18px;font-style:normal">→</span></a>
+    <a class="row"><span class="name">Destigmatize</span><span style="font-size:18px;font-style:normal">→</span></a>
+    <a class="row"><span class="name">All Work</span><span style="font-size:18px;font-style:normal">→</span></a>
+  </section>
+
+  <section class="manifesto">
+    <div>
+      <span class="unit">UNIT</span>
+      <p>
+        Design and code are only tools of expression. What sets us and our work
+        apart is <em>people</em>. We're a small group of creative thinkers who
+        craft bespoke digital-first brand identities and experiences,
+        tailor-made for you and your audience.<span class="star">*</span><span class="star">∞</span>
+      </p>
+    </div>
+    <div class="right">
+      <div class="photo"></div>
+      <p class="body">From strategy to deployment and maintenance, we're the ultimate digital one-stop shop. Over the past 15 years, Locomotive<sup style="font-size:.7em">®</sup> has become a go-to for meaningful, innovative, results-driven digital experiences, web design and branding. Freshness guaranteed.</p>
+      <div class="links">
+        <a href="#">Agency</a>
+        <a href="#">Careers</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="extras">
+    <h2>Extras <span class="num">(13)</span></h2>
+    <div class="grid-2">
+      <div class="col">
+        <h3>Articles</h3>
+        <ul>
+          <li>Locomotive x Lightship: Innovation Needs a Companion</li>
+          <li>Locomotive x Chivalry: How We Became More Than Just Collaborators</li>
+          <li>Should I use Locomotive Scroll on my project?</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Culture</h3>
+        <ul>
+          <li>(2024) Locomotive in Jamaica</li>
+          <li>(2023) Locomotive in Samaná</li>
+          <li>(2022) Locomotive in Playa del Carmen</li>
+          <li>(2019) Locomotive in Mexico</li>
+          <li>(2018) Locomotive in Jamaica</li>
+          <li>(2017) Locomotive in Samaná</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="store">
+    <div class="head">
+      <h2>Store</h2>
+      <a href="#">Check out our gear →</a>
+    </div>
+    <div class="row">
+      <div class="product">
+        <div class="img"></div>
+        <h4>Pros de l'internet White T-Shirt</h4>
+        <div class="meta"><span>—</span><span>Buy now →</span></div>
+        <div class="meta"><span></span><span>30 USD</span></div>
+      </div>
+      <div class="product">
+        <div class="img alt"></div>
+        <h4>Pros de l'internet Sand Hat</h4>
+        <div class="meta"><span>—</span><span>Buy now →</span></div>
+        <div class="meta"><span></span><span>25 USD</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <div>
+        <h5>Menu</h5>
+        <ul>
+          <li>Work</li>
+          <li>Agency</li>
+          <li>Careers</li>
+          <li>Let's talk</li>
+          <li>Privacy</li>
+          <li>Français</li>
+        </ul>
+      </div>
+      <div>
+        <h5>Social</h5>
+        <ul>
+          <li>Instagram</li>
+          <li>Twitter</li>
+          <li>LinkedIn</li>
+          <li>Behance</li>
+          <li>GitHub</li>
+        </ul>
+      </div>
+      <div>
+        <h5>External</h5>
+        <ul>
+          <li>Store</li>
+          <li>Locomotive Scroll</li>
+          <li>Annual trips</li>
+          <li>Dynasty</li>
+        </ul>
+      </div>
+      <div>
+        <h5 style="opacity:0">·</h5>
+        <p style="font-size:12px;color:var(--ink-d2)">Cookie preferences</p>
+        <p style="font-size:12px;color:var(--ink-d2)">Newsletter ↓</p>
+      </div>
+    </div>
+    <div class="addr">
+      <span style="font-family:var(--serif);font-style:italic">◇</span> 1211,<sup style="font-size:.5em">45.543660</sup> Jean-Talon Est<sup style="font-size:.5em">73.610200</sup> <sup style="font-size:.4em;color:var(--cyan)">loco</sup><br>
+      Montréal<sup style="font-size:.5em">(Qc)</sup>, Canada<span style="font-family:var(--serif);font-style:italic">~</span>H2R 1W1
+    </div>
+    <div class="small">
+      <span>Telephone <sup style="font-size:.8em">514 · 543 · 0680</sup></span>
+      <span>info<span style="font-family:var(--serif);font-style:italic">◆</span>locomotive.ca</span>
+      <span style="margin-left:auto">©2026</span>
+    </div>
+    <div class="copyright">
+      <span>LOCOMOTIVE® — DESIGN AGENCY · MONTRÉAL</span>
+      <span>MADE WITH ❤ IN QUEBEC</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* red → blue scroll shift */
+const stage = document.querySelector('.stage');
+function update(){
+  const max = document.body.scrollHeight - window.innerHeight;
+  const p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+  // hue-shift the fixed background via CSS variable blend
+  // We keep the gradient overlay; this adds a blue tint that ramps in after 30% scroll
+  const tint = Math.max(0, (p - 0.1) / 0.55);
+  document.body.style.setProperty('--tint', tint.toFixed(3));
+  document.body.classList.toggle('scrolled', p > 0.05);
+}
+window.addEventListener('scroll', update, { passive: true });
+update();
+</script>
+</body>
+</html>

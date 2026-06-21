@@ -1,0 +1,390 @@
+<!--
+Original URL: https://immersive-g.com/
+Filename:    immersive-garden.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: ultra-elegant, almost gallery-grade minimalism. Off-white plaster
+canvas, dark sage text (#0c0c0c on #e8e8e8). The hero is a full-bleed WebGL
+scene with white sculptural organic forms (baroque flowers, feathers, jellyfish
+silhouettes) floating in the void with soft drop shadows — the effect is that
+of carved plaster in a Parisian atelier. The brand sits in the corner:
+an "IG" monogram in a serif cap with "IMMERSIVE GARDEN" in tracked-out caps to
+its right. A large italic-serif display headline reads "Innovative digital
+experiences studio", with "Scroll down" hint on the right. "See all projects"
+sits at bottom-left with a small arrow, and a tiny status dot pulses at
+bottom-right.
+
+The project index is rendered as a long, scroll-snapped list of links — each
+project title set in display serif italic, paired with a category ("Web
+Experience", "E-Shop", "Corporate") in monospaced caps, with the year and a
+short description. Categories I observed: Louis Vuitton VIA / David Whyte
+Experience / Cartier End of Year 23 / Chartogne Taillet / Cartier in Time /
+Aten7 / GLEEC / Dioriviera / Longines Spirit Zulu Time / Masar / Midwam.
+
+Layout / hierarchy:
+  - Header (left): IG monogram + "IMMERSIVE GARDEN"
+  - Header (right): About link
+  - Center hero: "Innovative / digital experiences / studio" stacked serif italic
+  - Right side: "Scroll down" with a thin animated arrow
+  - Bottom-left: "See all projects :"
+  - Bottom-right: tiny dot indicator
+  - Project index: scrollable list with ~30+ entries, each row shows project
+    title (serif), category (mono caps), description (sans)
+
+Motion / interaction:
+  - Sculptural plaster forms float slowly in the background — recreated here
+    as CSS-rendered SVG silhouettes with subtle blur and slow drift via
+    @keyframes.
+  - Soft drop shadows on the forms give them depth.
+  - Tiny status dot at bottom-right pulses (1.4s ease-in-out infinite).
+  - Project rows reveal on hover with a subtle color shift and small arrow
+    sliding into the gutter.
+  - Cursor changes to a thin circle on hover over interactive elements.
+
+Color system (extracted from screenshots):
+  --bg          #e8e8e8   (page, slightly cool plaster)
+  --bg-warm     #f3f1ec   (slight variation in some sections)
+  --ink         #0c0c0c   (primary type)
+  --ink-2       #4a4a48   (secondary)
+  --ink-3       #8a8a87   (tertiary)
+  --paper       #ffffff   (highlights)
+  --shadow      rgba(20,20,20,.12)  (form drop shadow)
+  --serif: 'PSTimes' fallback to 'EB Garamond' / 'Cormorant'
+  --sans:  'Neue Haas Grotesk' fallback to 'Inter' / 'Helvetica Neue'
+
+CHALLENGES SOLVED
+-----------------
+  - The hero "sculpture" is recreated with ~6 inline SVG silhouettes
+    (baroque flowers, feathers, leaves) positioned absolutely with rotation
+    + scale + slow drift via CSS @keyframes. SVG paths are hand-rolled to
+    evoke the original plaster forms (no real photo allowed).
+  - Each SVG form has a layered drop-shadow filter for the "carved plaster"
+    feel — multiple stacked drop-shadows at different blur amounts.
+  - The project index is a single scrollable list with 16 entries (curated
+    from the live site's ~30+). Each row uses display serif italic for the
+    title, monospaced caps for the category.
+  - The "Scroll down" arrow uses a thin animated chevron (translateY
+    loop).
+  - The status dot at bottom-right is a CSS-only pulse.
+  - Mobile: the hero stacks IG-mark over hero copy, project rows collapse
+    gracefully.
+
+What we preserved especially well:
+  - The exact corner-anchored composition of the header / hero (IG mark
+    left, About right, hero centered, scroll hint right, status dot BR).
+  - The serif italic display treatment on every project name.
+  - The category-to-description monospaced hierarchy on each row.
+  - The off-white plaster palette with sage ink.
+  - The "sculpted" feel of the hero through SVG silhouettes + drop shadows.
+
+Intentional trade-offs:
+  - PSTimes (the original font) is replaced with Cormorant Garamond italic —
+    same "old-world serif" feel.
+  - The actual plaster sculptures are SVG approximations rather than real
+    WebGL geometries; we capture the silhouette energy and shadow play.
+  - Live site has ~30 projects; we ship 16 to keep the page tight.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Immersive Garden — Innovative digital experiences studio (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #e8e8e8;
+    --bg-2:     #efeeea;
+    --bg-3:     #f4f3ef;
+    --ink:      #0c0c0c;
+    --ink-2:    #4a4a48;
+    --ink-3:    #8a8a87;
+    --paper:    #ffffff;
+    --shadow:   rgba(20,20,20,.18);
+    --serif:    'Cormorant Garamond', 'Times New Roman', serif;
+    --sans:     'Inter', system-ui, sans-serif;
+    --mono:     'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;overflow:hidden}
+  .hero canvas, .hero .sculpture{position:absolute;inset:0;pointer-events:none}
+
+  /* header */
+  .hdr{position:absolute;top:0;left:0;right:0;padding:32px 40px;display:flex;align-items:center;justify-content:space-between;z-index:10}
+  .brand{display:flex;align-items:center;gap:16px}
+  .brand .ig{font-family:var(--serif);font-style:italic;font-weight:600;font-size:24px;line-height:1;letter-spacing:-.04em;color:var(--ink)}
+  .brand .ig::before, .brand .ig::after{content:"";display:inline-block;width:6px;height:14px;border:1.5px solid var(--ink);border-bottom:0;vertical-align:1px;margin:0 2px}
+  .brand .ig::before{border-top:0;border-bottom:1.5px solid var(--ink);border-right:0;height:7px;vertical-align:baseline;margin-bottom:-2px}
+  .brand .ig::after{border-top:0;border-bottom:1.5px solid var(--ink);border-left:0;height:7px;vertical-align:baseline;margin-bottom:-2px}
+  .brand .name{font-size:11px;letter-spacing:.34em;font-weight:500;text-transform:uppercase;color:var(--ink)}
+  .hdr .about{font-size:13px;letter-spacing:.02em;color:var(--ink);position:relative;padding-bottom:2px}
+  .hdr .about::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(.6);transform-origin:left;transition:transform .35s ease}
+  .hdr .about:hover::after{transform:scaleX(1)}
+
+  /* hero headline */
+  .hero-h{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5}
+  .hero-h h1{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(28px, 3.6vw, 56px);line-height:1.18;color:var(--ink);text-align:center;letter-spacing:-.005em}
+  .hero-h h1 em{font-style:italic}
+
+  /* scroll down hint */
+  .scroll-hint{position:absolute;right:60px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:14px;font-size:12px;letter-spacing:.04em;color:var(--ink);z-index:6}
+  .scroll-hint .arrow{width:1px;height:38px;background:rgba(0,0,0,.18);position:relative;overflow:hidden}
+  .scroll-hint .arrow::after{content:"";position:absolute;left:0;top:0;width:1px;height:14px;background:var(--ink);animation:drop 2.2s ease-in-out infinite}
+  @keyframes drop{0%{transform:translateY(-100%)} 60%{transform:translateY(190%)} 100%{transform:translateY(190%)}}
+
+  /* bottom-left "see all" + status dot */
+  .see-all{position:absolute;left:40px;bottom:40px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);z-index:6}
+  .see-all .arrow{display:inline-block;transform:translateX(0);transition:transform .25s ease}
+  .see-all:hover .arrow{transform:translateX(4px)}
+  .status-dot{position:absolute;right:40px;bottom:42px;width:6px;height:6px;border-radius:50%;background:var(--ink);z-index:6;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4;transform:scale(.85)} 50%{opacity:1;transform:scale(1.15)}}
+
+  /* SVG sculptures — positioned absolutely */
+  .sculpture{position:absolute;z-index:2}
+  .sculpture svg{width:100%;height:100%;display:block;filter:
+    drop-shadow(0 30px 60px rgba(20,20,20,.10))
+    drop-shadow(0 12px 24px rgba(20,20,20,.12))
+    drop-shadow(0 4px 8px rgba(20,20,20,.15))}
+  .s1{top:-6%;left:-2%;width:36%;height:60%;opacity:.95;animation:drift1 14s ease-in-out infinite}
+  .s2{top:6%;right:-4%;width:32%;height:55%;opacity:.95;animation:drift2 18s ease-in-out infinite}
+  .s3{bottom:-8%;left:18%;width:30%;height:50%;opacity:.85;animation:drift3 22s ease-in-out infinite}
+  .s4{top:30%;right:18%;width:18%;height:30%;opacity:.7;animation:drift4 16s ease-in-out infinite}
+  .s5{bottom:18%;left:42%;width:14%;height:22%;opacity:.6;animation:drift5 20s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:rotate(-3deg) translateY(0)} 50%{transform:rotate(2deg) translateY(-10px)}}
+  @keyframes drift2{0%,100%{transform:rotate(4deg) translateY(0)} 50%{transform:rotate(-2deg) translateY(12px)}}
+  @keyframes drift3{0%,100%{transform:rotate(-2deg) translateY(0) scale(1)} 50%{transform:rotate(3deg) translateY(-8px) scale(1.02)}}
+  @keyframes drift4{0%,100%{transform:rotate(8deg) translateY(0)} 50%{transform:rotate(-4deg) translateY(6px)}}
+  @keyframes drift5{0%,100%{transform:rotate(-6deg) translateY(0)} 50%{transform:rotate(5deg) translateY(-4px)}}
+
+  /* SECTION — approach */
+  .approach{position:relative;padding:120px 40px;background:var(--bg-2);color:var(--ink)}
+  .approach .grid{display:grid;grid-template-columns:1fr 2fr;gap:48px;align-items:start;max-width:1300px;margin:0 auto}
+  @media (max-width:768px){ .approach .grid{grid-template-columns:1fr;gap:18px} .approach{padding:80px 24px} }
+  .approach h2{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(28px, 3vw, 44px);line-height:1.2;color:var(--ink);max-width:30ch}
+  .approach p{font-family:var(--sans);font-size:15px;line-height:1.7;color:var(--ink-2);max-width:60ch;margin-bottom:24px}
+  .approach .quote{border-left:1px solid rgba(0,0,0,.2);padding-left:18px;font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ink);margin-top:18px;max-width:50ch}
+
+  /* PROJECT INDEX */
+  .projects{background:var(--bg);padding:80px 40px 120px;color:var(--ink)}
+  .projects h2{font-family:var(--serif);font-style:italic;font-size:clamp(36px, 5vw, 72px);font-weight:500;margin-bottom:8px}
+  .projects h2 .count{font-style:normal;font-family:var(--sans);font-size:14px;color:var(--ink-3);letter-spacing:.18em;margin-left:12px;vertical-align:middle}
+  .projects .sub{font-size:13px;color:var(--ink-2);margin-bottom:36px;max-width:50ch;line-height:1.6}
+  .proj-list{list-style:none;display:flex;flex-direction:column}
+  .proj{display:grid;grid-template-columns:60px 1fr 220px 1fr 40px;align-items:baseline;gap:24px;padding:28px 0;border-top:1px solid rgba(0,0,0,.12);cursor:pointer;position:relative;transition:padding .35s ease, background .35s ease}
+  .proj:last-child{border-bottom:1px solid rgba(0,0,0,.12)}
+  .proj:hover{background:rgba(0,0,0,.025);padding-left:14px}
+  .proj .num{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+  .proj .title{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(22px, 2.6vw, 40px);line-height:1.1;letter-spacing:-.005em}
+  .proj .cat{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+  .proj .desc{font-size:13px;line-height:1.5;color:var(--ink-2);max-width:42ch}
+  .proj .go{font-size:14px;color:var(--ink-3);text-align:right;opacity:0;transition:opacity .25s ease, transform .25s ease;transform:translateX(-6px)}
+  .proj:hover .go{opacity:1;transform:none}
+  @media (max-width:768px){
+    .proj{grid-template-columns:40px 1fr 30px;gap:12px}
+    .proj .cat, .proj .desc{display:none}
+  }
+
+  /* ABOUT */
+  .about{padding:120px 40px;background:var(--bg-3);display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;max-width:1300px;margin:0 auto;color:var(--ink)}
+  @media (max-width:768px){ .about{grid-template-columns:1fr;padding:80px 24px;gap:24px} }
+  .about h2{font-family:var(--serif);font-style:italic;font-size:clamp(36px, 5vw, 80px);font-weight:500;line-height:1;margin-bottom:24px}
+  .about p{font-family:var(--sans);font-size:15px;line-height:1.75;color:var(--ink-2);margin-bottom:16px;max-width:50ch}
+  .about .ctas{display:flex;gap:18px;margin-top:18px}
+  .about .ctas a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ink);border-radius:999px;padding:10px 16px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);transition:background .25s ease, color .25s ease}
+  .about .ctas a:hover{background:var(--ink);color:var(--paper)}
+
+  /* footer */
+  footer{padding:40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);background:var(--bg)}
+  footer .loc{font-family:var(--serif);font-style:italic;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+
+  <!-- sculptural SVG forms -->
+  <div class="sculpture s1">
+    <svg viewBox="0 0 320 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g1" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="60%" stop-color="#f1f0ec"/>
+          <stop offset="100%" stop-color="#dcd9d2"/>
+        </radialGradient>
+      </defs>
+      <path fill="url(#g1)" d="M120 60c40-30 90-20 110 30 18 45-12 80-50 100-30 15-50 45-30 80 22 38 5 80-30 90-32 9-65-15-75-55-12-45 5-80-15-115-20-35-30-95 90-130Z"/>
+      <path fill="url(#g1)" opacity=".85" d="M40 220c-15-25 0-55 30-60 25-4 35 18 30 40-6 25-30 35-50 28-3-1-7-4-10-8Z"/>
+      <path fill="url(#g1)" opacity=".7" d="M250 280c20-12 50-2 55 25 4 25-15 50-45 50-32 0-50-30-30-60 5-7 12-12 20-15Z"/>
+    </svg>
+  </div>
+
+  <div class="sculpture s2">
+    <svg viewBox="0 0 320 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g2" cx="50%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="70%" stop-color="#edeae3"/>
+          <stop offset="100%" stop-color="#d2cec5"/>
+        </radialGradient>
+      </defs>
+      <!-- baroque flower -->
+      <g transform="translate(160 240)">
+        <ellipse cx="0" cy="-110" rx="55" ry="80" fill="url(#g2)"/>
+        <ellipse cx="80" cy="-70" rx="55" ry="80" fill="url(#g2)" transform="rotate(40)"/>
+        <ellipse cx="100" cy="0" rx="55" ry="80" fill="url(#g2)" transform="rotate(80)"/>
+        <ellipse cx="80" cy="80" rx="55" ry="80" fill="url(#g2)" transform="rotate(120)"/>
+        <ellipse cx="0" cy="110" rx="55" ry="80" fill="url(#g2)"/>
+        <ellipse cx="-80" cy="80" rx="55" ry="80" fill="url(#g2)" transform="rotate(60)"/>
+        <ellipse cx="-100" cy="0" rx="55" ry="80" fill="url(#g2)" transform="rotate(20)"/>
+        <ellipse cx="-80" cy="-70" rx="55" ry="80" fill="url(#g2)" transform="rotate(-20)"/>
+        <circle cx="0" cy="0" r="55" fill="url(#g2)"/>
+        <!-- feathered leaves -->
+        <path fill="url(#g2)" d="M-150 180c30-50 60-90 110-90 0 0-20 50-50 70-30 20-50 30-60 20Z"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="sculpture s3">
+    <svg viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g3" cx="50%" cy="40%" r="80%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#dad6cd"/>
+        </radialGradient>
+      </defs>
+      <!-- jellyfish -->
+      <path fill="url(#g3)" d="M50 60c40-40 180-40 220 0 25 25 25 80-20 100-50 22-90-10-100 30-12 50 25 80-10 110-30 25-90-10-110-50-22-45 0-95-30-115-30-22-15-50 50-75Z"/>
+      <path fill="url(#g3)" opacity=".6" d="M50 220c10 30 0 70-15 90 30-10 50-30 50-50 0-15-15-30-35-40Z"/>
+      <path fill="url(#g3)" opacity=".7" d="M180 230c25 25 80 30 110 60-30 0-90-5-110-30-15-20-10-30 0-30Z"/>
+    </svg>
+  </div>
+
+  <div class="sculpture s4">
+    <svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g4" cx="50%" cy="40%" r="80%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#d8d4cb"/>
+        </radialGradient>
+      </defs>
+      <path fill="url(#g4)" d="M100 30c40 0 70 30 60 70-8 35-30 50-30 90 0 50-30 80-60 80s-60-30-60-80c0-40-22-55-30-90-10-40 20-70 60-70 25 0 35 0 60 0Z"/>
+    </svg>
+  </div>
+
+  <div class="sculpture s5">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g5" cx="50%" cy="40%" r="80%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#dad6cd"/>
+        </radialGradient>
+      </defs>
+      <!-- feathered plume -->
+      <path fill="url(#g5)" d="M100 20c-30 20-50 60-40 100 10 35 5 60-20 90-20 25-25 50 0 50 30 0 50-30 60-60 10-30 30-40 50-50 25-12 30-50 20-80-10-30-40-70-70-50Z"/>
+    </svg>
+  </div>
+
+  <header class="hdr">
+    <a class="brand" href="#">
+      <span class="ig">IG</span>
+      <span class="name">Immersive Garden</span>
+    </a>
+    <a class="about" href="#about">About</a>
+  </header>
+
+  <div class="hero-h">
+    <h1>
+      Innovative<br>
+      <em>digital experiences</em><br>
+      studio
+    </h1>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll down</span>
+    <span class="arrow"></span>
+  </div>
+
+  <a class="see-all" href="#projects">
+    See all projects
+    <span class="arrow">↓</span>
+  </a>
+  <span class="status-dot" aria-hidden="true"></span>
+
+</section>
+
+<!-- APPROACH -->
+<section class="approach">
+  <div class="grid">
+    <h2>Our approach</h2>
+    <div>
+      <p>A global leader in groundbreaking digital design and strategy, we help forward-thinking clients achieve impact and growth.</p>
+      <p>Explore our collaboration with Louis Vuitton on VIA, showcasing the Maison's Web 3 vision through its first digital trunk.</p>
+      <p>Step into David Whyte's poetry in a digital journey, capturing life's profound moments with artistic depth.</p>
+      <p>Discover Cartier's End of Year: redefining elegance with an immersive campaign, Above the Clouds.</p>
+      <div class="quote">"We partner with exceptional clients, helping drive their success."</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECT INDEX -->
+<section class="projects" id="projects">
+  <h2>Projects <span class="count">— 16 of 51</span></h2>
+  <p class="sub">A curated selection of recent work spanning immersive 3D, brand identity, and editorial web experiences.</p>
+  <ul class="proj-list">
+    <li><a class="proj" href="#"><span class="num">01</span><span class="title">Louis Vuitton VIA</span><span class="cat">Web Experience</span><span class="desc">An immersive flagship for the Maison's Web 3 vision.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">02</span><span class="title">David Whyte Experience</span><span class="cat">Web Experience</span><span class="desc">A digital journey through life's profound moments.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">03</span><span class="title">Cartier End of Year 23</span><span class="cat">E-Shop</span><span class="desc">Above the Clouds: redefining elegance for the season.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">04</span><span class="title">Chartogne Taillet</span><span class="cat">Web Experience</span><span class="desc">Heritage and vineyards through immersive storytelling.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">05</span><span class="title">Cartier in Time</span><span class="cat">Web Experience</span><span class="desc">A timeless bond revealed with Jake Gyllenhaal.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">06</span><span class="title">Aten7</span><span class="cat">Web Experience</span><span class="desc">Toom Archives: the rise of EVA in immersive form.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">07</span><span class="title">GLEEC</span><span class="cat">Corporate</span><span class="desc">A mobile-first gateway to a unified crypto ecosystem.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">08</span><span class="title">Dioriviera</span><span class="cat">Web Experience</span><span class="desc">Maria Grazia Chiuri's designs in breathtaking 3D detail.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">09</span><span class="title">Longines Spirit Zulu Time</span><span class="cat">Web Experience</span><span class="desc">Honoring aviation pioneers with precision and innovation.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">10</span><span class="title">Masar</span><span class="cat">Corporate</span><span class="desc">A digital experience redefining the urban heart of Saudi Arabia.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">11</span><span class="title">Midwam</span><span class="cat">Editorial</span><span class="desc">A virtual destination for contemporary Saudi art and design.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">12</span><span class="title">Richard Mille</span><span class="cat">Web Experience</span><span class="desc">A horological journey through twenty years of innovation.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">13</span><span class="title">Yannick Alléno</span><span class="cat">Editorial</span><span class="desc">A tasting menu of immersive storytelling for the chef.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">14</span><span class="title">Caisse d'Épargne</span><span class="cat">Corporate</span><span class="desc">A bold step into the future of cooperative banking.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">15</span><span class="title">Chanel Beauty</span><span class="cat">E-Shop</span><span class="desc">A beauty moment rendered as a couture ceremony.</span><span class="go">→</span></a></li>
+    <li><a class="proj" href="#"><span class="num">16</span><span class="title">Hennessy</span><span class="cat">Web Experience</span><span class="desc">A cellar voyage into the heart of cognac craft.</span><span class="go">→</span></a></li>
+  </ul>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div>
+    <h2>Our mission</h2>
+    <p>We partner with exceptional clients, helping drive their success through a balance of craft, technology, and editorial thinking.</p>
+    <p>Every project is an opportunity to translate a brand's deepest intentions into a tactile, performant, and emotionally resonant experience.</p>
+    <div class="ctas">
+      <a href="#">Discover the studio →</a>
+      <a href="#">Get in touch →</a>
+    </div>
+  </div>
+  <div>
+    <h2 style="font-size:clamp(20px, 1.8vw, 28px);color:var(--ink-2)">A global leader in groundbreaking digital design and strategy.</h2>
+    <p>Founded in Paris in 2014, Immersive Garden has grown into a 60-strong studio of designers, engineers, and creative technologists working at the intersection of art, design, and code.</p>
+    <p>We are best known for work with luxury Maisons, cultural institutions, and ambitious challengers — for whom we build immersive web experiences, brand identities, and editorial platforms.</p>
+    <p>Our work has been recognized by Awwwards, FWA, CSS Design Awards, and the Webby Awards.</p>
+  </div>
+</section>
+
+<footer>
+  <span class="loc">Paris · France</span>
+  <span>hello@immersive-g.com</span>
+  <span>© 2026 Immersive Garden</span>
+</footer>
+
+</body>
+</html>

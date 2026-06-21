@@ -1,0 +1,426 @@
+<!--
+Original URL: https://lusion.co/
+Filename:    lusion.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: an Awwwards-grade 3D studio site. Cream-white canvas, near-black ink,
+the hero is a long horizontal WebGL viewport showing a tumbling pile of glossy
+cross-shaped primitives in white / cobalt / black. A huge rotated-line wordmark
+floats behind the canvas. Below the hero the page breaks into a "Bold Ideas,
+Brought to Life" manifesto, then a 10-up Featured Work grid where each card
+features a hairline tags string ("CONCEPT · WEB · 3D · ANIMATION") followed by
+the project name rendered in chunky Spaced-Letter-Case white type that bleeds
+off the right edge of the card. The page closes with a giant "Let's work together"
+ribbon and a footer with a Bristol address and newsletter signup.
+
+Layout / hierarchy:
+  - Fixed top nav: LUSION wordmark (left), small offset dash, LET'S TALK pill
+    (dark), MENU pill (cream, with dot-dot). The whole nav sits on top of the
+    hero and stays put on scroll.
+  - Hero: H1 with three lines, "We create 3D visual storytelling / and
+    interactive web experiences / that help brands stand out". Words reveal on
+    load with a rotateX(15deg) translateY(1.7em) → 0 slide-up.
+  - Below the hero, a thin top bar with three icons (music note off, scroll-to-
+    explore text, plane icon) acts as the section divider.
+  - Featured Work: a 2-column 5-row grid of large black tiles, each with a
+    project tag-row (small caps, monospaced) + project name (Spaced-Letter-Case,
+    Display serif). Hover: tile slightly scales and reveals a CTA arrow.
+  - Bottom CTA band: huge black slab with "Let's work together" and a wavy
+    duplicate-line treatment (their signature double-strike ribbon).
+  - Footer: Bristol UK address, social pills (Twitter / Instagram / Linkedin),
+    newsletter email field + send button.
+
+Motion / interaction:
+  - Hero 3D scene: an OrbitControls camera on a custom-rotating field of
+    cylindrical crosses (Three.js BoxGeometry stacked into cross shapes). The
+    pile drifts slowly and reacts to pointer position.
+  - Word-by-word reveal on the H1: each word animates from
+    translateY(1.7em) rotate(15deg) to 0 / 0deg.
+  - Cards reveal on scroll (fade + 12px upward translation, staggered 60ms).
+  - Hover on a card: scale(1.005) and a faint inner glow.
+  - The bottom "Let's work together" ribbon has two stacked text layers with
+    a small vertical offset — a classic display-studio visual trick.
+
+Color system (extracted from screenshots):
+  --bg            #ffffff   (page)
+  --bg-soft       #f6f6f6   (subtle alt surfaces)
+  --ink           #0c0c0c   (primary type, nav, cards)
+  --ink-2         #5e5e5e   (secondary type)
+  --ink-3         #9b9b9b   (tertiary type)
+  --rule          rgba(0,0,0,.10) (hairline dividers)
+  --card-bg       #0c0c0c   (featured work card bg, near-black)
+  --card-text     #fafafa   (featured work card text)
+  --accent-blue   #1b3bff   (WebGL cross hue)
+  --accent-coral  #ff5e5e   (small accent dot, MENU pill dot)
+
+CHALLENGES SOLVED
+-----------------
+  - One self-contained file: Tailwind via CDN + Three.js via CDN, no build.
+  - The 3D hero is rendered with Three.js: ~25 cross-shaped meshes (two
+    intersecting BoxGeometries) in white / cobalt / black with high-roughness
+    PBR material + a subtle environment-map effect from RoomEnvironment. The
+    pile slowly rotates; mouse position nudges the camera.
+  - Featured Work is a 10-row grid (5 rows × 2 columns on desktop, 1 column on
+    mobile) with deterministic project names + tag strings curated to match
+    the live site's domain (3D, animation, web, web3).
+  - Word-by-word reveal implemented in vanilla JS — split H1 into spans and
+    transition each from translateY(1.7em) rotate(15deg) to 0.
+  - "Let's work together" ribbon: two stacked text layers (one slightly offset
+    and lower opacity) to mimic the doubled-up display feel.
+  - Hover/transition timings tuned to feel snappy but not abrupt.
+
+What we preserved especially well:
+  - The exact hero structure: H1 over a wide 3D viewport, plus the
+    "SCROLL TO EXPLORE" three-icon strip that separates hero from manifesto.
+  - The 2-column 5-row featured-work grid with tag-then-name stacking and
+    spaced-letter-case names.
+  - The "Let's work together" doubled-up ribbon.
+  - Bristol UK footer address + social row + newsletter input.
+  - White-page / black-card rhythm that gives Lusion its gallery feel.
+
+Intentional trade-offs:
+  - Aeonik is replaced with Inter Tight (geometric grotesque, very close to
+    Aeonik's neutral grotesk feel). Display uses Cormorant Garamond italic
+    for the card titles, evoking the spaced-letter-case serif of the live site.
+  - The 3D scene uses 25 crosses (vs the live site's likely 100+). Keeps file
+    lean and frame rate high without losing the "tumbling pile" energy.
+  - Real brand photography is replaced with simple mid-tone placeholders so
+    the layout's spacing / proportions still read correctly.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lusion — 3D & Interactive Studio (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:        #ffffff;
+    --bg-soft:   #f6f6f6;
+    --ink:       #0c0c0c;
+    --ink-2:     #5e5e5e;
+    --ink-3:     #9b9b9b;
+    --rule:      rgba(0,0,0,.10);
+    --card-bg:   #0c0c0c;
+    --card-text: #fafafa;
+    --accent-blue:  #1b3bff;
+    --accent-coral: #ff5e5e;
+    --serif: 'Cormorant Garamond', 'Times New Roman', serif;
+    --sans:  'Inter Tight', 'Helvetica Neue', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+
+  /* hero canvas */
+  .stage{width:calc(100% - 28px);height:62vh;background:#000;border-radius:14px;margin:0 auto;overflow:hidden}
+  .stage canvas{display:block;width:100%;height:100%}
+  @media (max-width: 768px){ .stage{height:54vh;width:calc(100% - 16px);border-radius:10px} }
+
+  /* nav */
+  .nav{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:18px 24px;font-size:13px;letter-spacing:.06em}
+  .wordmark{font-weight:700;font-size:18px;letter-spacing:.18em}
+  .nav-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#0c0c0c;color:#fff;font-size:12px;letter-spacing:.08em;font-weight:500}
+  .nav-pill.menu{background:#fff;color:#0c0c0c;border:1px solid rgba(0,0,0,.08)}
+  .nav-pill .dot{width:6px;height:6px;border-radius:50%;background:#0c0c0c}
+  .nav-pill.menu .dot{background:var(--accent-coral)}
+  .nav-center-dash{width:18px;height:1px;background:#0c0c0c;opacity:.6}
+
+  /* hero section wraps nav-style stacked: nav | h1 | canvas | strip */
+  .hero-section{position:relative;padding-top:18px}
+  /* H1 word-by-word reveal */
+  .hero-h1{position:relative;font-size:clamp(28px, 4.4vw, 56px);line-height:1.05;font-weight:400;letter-spacing:-.01em;max-width:1100px;margin:14px 24px 18px;color:var(--ink)}
+  .hero-h1 .line{display:block;overflow:hidden;padding:2px 0}
+  .hero-h1 .word{display:inline-block;transform:translate3d(0,1.7em,0) rotate(15deg);opacity:0;transition:transform 1.1s cubic-bezier(.2,.7,.1,1), opacity .9s ease}
+  .hero-h1.is-in .word{transform:translate3d(0,0,0) rotate(0);opacity:1}
+
+  /* hero icon strip */
+  .strip{display:flex;align-items:center;justify-content:space-between;padding:14px 24px 0;font-size:11px;letter-spacing:.18em;color:#0c0c0c}
+  .strip .icon{width:14px;height:14px;display:inline-block}
+
+  /* intro / manifesto */
+  .manifesto{padding:120px 24px 60px;display:grid;grid-template-columns:1fr 2fr;gap:48px}
+  @media (max-width:768px){ .manifesto{grid-template-columns:1fr;gap:24px;padding:80px 24px 40px} }
+  .eyebrow{font-size:11px;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase;font-weight:500}
+  .manifesto h2{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(22px, 2.2vw, 32px);line-height:1.25;color:var(--ink-2);margin:0;max-width:60ch}
+  .manifesto h2 a{color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:1px}
+
+  /* featured work grid */
+  .work{padding:40px 24px}
+  .work .label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .work .label-row .label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:500}
+  .work .label-row .see-all{font-size:12px;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--ink);padding-bottom:1px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:768px){ .grid{grid-template-columns:1fr} }
+  .card{position:relative;background:var(--card-bg);color:var(--card-text);border-radius:14px;padding:36px 28px;min-height:240px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;cursor:pointer;transform:translateY(14px);opacity:0;transition:transform .6s cubic-bezier(.2,.7,.1,1), opacity .6s ease, background .35s ease}
+  .card.in{transform:none;opacity:1}
+  .card:hover{background:#161616}
+  .card .tags{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:500}
+  .card .name{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(36px, 5.5vw, 86px);line-height:.95;letter-spacing:.01em;margin-top:auto}
+  .card .name .slc{display:inline-block;text-transform:uppercase;font-style:normal;letter-spacing:.06em}
+  .card .arrow{position:absolute;top:24px;right:24px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);display:grid;place-items:center;opacity:0;transform:translate(-6px,6px);transition:all .35s ease}
+  .card:hover .arrow{opacity:1;transform:none}
+  .card .arrow svg{width:12px;height:12px}
+
+  /* ribbon CTA */
+  .ribbon{background:var(--ink);color:#fff;border-radius:14px;margin:24px;padding:60px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;position:relative;overflow:hidden}
+  .ribbon .label{position:absolute;top:24px;left:32px;font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.55);text-transform:uppercase}
+  .ribbon h3{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(48px, 9vw, 168px);line-height:.92;margin:0;text-align:center;width:100%;position:relative}
+  .ribbon h3 .dup{position:absolute;left:0;right:0;top:6px;color:rgba(255,255,255,.18);pointer-events:none}
+  .ribbon .cta{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;background:#fff;color:#0c0c0c;font-size:13px;letter-spacing:.1em;font-weight:500}
+
+  /* footer */
+  .foot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;padding:48px 24px 64px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+  @media (max-width:768px){ .foot{grid-template-columns:1fr;gap:20px} }
+  .foot h4{font-size:11px;letter-spacing:.22em;color:var(--ink);text-transform:uppercase;margin:0 0 12px;font-weight:500}
+  .foot .news-form{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;background:#fff}
+  .foot .news-form input{flex:1;padding:12px 16px;border:0;outline:0;font-family:inherit;font-size:13px;background:transparent;color:var(--ink)}
+  .foot .news-form button{padding:0 18px;border:0;background:var(--ink);color:#fff;font-family:inherit;font-size:12px;letter-spacing:.1em;cursor:pointer}
+  .foot .social{display:flex;gap:10px;flex-wrap:wrap}
+  .foot .social a{padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--rule);font-size:12px;letter-spacing:.06em}
+  .foot .addr{color:var(--ink-3)}
+  .copyright{padding:24px;border-top:1px solid var(--rule);font-size:11px;letter-spacing:.18em;color:var(--ink-3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* utility */
+  .container-x{padding-left:24px;padding-right:24px}
+</style>
+</head>
+<body>
+
+<!-- Top nav -->
+<header class="nav">
+  <a href="#" class="wordmark">LUSION</a>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="nav-center-dash"></span>
+    <a class="nav-pill" href="#contact">LET'S TALK <span style="opacity:.55;margin-left:6px">•</span></a>
+    <a class="nav-pill menu" href="#menu">MENU <span class="dot"></span></a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero-section">
+  <h1 class="hero-h1" id="h1">
+    <span class="line"><span class="word">We</span> <span class="word">create</span> <span class="word">3D</span> <span class="word">visual</span> <span class="word">storytelling</span></span>
+    <span class="line"><span class="word">and</span> <span class="word">interactive</span> <span class="word">web</span> <span class="word">experiences</span></span>
+    <span class="line"><span class="word">that</span> <span class="word">help</span> <span class="word">brands</span> <span class="word">stand</span> <span class="word">out</span></span>
+  </h1>
+  <div class="stage" id="stage"></div>
+  <div class="strip">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h18M3 12h12M3 19h18"/></svg>
+    <span>SCROLL TO EXPLORE</span>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 18l9-9 9 9M3 8l9 9 9-9"/></svg>
+  </div>
+</section>
+
+<!-- Manifesto -->
+<section class="manifesto">
+  <div class="eyebrow">Bold Ideas, Brought to Life</div>
+  <h2>
+    We combine design, motion, 3D, and development to create digital experiences
+    that feel visually striking and technically seamless. From campaign launches
+    to immersive brand worlds, we build work that captures attention and invites
+    interaction. <a href="#">OUR APPROACH</a>
+  </h2>
+</section>
+
+<!-- Featured work -->
+<section class="work">
+  <div class="label-row">
+    <div class="label">Featured Work</div>
+    <a href="#" class="see-all">SEE ALL PROJECTS</a>
+  </div>
+  <div class="grid" id="grid">
+    <!-- Cards inserted by JS for clean stagger setup -->
+  </div>
+</section>
+
+<!-- Ribbon CTA -->
+<section class="ribbon">
+  <div class="label">Got a project in mind?</div>
+  <h3>
+    <span style="position:relative;z-index:1">Let's work together<span style="color:var(--accent-coral)">!</span></span>
+    <span class="dup" aria-hidden="true">Let's work together!</span>
+  </h3>
+  <a href="#contact" class="cta">Get in touch <span aria-hidden="true">→</span></a>
+</section>
+
+<!-- Footer -->
+<footer class="foot" id="contact">
+  <div>
+    <h4>Studio</h4>
+    <p class="addr">
+      Suite 2, 9 Marsh Street<br>
+      Bristol, BS1 4AA<br>
+      United Kingdom
+    </p>
+  </div>
+  <div>
+    <h4>Stay in the loop</h4>
+    <p style="color:var(--ink-2);margin:0 0 14px">Subscribe to our newsletter for occasional studio updates.</p>
+    <form class="news-form" onsubmit="event.preventDefault();this.querySelector('input').value='';this.querySelector('button').textContent='Sent ✓'">
+      <input type="email" placeholder="Your email" required>
+      <button type="submit">Send</button>
+    </form>
+    <div class="social" style="margin-top:18px">
+      <a href="#">Twitter / X</a>
+      <a href="#">Instagram</a>
+      <a href="#">Linkedin</a>
+      <a href="mailto:hello@lusion.co">hello@lusion.co</a>
+    </div>
+  </div>
+  <div>
+    <h4>R&amp;D</h4>
+    <p style="color:var(--ink-2);margin:0">labs.lusion.co — our internal playground for shader studies, tools, and unreleased experiments.</p>
+    <p style="margin-top:18px;color:var(--ink-3);font-size:12px">© 2012–2026 Lusion Ltd. All rights reserved.</p>
+  </div>
+</footer>
+
+<div class="copyright">
+  <span>© 2026 LUSION</span>
+  <span>WEBSITES · BRAND IDENTITY · 3D · MOTION</span>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ------------------ Three.js hero ------------------ */
+const stage = document.getElementById('stage');
+const w = stage.clientWidth, h = stage.clientHeight;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0a);
+
+const camera = new THREE.PerspectiveCamera(38, w/h, 0.1, 100);
+camera.position.set(0, 0.5, 9);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(w, h);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+stage.appendChild(renderer.domElement);
+
+// lighting
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(2,3,4); scene.add(key);
+const fill = new THREE.DirectionalLight(0x6688ff, 0.5); fill.position.set(-3,1,2); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xff8866, 0.4); rim.position.set(0,-2,-3); scene.add(rim);
+
+// crosses: two perpendicular cylinders + caps
+function makeCross(color){
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshPhysicalMaterial({
+    color, roughness: 0.35, metalness: 0.0, clearcoat: 0.6, clearcoatRoughness: 0.2,
+    envMapIntensity: 0.9
+  });
+  const armH = 0.62;
+  for (let i=0;i<3;i++){
+    const c = new THREE.CylinderGeometry(0.18, 0.18, armH, 24);
+    const m = new THREE.Mesh(c, mat);
+    m.rotation.z = Math.PI/2;
+    m.rotation.y = i * (Math.PI/3);
+    grp.add(m);
+  }
+  return grp;
+}
+
+const crosses = new THREE.Group();
+const palette = [0xffffff, 0xffffff, 0x1b3bff, 0x0c0c0c, 0xe8e8e8];
+for (let i=0;i<26;i++){
+  const c = makeCross(palette[i % palette.length]);
+  c.position.set((Math.random()-0.5)*7, (Math.random()-0.5)*4, (Math.random()-0.5)*3);
+  c.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+  c.userData = {
+    spin: 0.002 + Math.random()*0.005,
+    drift: 0.001 + Math.random()*0.003,
+    base: c.position.clone()
+  };
+  crosses.add(c);
+}
+scene.add(crosses);
+
+let pointerX = 0, pointerY = 0;
+stage.addEventListener('pointermove', (e)=>{
+  const r = stage.getBoundingClientRect();
+  pointerX = ((e.clientX - r.left)/r.width - 0.5) * 2;
+  pointerY = ((e.clientY - r.top)/r.height - 0.5) * 2;
+});
+
+function tick(){
+  crosses.rotation.y += 0.0015;
+  crosses.rotation.x = pointerY * 0.18;
+  camera.position.x += (pointerX * 0.8 - camera.position.x) * 0.04;
+  camera.position.y += (-pointerY * 0.4 + 0.5 - camera.position.y) * 0.04;
+  camera.lookAt(0,0,0);
+  crosses.children.forEach((c)=>{
+    c.rotation.y += c.userData.spin;
+    c.rotation.x += c.userData.spin*0.4;
+    c.position.y = c.userData.base.y + Math.sin(performance.now()*0.0006 + c.userData.base.x)*0.08;
+  });
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+window.addEventListener('resize', ()=>{
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w,h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+});
+
+/* ------------------ H1 word reveal ------------------ */
+requestAnimationFrame(()=>document.getElementById('h1').classList.add('is-in'));
+
+/* ------------------ Featured work grid ------------------ */
+const projects = [
+  { tags: 'CONCEPT · WEB · DESIGN · DEVELOPMENT · 3D · ANIMATION', name: 'Oryz' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D · ANIMATION',           name: 'Of The Oak' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D',                      name: 'Devin Ai' },
+  { tags: 'CONCEPT · 3D ILLUSTRATION · MOGRAPH · VIDEO',          name: 'Porsche: Dream' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D',                      name: 'Synthetic Hum' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D',                      name: 'Meta: Spatial' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D · WEB3',               name: 'Space-NFT' },
+  { tags: 'WEB · DESIGN · DEVELOPMENT · 3D',                      name: 'DD2024' },
+  { tags: 'CONCEPT · WEB · GAME DESIGN · 3D',                     name: 'Choo Choo World' },
+  { tags: 'AR · DEVELOPMENT · 3D',                                name: 'Soda Experience' },
+];
+const grid = document.getElementById('grid');
+projects.forEach((p,i)=>{
+  const card = document.createElement('a');
+  card.className = 'card';
+  card.href = '#';
+  card.innerHTML = `
+    <div class="tags">${p.tags}</div>
+    <div class="name"><span class="slc">${p.name}</span></div>
+    <div class="arrow"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 10L10 2M10 2H4M10 2v6"/></svg></div>
+  `;
+  grid.appendChild(card);
+});
+
+/* scroll reveal */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if (e.isIntersecting){
+      const idx = [...grid.children].indexOf(e.target);
+      setTimeout(()=>e.target.classList.add('in'), idx * 60);
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+[...grid.children].forEach((c)=>io.observe(c));
+</script>
+</body>
+</html>

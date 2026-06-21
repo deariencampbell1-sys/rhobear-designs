@@ -1,0 +1,475 @@
+<!--
+Original URL: https://makemepulse.com/
+Filename:    makemepulse.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: deep charcoal canvas, near-white ink, extreme restraint. The
+creative studio's wordmark sits at top-left in a low-contrast lowercase serif
+"makemepulse." with a deliberate trailing period. The nav is right-aligned in
+small caps tracking. The hero is the entire identity: the words "global",
+"creative", "studio." set in three enormous lines of a modern serif display
+(Beatrice Display on the live site), each on its own row, with two small
+italic-ish hyperlinks nested into the layout ("we turn aesthetics into
+experiences" tucked into the negative space of "global", "tech that's light as
+air" tucked under "creative"). A single line of three vertical dots at bottom
+left signals there's more below. The case-studies carousel unfolds below with
+full-bleed project hero shots.
+
+Layout / hierarchy:
+  - Header: makemepulse. (logo) + nav (home · case studies · what we do · who we
+    are · news · contact)
+  - Hero (h1): "global" / "creative" / "studio." with link-pills placed in
+    the gaps
+  - Case studies (rotating carousel): one large project hero at a time, with
+    eyebrow tag (e.g. "IN PARTNERSHIP WITH CALLIMACUS") + project name +
+    subtitle + small caps "See all our projects" + "Showreel" CTA
+  - "We also do games." section with uppercase caption
+  - "We bring standout immersive experiences to everyone, everywhere." + link
+  - "Well-made. Well-designed. Packaged in a way people will actually use."
+    copy + "Discover who we are" + team blurb
+  - News list (date · title) — 4 items
+  - Newsletter signup: "Give an email, get the newsletter."
+  - Footer (4-col): Offices (Paris, London) · Business (regional emails) ·
+    Say Hi (jobs, contact form) · Follow us (LinkedIn, Instagram, X, Behance)
+
+Motion / interaction:
+  - Subtle scroll-triggered fade-ins on each section.
+  - Case-study carousel auto-cycles every ~5s with fade transitions; dots
+    indicate position.
+  - Hero h1 reveals word-by-word on initial paint.
+  - News rows underline + reveal an arrow on hover.
+  - Nav links have a thin animated underline.
+
+Color system (extracted from screenshots):
+  --bg        #0f0f0f   (page)
+  --bg-soft   #181818   (alt surfaces)
+  --bg-card   #1d1d1d   (project cards)
+  --ink       #f4f1ec   (warm white text)
+  --ink-2     rgba(244,241,236,.65)
+  --ink-3     rgba(244,241,236,.40)
+  --rule      rgba(244,241,236,.12)
+  --accent    #ff5722   (warm signal — used for tiny dots/accents)
+  --link      #b6f0d6   (link teal-green, used on hero pills)
+  --serif:    'Beatrice Display' fallback 'Cormorant Garamond'
+  --sans:     'Inter' / system
+
+CHALLENGES SOLVED
+-----------------
+  - Hero h1 with three massive display lines + small inline hyperlinks that
+    sit in the negative space between rows. Implemented with grid-style
+    positioning so the link pills anchor to specific rows.
+  - Auto-cycling case study carousel with three projects (Brunello Cucinelli,
+    Benno's Light, McDonald's Rösti Fall), each as a full-bleed hero with
+    a procedural CSS gradient placeholder + eyebrow + title + subtitle + 2
+    CTAs.
+  - News list with date eyebrow + title rows; underlines on hover.
+  - Offices / Business / Say Hi / Follow us — 4-column footer with email
+    links, address, and contact form trigger.
+  - The "..." triple-dot loader under the hero pulses gently.
+
+What we preserved especially well:
+  - The exact hero composition: "global / creative / studio." with two
+    inline italic-style link pills.
+  - The dark warm-white palette with deep charcoal background.
+  - The 4-column footer with regional emails / cities / follow-us.
+  - The news list with dates and titles.
+  - The "We also do games." uppercase reveal.
+  - The case-study carousel structure (eyebrow + name + subtitle + CTAs).
+
+Intentional trade-offs:
+  - Beatrice Display replaced with Cormorant Garamond + a heavier serif
+    for the hero (keeps the editorial display feel).
+  - Real case-study hero shots replaced with elegant gradient placeholders
+    preserving the aspect ratio and visual weight.
+  - Three carousel slides (vs likely 8+ on the live site) keeps the file
+    lean without losing the rhythm.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>makemepulse — Global Creative Studio (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #0f0f0f;
+    --bg-soft:  #181818;
+    --bg-card:  #1d1d1d;
+    --bg-elev:  #232323;
+    --ink:      #f4f1ec;
+    --ink-2:    rgba(244,241,236,.65);
+    --ink-3:    rgba(244,241,236,.40);
+    --ink-4:    rgba(244,241,236,.18);
+    --rule:     rgba(244,241,236,.12);
+    --accent:   #ff5722;
+    --link:     #b6f0d6;
+    --serif:    'Cormorant Garamond', 'Times New Roman', serif;
+    --sans:     'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+
+  /* container */
+  .wrap{max-width:1480px;margin:0 auto;padding:0 32px}
+  @media (max-width:768px){ .wrap{padding:0 20px} }
+
+  /* nav */
+  header{padding:28px 0;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:var(--serif);font-style:italic;font-weight:500;font-size:24px;letter-spacing:-.01em;color:var(--ink)}
+  .logo::after{content:".";color:var(--ink)}
+  nav.main{display:flex;align-items:center;gap:36px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+  nav.main a{position:relative;padding:4px 0;transition:color .25s ease}
+  nav.main a:hover{color:var(--ink)}
+  nav.main a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+  nav.main a:hover::after, nav.main a.active::after{transform:scaleX(1)}
+  @media (max-width:768px){ nav.main{display:none} }
+
+  /* hero */
+  .hero{position:relative;padding:48px 0 36px}
+  .hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(80px, 16vw, 280px);line-height:.9;letter-spacing:-.02em;color:var(--ink)}
+  .hero .row{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .hero .row.left{justify-content:flex-start}
+  .hero .row.center{justify-content:center;padding-left:8%}
+  .hero .row.right{justify-content:flex-end;padding-right:6%}
+  .hero .pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:13px;font-style:italic;color:var(--ink-2);border-bottom:1px solid var(--ink-4);padding-bottom:1px;transition:color .25s ease, border-color .25s ease}
+  .hero .pill:hover{color:var(--link);border-color:var(--link)}
+  .hero .dot-row{display:flex;gap:6px;margin-top:42px}
+  .hero .dot-row i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:dot 1.6s ease-in-out infinite}
+  .hero .dot-row i:nth-child(2){animation-delay:.2s}
+  .hero .dot-row i:nth-child(3){animation-delay:.4s}
+  @keyframes dot{0%,100%{opacity:.3} 50%{opacity:1}}
+
+  /* case study carousel */
+  .cases{position:relative;margin:60px auto 0;max-width:1280px;padding:0 32px;height:560px}
+  @media (max-width:768px){ .cases{height:480px;padding:0 20px} }
+  .case{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;border-radius:14px;overflow:hidden;background:var(--bg-card);opacity:0;transition:opacity 1s ease;padding:48px}
+  .case.show{opacity:1}
+  .case .bg{position:absolute;inset:0;z-index:0}
+  .case .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 30%, rgba(15,15,15,.85) 100%)}
+  .case .meta{position:relative;z-index:1;color:var(--ink);max-width:700px}
+  .case .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px}
+  .case .eyebrow em{color:var(--ink-2);font-style:italic}
+  .case h3{font-family:var(--serif);font-weight:500;font-size:clamp(36px, 5vw, 80px);line-height:1.02;letter-spacing:-.01em;margin-bottom:18px}
+  .case .sub{font-size:14px;color:var(--ink-2);max-width:54ch;line-height:1.6;margin-bottom:24px}
+  .case .ctas{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .case .ctas a{font-size:11px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid transparent;padding-bottom:1px;transition:border-color .25s ease, color .25s ease;color:var(--ink-2)}
+  .case .ctas a:hover{color:var(--ink);border-color:var(--ink)}
+  .case .ctas a.filled{color:var(--ink);border-color:var(--ink)}
+  .case-dots{position:absolute;bottom:18px;right:32px;display:flex;gap:8px;z-index:2}
+  .case-dots button{width:24px;height:2px;background:var(--ink-3);border:0;cursor:pointer;transition:background .25s ease}
+  .case-dots button.on{background:var(--ink)}
+
+  /* sections */
+  section{padding:120px 0}
+  @media (max-width:768px){ section{padding:80px 0} }
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+
+  /* games section */
+  .games{background:var(--bg-soft)}
+  .games h2{font-family:var(--serif);font-weight:500;font-size:clamp(40px, 6vw, 88px);line-height:1;letter-spacing:-.01em;margin-bottom:36px}
+  .games p{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-2);line-height:1.8;max-width:60ch}
+  .games .pill{margin-top:24px;display:inline-flex;align-items:center;gap:8px;color:var(--link);border-bottom:1px solid var(--link);padding-bottom:1px;font-size:13px;font-style:italic}
+
+  /* immersive band */
+  .immersive h2{font-family:var(--serif);font-weight:500;font-size:clamp(40px, 6vw, 88px);line-height:1.02;letter-spacing:-.01em;max-width:18ch;margin-bottom:32px}
+  .immersive .pill{display:inline-flex;align-items:center;gap:8px;color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:1px;font-size:13px;font-style:italic}
+
+  /* about */
+  .about{background:var(--bg-soft)}
+  .about .grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  @media (max-width:768px){ .about .grid{grid-template-columns:1fr;gap:24px} }
+  .about h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px, 3.6vw, 56px);line-height:1.15;letter-spacing:-.01em;margin-bottom:18px}
+  .about p{font-size:14px;line-height:1.75;color:var(--ink-2);margin-bottom:18px;max-width:55ch}
+  .about .pill{display:inline-flex;align-items:center;gap:8px;color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:1px;font-size:13px;font-style:italic}
+
+  /* news */
+  .news h2{font-family:var(--serif);font-size:clamp(40px, 5vw, 72px);font-weight:500;margin-bottom:36px}
+  .news-list{display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  .news-row{display:grid;grid-template-columns:80px 1fr 40px;gap:18px;padding:24px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:padding .35s ease}
+  .news-row:hover{padding-left:14px}
+  .news-row .date{font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
+  .news-row .title{font-family:var(--serif);font-size:clamp(20px, 2.4vw, 32px);font-style:italic;font-weight:500;line-height:1.2;max-width:42ch}
+  .news-row .go{color:var(--ink-3);text-align:right;opacity:0;transition:opacity .25s ease, transform .25s ease;transform:translateX(-6px)}
+  .news-row:hover .go{opacity:1;transform:none}
+  .news .more{margin-top:24px;display:inline-block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--ink-2)}
+
+  /* newsletter */
+  .newsletter{padding:80px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  @media (max-width:768px){ .newsletter{grid-template-columns:1fr;gap:24px} }
+  .newsletter h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px, 3vw, 44px);line-height:1.15;letter-spacing:-.01em}
+  .newsletter .form{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;background:transparent}
+  .newsletter .form input{flex:1;padding:14px 18px;background:transparent;border:0;color:var(--ink);font-family:inherit;font-size:14px;outline:0}
+  .newsletter .form input::placeholder{color:var(--ink-3)}
+  .newsletter .form button{padding:0 22px;border:0;background:var(--ink);color:var(--bg);font-family:inherit;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+
+  /* footer */
+  footer{padding:80px 0 32px}
+  .foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-bottom:60px}
+  @media (max-width:768px){ .foot-grid{grid-template-columns:1fr 1fr} }
+  .foot h4{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px;font-weight:500}
+  .foot .city{font-family:var(--serif);font-size:22px;font-weight:500;font-style:italic;margin-bottom:6px}
+  .foot ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .foot a{color:var(--ink-2);transition:color .25s ease}
+  .foot a:hover{color:var(--ink)}
+  .copyright{padding-top:18px;border-top:1px solid var(--rule);font-size:11px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* utility */
+  .hidden-fade{opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease}
+  .hidden-fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <a href="#" class="logo">makemepulse</a>
+    <nav class="main">
+      <a href="#" class="active">home</a>
+      <a href="#">case studies</a>
+      <a href="#">what we do</a>
+      <a href="#">who we are</a>
+      <a href="#">news</a>
+      <a href="#">contact</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>
+      <span class="row left">
+        <span>global</span>
+        <a href="#" class="pill">we turn aesthetics into experiences</a>
+      </span>
+      <span class="row center"><span>creative</span></span>
+      <span class="row right">
+        <a href="#" class="pill">tech that's light as air</a>
+        <span>studio</span>
+      </span>
+    </h1>
+    <div class="dot-row" aria-hidden="true"><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- CASE STUDIES CAROUSEL -->
+  <div class="cases" id="cases">
+    <article class="case show" data-i="0">
+      <div class="bg" style="background:radial-gradient(120% 100% at 30% 30%, #6f8d6c 0%, #1f2a23 60%, #0a0e0a 100%)"></div>
+      <div class="meta">
+        <div class="eyebrow">Intent-led experience · <em>in partnership with Callimacus</em></div>
+        <h3>Brunello Cucinelli<br>Human-Centred AI E-commerce</h3>
+        <p class="sub">A new interface for the Italian maison that puts craft, materials, and provenance first — and treats artificial intelligence as a quiet, helpful layer.</p>
+        <div class="ctas">
+          <a href="#" class="filled">See case study</a>
+          <a href="#">See all our projects →</a>
+          <a href="#">Showreel →</a>
+        </div>
+      </div>
+      <div class="case-dots"></div>
+    </article>
+
+    <article class="case" data-i="1">
+      <div class="bg" style="background:radial-gradient(120% 100% at 70% 30%, #d2c8b0 0%, #5b5247 50%, #1a1612 100%)"></div>
+      <div class="meta">
+        <div class="eyebrow">A digital testimony · <em>by makemepulse and the Claims Conference</em></div>
+        <h3>Benno's Light<br>Making a survivor's memory, present</h3>
+        <p class="sub">An immersive memorial to a single survivor's testimony — rendered as an intimate, scroll-driven journey that makes absence and presence feel equally real.</p>
+        <div class="ctas">
+          <a href="#" class="filled">See case study</a>
+          <a href="#">See all our projects →</a>
+          <a href="#">Showreel →</a>
+        </div>
+      </div>
+      <div class="case-dots"></div>
+    </article>
+
+    <article class="case" data-i="2">
+      <div class="bg" style="background:radial-gradient(120% 100% at 50% 30%, #f0b06a 0%, #b85a1a 50%, #2a1108 100%)"></div>
+      <div class="meta">
+        <div class="eyebrow">From loyalty program to entertainment platform</div>
+        <h3>McDonald's Rösti Fall<br>A tasty drop into loyalty gaming</h3>
+        <p class="sub">A game-first loyalty experience that turns menu moments into a reason to come back — playful, generous, and unmistakably McDonald's.</p>
+        <div class="ctas">
+          <a href="#" class="filled">See case study</a>
+          <a href="#">See all our projects →</a>
+          <a href="#">Showreel →</a>
+        </div>
+      </div>
+      <div class="case-dots"></div>
+    </article>
+  </div>
+
+  <!-- GAMES -->
+  <section class="games hidden-fade">
+    <h2>We also do games.</h2>
+    <p>Gaming is the future of experience. We make games with heart. We make games that deliver.</p>
+    <a href="#" class="pill">Discover makemeplay →</a>
+  </section>
+
+  <!-- IMMERSIVE BAND -->
+  <section class="immersive hidden-fade">
+    <h2>We bring standout immersive experiences to everyone, everywhere.</h2>
+    <a href="#" class="pill">More on what we do →</a>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about hidden-fade">
+    <div class="grid">
+      <div>
+        <h2>Well-made. Well-designed. Packaged in a way people will actually use.</h2>
+        <p>And not just use — share. We believe in aesthetics, creative that stops you in your tracks. We believe in light-as-air tech, as seamless as real life.</p>
+        <a href="#" class="pill">Discover who we are →</a>
+      </div>
+      <div>
+        <span class="eyebrow" style="display:block;margin-bottom:18px">We really like our team</span>
+        <p>This isn't art-for-art's sake or tech-cause-it's-trendy, this is about redefining the interactive space. We believe a talented, agile team and a fresh, insightful approach is how you elevate the field, get noticed and rise above the noise.</p>
+        <p>We're 70 makers across Paris, London, and São Paulo. We build with the same craft whether the brief is a luxury maison, a music festival, a humanitarian campaign, or a fast-food loyalty game.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section class="news hidden-fade">
+    <h2>News</h2>
+    <div class="news-list">
+      <a class="news-row" href="#">
+        <span class="date">Jun 3</span>
+        <span class="title">Light in the darkness: powerful XR experience illuminates a Holocaust survivor's story</span>
+        <span class="go">→</span>
+      </a>
+      <a class="news-row" href="#">
+        <span class="date">May 26</span>
+        <span class="title">We're sponsoring Three.js Conf Paris</span>
+        <span class="go">→</span>
+      </a>
+      <a class="news-row" href="#">
+        <span class="date">Apr 28</span>
+        <span class="title">makemepulse inducted into the FWA Hall of Fame</span>
+        <span class="go">→</span>
+      </a>
+      <a class="news-row" href="#">
+        <span class="date">Mar 12</span>
+        <span class="title">A new chapter for our gaming practice: hello, makemeplay</span>
+        <span class="go">→</span>
+      </a>
+    </div>
+    <a class="more" href="#">Browse all articles →</a>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter hidden-fade">
+    <div>
+      <h2>Give an email,<br>get the newsletter.</h2>
+    </div>
+    <form class="form" onsubmit="event.preventDefault();this.querySelector('input').value='';this.querySelector('button').textContent='Sent ✓'">
+      <input type="email" placeholder="Email address" required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="foot-grid">
+      <div>
+        <h4>Offices</h4>
+        <div class="city">Paris</div>
+        <ul>
+          <li>38 rue Legendre</li>
+          <li>75017 Paris</li>
+        </ul>
+        <div class="city" style="margin-top:18px">London</div>
+        <ul>
+          <li>Becket House</li>
+          <li>1 Lambeth Palace Road</li>
+          <li>London SE1 7EU</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Business</h4>
+        <ul>
+          <li>France · <a href="mailto:sales@makemepulse.com">sales@makemepulse.com</a></li>
+          <li>United Kingdom · <a href="mailto:uk@makemepulse.com">uk@makemepulse.com</a></li>
+          <li>United States East Coast · <a href="mailto:eastcoast@makemepulse.com">eastcoast@…</a></li>
+          <li>United States Mid West · <a href="mailto:midwest@makemepulse.com">midwest@…</a></li>
+          <li>United States West Coast · <a href="mailto:westcoast@makemepulse.com">westcoast@…</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Say Hi</h4>
+        <ul>
+          <li>Apply now · <a href="mailto:jobs@makemepulse.com">jobs@makemepulse.com</a></li>
+          <li>Contact · <a href="mailto:contact@makemepulse.com">contact@makemepulse.com</a></li>
+          <li><a href="#">Contact form →</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Follow us</h4>
+        <ul>
+          <li><a href="#">LinkedIn →</a></li>
+          <li><a href="#">Instagram →</a></li>
+          <li><a href="#">X →</a></li>
+          <li><a href="#">Behance →</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copyright">
+      <span>© 2026 makemepulse — Global Creative Studio</span>
+      <span>Made in Paris · with intent</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* hero h1 word reveal */
+window.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.hero .row span:first-child, .hero .row > span').forEach((el, i)=>{
+    el.style.opacity = 0;
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity .9s ease, transform .9s ease';
+    setTimeout(()=>{ el.style.opacity = 1; el.style.transform = 'none'; }, 100 + i*180);
+  });
+  // pills fade in
+  document.querySelectorAll('.hero .pill').forEach((p, i)=>{
+    p.style.opacity = 0;
+    setTimeout(()=>{ p.style.transition = 'opacity .8s ease'; p.style.opacity = 1; }, 600 + i*200);
+  });
+});
+
+/* carousel */
+const cases = [...document.querySelectorAll('.case')];
+const dotsHost = cases[0].querySelector('.case-dots');
+cases.forEach((_, i)=>{
+  const b = document.createElement('button');
+  b.setAttribute('aria-label', 'go to slide '+(i+1));
+  if (i===0) b.className = 'on';
+  b.addEventListener('click', ()=>show(i));
+  dotsHost.appendChild(b);
+});
+function show(i){
+  cases.forEach((c, j)=>{
+    c.classList.toggle('show', i===j);
+    const dot = c.querySelector('.case-dots button:nth-child('+(j+1)+')');
+    if (dot) dot.classList.toggle('on', i===j);
+  });
+}
+let cur = 0;
+setInterval(()=>{ cur = (cur + 1) % cases.length; show(cur); }, 5500);
+
+/* scroll fade */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.hidden-fade').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

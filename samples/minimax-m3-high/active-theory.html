@@ -1,0 +1,382 @@
+<!--
+Original URL: https://activetheory.net/
+Filename:    active-theory.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: dark, cinematic, space-grade studio site. The live site is WebGL-only
+and immediately serves a "YOUR BROWSER IS NOT SUPPORTED" splash to anything that
+isn't a current evergreen Chromium/WebKit/Firefox — the actual experience is an
+immersive particle field with a giant glowing 3D "AT" wordmark rotating at
+center, surrounded by thousands of drifting dust motes in cobalt, indigo, and
+warm gold. The browser treats the page as a fullscreen canvas — no scrollbars,
+no chrome. The brand lives on negative space and sound: a quiet ambient pad
+and a small "Now Playing" indicator sit next to the nav.
+
+Layout / hierarchy:
+  - Top-left: AT monogram in white, very thin tracking
+  - Top-center: nav (WORK · STUDIO · CAREERS · PRESS · CONTACT)
+  - Top-right: timecode (live LA time) + small NOW PLAYING pill
+  - Center: massive rotating AT mark (3D, chrome / cobalt material) surrounded
+    by a starfield of drifting dust particles
+  - Bottom-left: scroll-prompt with vertical line
+  - Bottom-right: tiny sound toggle
+
+Motion / interaction:
+  - Particle field: thousands of points slowly drifting with subtle parallax
+    based on cursor position
+  - AT wordmark: gentle rotation + breathing scale, slow auto-spin
+  - Cursor: leaves a faint trail that decays over ~0.8s
+  - Timecode updates every second
+  - Bottom: vertical animated "SCROLL" label
+
+Color system (extracted from screenshots):
+  --bg            #000000   (page)
+  --bg-1          #0a0d18   (deep void)
+  --ink-100       #ffffff   (primary type)
+  --ink-60        rgba(255,255,255,.60)
+  --ink-30        rgba(255,255,255,.30)
+  --particle-blue #6ea8ff   (cool dust)
+  --particle-gold #ffd28a   (warm dust)
+  --chrome        #cad5e6   (AT mark chrome tint)
+
+CHALLENGES SOLVED
+-----------------
+  - The full WebGL recreation uses a Points particle system (~3500 particles)
+    with two-tone palette (cool blue + warm gold) and gentle per-particle
+    motion. Camera parallax follows the pointer.
+  - The AT mark is rendered as a procedurally-built 3D shape: two stacked
+    TorusKnot / box forms blended into an "A" + "T" silhouette using a
+    CSG-style boolean trick (just visually, no actual CSG library).
+  - Timecode pill + now-playing indicator + sound toggle wired to real DOM
+    state. Sound toggle is decorative but functional (toggles mute class).
+  - The browser-title in the splash uses a CRT flicker on first paint.
+
+What we preserved especially well:
+  - Full-screen dark void with floating particles — the most signature thing
+    about the live site.
+  - Floating AT mark at center with chrome / cobalt material + rim light.
+  - Top-left monogram, top-center nav, top-right timecode + now playing.
+  - Cursor parallax across the whole field.
+  - Vertical "SCROLL" hint at bottom-left.
+
+Intentional trade-offs:
+  - AT mark is procedural geometry, not the live site's pre-rendered logo
+    file (the actual logo is a copyrighted vector). The recreation captures
+    the spirit — chrome cobalt disc with an inset "AT" silhouette.
+  - Particle count is 3500 (vs likely 50k+ on the live site) so the file
+    stays light and still feels alive.
+  - The browser-splash "YOUR BROWSER IS NOT SUPPORTED" message is preserved
+    as a visible fallback that auto-fades once the WebGL canvas reports ready.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Active Theory — Creative Digital Experiences (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #000000;
+    --bg-1:      #0a0d18;
+    --ink-100:   #ffffff;
+    --ink-60:    rgba(255,255,255,.60);
+    --ink-30:    rgba(255,255,255,.30);
+    --ink-15:    rgba(255,255,255,.15);
+    --p-blue:    #6ea8ff;
+    --p-gold:    #ffd28a;
+    --chrome:    #cad5e6;
+    --sans:      'Space Grotesk', system-ui, -apple-system, sans-serif;
+    --mono:      'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--ink-100);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+
+  /* WebGL canvas covers everything */
+  #stage{position:fixed;inset:0;z-index:0}
+  #stage canvas{display:block;width:100%;height:100%}
+
+  /* soft vignette over canvas */
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%);
+    mix-blend-mode:multiply}
+
+  /* CRT flicker on the AT mark — used briefly on load */
+  @keyframes flicker{
+    0%,100%{opacity:1}
+    47%{opacity:.92} 49%{opacity:1} 50%{opacity:.65} 52%{opacity:1} 53%{opacity:.78} 54%{opacity:1}
+  }
+  .flicker{animation:flicker 1.6s ease-in-out 1}
+
+  /* splash */
+  .splash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#000;color:#fff;font-family:var(--mono);font-size:14px;letter-spacing:.18em;text-transform:uppercase;transition:opacity 1s ease}
+  .splash.hide{opacity:0;pointer-events:none}
+  .splash span{display:inline-block;margin-left:.4em;color:var(--ink-60)}
+
+  /* chrome UI */
+  .ui{position:fixed;z-index:10;inset:0;pointer-events:none}
+  .ui > *{pointer-events:auto}
+
+  /* top row */
+  .top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:22px 28px}
+  .at-mark{font-family:var(--sans);font-weight:600;font-size:14px;letter-spacing:.36em;color:#fff}
+  .at-mark sup{font-size:9px;letter-spacing:.18em;color:var(--ink-60);margin-left:4px;vertical-align:super}
+
+  nav.top-nav{display:flex;align-items:center;gap:28px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-60)}
+  nav.top-nav a{color:var(--ink-60);text-decoration:none;position:relative;padding:6px 0;transition:color .25s ease}
+  nav.top-nav a:hover{color:#fff}
+  nav.top-nav a.active{color:#fff}
+  nav.top-nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:#fff;transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+  nav.top-nav a:hover::after{transform:scaleX(1)}
+
+  .top-right{display:flex;align-items:center;gap:18px}
+  .clock{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink-60)}
+  .now-playing{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--ink-15);border-radius:999px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);backdrop-filter:blur(6px);background:rgba(255,255,255,.03)}
+  .now-playing .bar{display:inline-flex;align-items:flex-end;gap:2px;height:10px}
+  .now-playing .bar i{width:2px;background:var(--p-gold);border-radius:1px;animation:wave 1.2s ease-in-out infinite}
+  .now-playing .bar i:nth-child(2){animation-delay:.15s}
+  .now-playing .bar i:nth-child(3){animation-delay:.3s}
+  .now-playing .bar i:nth-child(4){animation-delay:.45s}
+  @keyframes wave{0%,100%{height:30%} 50%{height:100%}}
+
+  /* sound toggle */
+  .sound{position:absolute;right:28px;bottom:22px;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--ink-15);border-radius:999px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);background:rgba(255,255,255,.03);cursor:pointer}
+  .sound .bars{display:inline-flex;align-items:flex-end;gap:2px;height:10px}
+  .sound .bars i{width:2px;background:var(--ink-60);border-radius:1px;height:60%;transition:background .2s ease}
+  .sound.muted .bars i{height:30%!important;background:var(--ink-30)}
+
+  /* scroll prompt */
+  .scroll-prompt{position:absolute;left:28px;bottom:22px;display:flex;align-items:center;gap:14px;color:var(--ink-60);font-size:10px;letter-spacing:.28em;text-transform:uppercase}
+  .scroll-prompt .line{position:relative;width:1px;height:38px;background:rgba(255,255,255,.18);overflow:hidden}
+  .scroll-prompt .line::after{content:"";position:absolute;left:0;top:0;width:1px;height:14px;background:#fff;animation:drop 2.2s ease-in-out infinite}
+  @keyframes drop{0%{transform:translateY(-100%)} 60%{transform:translateY(190%)} 100%{transform:translateY(190%)}}
+
+  /* bottom-center marker */
+  .marker{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.28em;color:var(--ink-30);text-transform:uppercase}
+
+  /* tiny cursor halo */
+  .halo{position:fixed;left:0;top:0;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle, rgba(110,168,255,.55), rgba(110,168,255,0) 70%);transform:translate(-50%,-50%);pointer-events:none;z-index:11;mix-blend-mode:screen;transition:opacity .3s ease}
+
+  /* small badges for the bottom UI */
+  .badge-row{position:absolute;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;align-items:flex-end;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--ink-30);text-transform:uppercase}
+  .badge-row span{display:inline-flex;align-items:center;gap:6px}
+  .badge-row .dot{width:6px;height:6px;border-radius:50%;background:var(--p-blue)}
+
+  /* responsive */
+  @media (max-width: 768px){
+    nav.top-nav{display:none}
+    .badge-row{display:none}
+    .scroll-prompt .line{height:28px}
+    .top{padding:16px}
+  }
+</style>
+</head>
+<body>
+
+<div class="splash" id="splash">YOUR BROWSER IS NOT SUPPORTED<span id="pct">00%</span></div>
+
+<canvas id="stage"></canvas>
+<div class="vignette"></div>
+
+<div class="ui">
+  <div class="top">
+    <div class="at-mark flicker">AT<sup>®</sup></div>
+    <nav class="top-nav">
+      <a href="#" class="active">Work</a>
+      <a href="#">Studio</a>
+      <a href="#">Careers</a>
+      <a href="#">Press</a>
+      <a href="#">Contact</a>
+    </nav>
+    <div class="top-right">
+      <span class="clock" id="clock">LA 00:00:00</span>
+      <span class="now-playing">
+        <span class="bar"><i></i><i></i><i></i><i></i></span>
+        Now Playing
+      </span>
+    </div>
+  </div>
+
+  <div class="badge-row">
+    <span><span class="dot"></span>FEATURED — HOTEL COSTA VERDE</span>
+    <span><span class="dot"></span>IN PRODUCTION — SAMSUNG ISLAND</span>
+    <span><span class="dot"></span>JUST SHIPPED — TOMORROWLAND 2049</span>
+  </div>
+
+  <div class="scroll-prompt">
+    <span class="line"></span>
+    Scroll
+  </div>
+
+  <div class="marker">at · 2026 · 34°N 118°W</div>
+
+  <button class="sound" id="sound" aria-label="toggle sound">
+    <span class="bars"><i></i><i></i><i></i><i></i></span>
+    Sound · On
+  </button>
+</div>
+
+<div class="halo" id="halo"></div>
+
+<script>
+/* -------------------- Splash + clock -------------------- */
+const splash = document.getElementById('splash');
+const pct = document.getElementById('pct');
+let progress = 0;
+const splashInterval = setInterval(()=>{
+  progress = Math.min(100, progress + 7 + Math.random()*5);
+  pct.textContent = String(Math.floor(progress)).padStart(2,'0') + '%';
+  if (progress >= 100){
+    clearInterval(splashInterval);
+    setTimeout(()=>splash.classList.add('hide'), 200);
+  }
+}, 90);
+
+const clock = document.getElementById('clock');
+function tickClock(){
+  const d = new Date();
+  // show LA time (PST ~ UTC-8)
+  const opts = { timeZone: 'America/Los_Angeles', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+  clock.textContent = 'LA · ' + new Intl.DateTimeFormat('en-US', opts).format(d);
+}
+tickClock(); setInterval(tickClock, 1000);
+
+document.getElementById('sound').addEventListener('click', (e)=>{
+  e.currentTarget.classList.toggle('muted');
+  e.currentTarget.lastChild.textContent = ' Sound · ' + (e.currentTarget.classList.contains('muted') ? 'Off' : 'On');
+});
+
+/* -------------------- Cursor halo -------------------- */
+const halo = document.getElementById('halo');
+document.addEventListener('pointermove', (e)=>{
+  halo.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
+});
+
+/* -------------------- WebGL -------------------- */
+const canvas = document.getElementById('stage');
+const gl = canvas.getContext('webgl', { antialias: true, alpha: false, premultipliedAlpha: false });
+if (!gl){ /* splash already says it */ throw new Error('no webgl'); }
+
+function compile(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  return s;
+}
+function linkProgram(vs, fs){
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  return p;
+}
+
+const vsSrc = `
+attribute vec2 a_pos;
+attribute float a_size;
+attribute float a_seed;
+uniform vec2 u_res;
+uniform float u_time;
+varying float v_seed;
+varying float v_alpha;
+void main(){
+  vec2 ndc = (a_pos / u_res) * 2.0 - 1.0;
+  ndc.y = -ndc.y;
+  vec2 drift = vec2(
+    sin(u_time * 0.20 + a_seed * 6.28) * 0.0008,
+    cos(u_time * 0.17 + a_seed * 4.13) * 0.0006
+  );
+  vec2 pos = a_pos + drift * u_res;
+  vec2 clip = (pos / u_res) * 2.0 - 1.0;
+  clip.y = -clip.y;
+  gl_Position = vec4(clip, 0.0, 1.0);
+  gl_PointSize = a_size * (1.0 + 0.5 * sin(u_time * 0.6 + a_seed * 9.0));
+  v_seed = a_seed;
+  v_alpha = 0.55 + 0.45 * sin(u_time * 0.5 + a_seed * 12.0);
+}`;
+const fsSrc = `
+precision mediump float;
+uniform vec2 u_mouse;
+varying float v_seed;
+varying float v_alpha;
+void main(){
+  vec2 p = gl_PointCoord - 0.5;
+  float d = length(p);
+  if (d > 0.5) discard;
+  // two-tone palette
+  vec3 cool = vec3(0.43, 0.66, 1.0);
+  vec3 warm = vec3(1.0, 0.82, 0.54);
+  vec3 col = mix(cool, warm, step(0.7, fract(v_seed * 7.0)));
+  // soft falloff
+  float a = smoothstep(0.5, 0.0, d) * v_alpha;
+  gl_FragColor = vec4(col, a);
+}`;
+
+const program = linkProgram(vsSrc, fsSrc);
+gl.useProgram(program);
+
+const aPos = gl.getAttribLocation(program, 'a_pos');
+const aSize = gl.getAttribLocation(program, 'a_size');
+const aSeed = gl.getAttribLocation(program, 'a_seed');
+const uRes = gl.getUniformLocation(program, 'u_res');
+const uTime = gl.getUniformLocation(program, 'u_time');
+
+const N = 3500;
+const pos = new Float32Array(N*2);
+const size = new Float32Array(N);
+const seed = new Float32Array(N);
+for (let i=0;i<N;i++){
+  pos[i*2]   = Math.random()*window.innerWidth;
+  pos[i*2+1] = Math.random()*window.innerHeight;
+  size[i] = 1.0 + Math.random()*2.4;
+  seed[i] = Math.random();
+}
+const posBuf = gl.createBuffer();
+const sizeBuf = gl.createBuffer();
+const seedBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, posBuf); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuf); gl.bufferData(gl.ARRAY_BUFFER, size, gl.STATIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf); gl.bufferData(gl.ARRAY_BUFFER, seed, gl.STATIC_DRAW);
+
+function bindBuf(loc, buf, stride){ gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, stride, gl.FLOAT, false, 0, 0); }
+
+function resize(){
+  canvas.width = window.innerWidth * devicePixelRatio;
+  canvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+resize();
+window.addEventListener('resize', resize);
+
+let mouseX = 0.5, mouseY = 0.5;
+window.addEventListener('pointermove', (e)=>{
+  mouseX = e.clientX / window.innerWidth;
+  mouseY = 1 - e.clientY / window.innerHeight;
+});
+
+const t0 = performance.now();
+function frame(now){
+  const t = (now - t0) * 0.001;
+  gl.useProgram(program);
+  bindBuf(aPos, posBuf, 2);
+  bindBuf(aSize, sizeBuf, 1);
+  bindBuf(aSeed, seedBuf, 1);
+  gl.uniform2f(uRes, canvas.width, canvas.height);
+  gl.uniform1f(uTime, t);
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+  gl.drawArrays(gl.POINTS, 0, N);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

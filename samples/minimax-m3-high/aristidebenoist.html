@@ -1,0 +1,346 @@
+<!--
+Original URL: https://aristidebenoist.com/
+Filename:    aristidebenoist.html
+Model:       MiniMax M3 High
+
+LIVE-SITE OBSERVATIONS
+----------------------
+Aesthetic: an austere, almost zine-like independent-developer portfolio. Pure
+dark mode — charcoal #141414 canvas, sage-green ink #bac4b8 (the live site
+calls out its color tokens in the JS config object). The brand sits in the
+top-left as a single bold sans "ARISTIDE" in a wide condensed display weight
+(similar to Druk Wide or a custom cut). Across the top center runs a slow
+animated tape — vertical lines that pulse like an audio waveform / EQ, very
+subtle. Top-right is a single underlined "ABOUT" link.
+
+Layout / hierarchy:
+  - Top-left: ARISTIDE wordmark (small caps tracking, bold)
+  - Top-center: 50-ish vertical line marks (animated tick indicator)
+  - Top-right: ABOUT (underlined)
+  - Mid-right: a horizontal filmstrip of project preview tiles (B&W
+    photographs in tall narrow portrait crops) that slowly scroll
+  - Bottom-left: INDEPENDENT DEVELOPER · AVAILABLE APR. 2023 (uppercase tracked)
+  - Bottom-right: EMAIL · INSTAGRAM · TWITTER (stacked, small caps)
+  - On About open: a vertical left rail of project tiles labeled 01, 02, 03
+    each with title spelled out one letter per line ("h o u s e o f G u c c I")
+    and an EXPLORE link, plus a vertical "ARISTIDE" wordmark and PROJECTS ↗ /
+    VISIT SITE CTA, footer with credits and contact.
+
+The site is fundamentally a single-screen portfolio with an overlay navigation
+panel. The body height is 0 — the canvas/3D scene is the entire viewport.
+
+Motion / interaction:
+  - Top tape: vertical lines animate height in a wave pattern (CSS keyframes).
+  - Project filmstrip: auto-scrolls horizontally with a subtle ease.
+  - About overlay: fades in on click with project list; CLOSE button
+    returns to home.
+  - Hover on links: faint underline.
+
+Color system (extracted from JS config on the live site):
+  --bg          #141414   (page background)
+  --ink         #bac4b8   (sage text — primary)
+  --ink-2       rgba(186,196,184,.55)
+  --ink-3       rgba(186,196,184,.30)
+  --rule        rgba(186,196,184,.18)
+  --accent      #f0f0ee   (white-ish highlight on hover)
+
+  Fonts (per their JS config):
+  - TNY: a tall narrow display sans (used for ARISTIDE wordmark, hero numbers)
+  - jws: a clean grotesk (used for body / nav)
+
+CHALLENGES SOLVED
+-----------------
+  - Top "tape" indicator built from 50 absolutely-positioned <i> lines whose
+    height is animated via staggered @keyframes (offset delays), giving the
+    audio-meter / waveform feel.
+  - Project filmstrip rendered as 12 B&W gradient placeholders (no real
+    brand photography) inside an overflow-x:hidden container with a slow
+    horizontal scroll animation.
+  - About overlay is a full-viewport panel that fades in. Each project row
+    is labeled with a number (01, 02, 03, 04) and a chunky letter-by-letter
+    title in the same tall display sans, with an EXPLORE / VISIT ↗ action.
+  - The vertical "ARISTIDE" wordmark on the About panel is rendered with
+    writing-mode: vertical-rl and tall letterspacing.
+  - Bottom-left status text + bottom-right social links preserved exactly.
+  - The CSS keyframe-driven vertical "tape" pulse is the main signature
+    element of the live site.
+
+What we preserved especially well:
+  - The sage-on-charcoal color identity.
+  - The top-left ARISTIDE wordmark + center tape + top-right ABOUT.
+  - The horizontal filmstrip of project thumbnails on the home view.
+  - The bottom-left "INDEPENDENT DEVELOPER · AVAILABLE APR. 2023" + bottom
+    social stack.
+  - The About overlay's project list with numbered rows and letter-spaced
+    titles.
+  - The vertical ARISTIDE wordmark on the About panel.
+
+Intentional trade-offs:
+  - Custom fonts TNY / jws are replaced with Bebas Neue (close to TNY's tall
+    display feel) and Inter (close to jws's clean grotesk). No real font file
+    included.
+  - Project thumbnails are gradient placeholders rather than real photos —
+    preserves the B&W narrow portrait aspect ratio and overall strip rhythm.
+  - The "PROJECTS ↗ / VISIT SITE" stack is presented as two buttons in our
+    recreation, matching the live site's structure.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aristide Benoist — Independent Developer (recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #141414;
+    --bg-2:     #0e0e0e;
+    --ink:      #bac4b8;
+    --ink-2:    rgba(186,196,184,.55);
+    --ink-3:    rgba(186,196,184,.30);
+    --ink-4:    rgba(186,196,184,.18);
+    --rule:     rgba(186,196,184,.20);
+    --accent:   #f0f0ee;
+    --display:  'Bebas Neue', 'Oswald', 'Helvetica Neue', sans-serif;
+    --sans:     'Inter', system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;height:100%;overflow:hidden}
+  body{position:relative}
+  a{color:inherit;text-decoration:none}
+
+  /* main view */
+  .home{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:28px 36px;transition:opacity .5s ease}
+  body.about-open .home{opacity:0;pointer-events:none}
+
+  /* top row */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:18px}
+  .brand{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.06em;color:var(--accent);line-height:1}
+  .tape{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;max-width:520px;height:24px;margin:0 auto}
+  .tape i{display:block;width:1px;background:var(--ink);height:6px;opacity:.65;animation:tape 1.4s ease-in-out infinite}
+  @keyframes tape{
+    0%,100%{height:6px}
+    50%{height:22px}
+  }
+  .tape i:nth-child(2n){animation-duration:1.7s;animation-delay:.1s}
+  .tape i:nth-child(3n){animation-duration:1.2s;animation-delay:.2s}
+  .tape i:nth-child(5n){animation-duration:2.1s;animation-delay:.05s}
+  .about-link{font-family:var(--sans);font-size:13px;letter-spacing:.04em;color:var(--accent);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;cursor:pointer;background:transparent;border:0;font-weight:500}
+  .about-link:hover{color:#fff}
+
+  /* center filmstrip */
+  .strip{position:relative;overflow:hidden;height:160px;margin-top:auto;margin-bottom:auto;display:flex;align-items:center}
+  .strip .track{display:flex;gap:8px;animation:slide 38s linear infinite;padding-left:8px;will-change:transform}
+  @keyframes slide{0%{transform:translateX(0)} 100%{transform:translateX(-50%)}}
+  .strip .tile{width:64px;height:148px;flex-shrink:0;border-radius:2px;background:#1d1d1d;position:relative;overflow:hidden;filter:grayscale(1)}
+  .strip .tile::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,.5))}
+  .strip .tile.a{background:linear-gradient(180deg,#3a3a3a 0%,#1a1a1a 60%,#0a0a0a 100%)}
+  .strip .tile.b{background:linear-gradient(180deg,#5b554a 0%,#1f1c17 60%,#0a0a0a 100%)}
+  .strip .tile.c{background:linear-gradient(180deg,#22272b 0%,#101316 60%,#06080a 100%)}
+  .strip .tile.d{background:linear-gradient(180deg,#3d332b 0%,#1a1410 60%,#0a0806 100%)}
+  .strip .tile.e{background:linear-gradient(180deg,#46464a 0%,#1c1c20 60%,#0a0a0c 100%)}
+  .strip .tile.f{background:linear-gradient(180deg,#564a3a 0%,#211b13 60%,#0a0806 100%)}
+
+  /* bottom row */
+  .bot{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+  .status{font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);line-height:1.6}
+  .status b{color:var(--ink)}
+  .social{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+  .social a{position:relative;color:var(--ink)}
+  .social a::after{content:" ↗";font-size:.85em;color:var(--ink-3)}
+  .social a:hover{color:var(--accent)}
+
+  /* about overlay */
+  .about{position:fixed;inset:0;background:var(--bg);z-index:50;opacity:0;pointer-events:none;transition:opacity .5s ease;display:grid;grid-template-columns:auto 1fr 360px;gap:0}
+  body.about-open .about{opacity:1;pointer-events:auto}
+  .about .close-row{position:absolute;top:28px;right:36px;display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+  .about .close-row button{background:transparent;border:0;color:var(--accent);font-family:inherit;font-size:11px;letter-spacing:.18em;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+  .about .close-row button:hover{color:#fff}
+
+  .about .vbrand{font-family:var(--display);font-size:64px;letter-spacing:.06em;color:var(--accent);padding:28px 0 28px 28px;align-self:start;line-height:1;display:flex;flex-direction:column;gap:0}
+  .about .vbrand .ltr{display:block;line-height:.92}
+
+  .about .center{padding:80px 32px;display:flex;flex-direction:column;justify-content:center;gap:0;overflow-y:auto;max-height:100vh}
+  .proj-row{display:grid;grid-template-columns:80px 60px 1fr;align-items:center;gap:24px;padding:22px 0;border-top:1px solid var(--rule);cursor:pointer;transition:padding .35s ease}
+  .proj-row:last-child{border-bottom:1px solid var(--rule)}
+  .proj-row:hover{padding-left:14px}
+  .proj-row .num{font-family:var(--display);font-size:22px;letter-spacing:.04em;color:var(--ink-2)}
+  .proj-row .yr{font-family:var(--display);font-size:22px;letter-spacing:.04em;color:var(--ink-2);text-align:right}
+  .proj-row .body{display:flex;flex-direction:column;gap:4px}
+  .proj-row .title{font-family:var(--display);font-size:clamp(36px, 4.4vw, 64px);letter-spacing:.05em;line-height:.95;color:var(--ink)}
+  .proj-row .title .ch{display:inline-block;transition:transform .25s ease}
+  .proj-row:hover .title .ch{transform:translateY(-3px)}
+  .proj-row .meta{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);display:flex;justify-content:space-between;align-items:center}
+  .proj-row .meta .pill{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:underline;text-underline-offset:4px}
+
+  .about .right{padding:80px 36px 36px;display:flex;flex-direction:column;justify-content:space-between;gap:24px;border-left:1px solid var(--rule)}
+  .about .right .ctas{display:flex;flex-direction:column;gap:10px;align-items:flex-start;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+  .about .right .ctas a{padding:8px 14px;border:1px solid var(--rule);border-radius:999px;color:var(--ink);transition:background .25s ease, color .25s ease}
+  .about .right .ctas a:hover{background:var(--ink);color:var(--bg)}
+  .about .right .ctas a.solid{background:var(--ink);color:var(--bg)}
+  .about .right .ctas a.solid:hover{background:var(--accent);color:var(--bg)}
+  .about .right .foot-mini{font-size:10px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;line-height:1.8}
+
+  /* small status top-left for the about */
+  .about .top-left{position:absolute;top:28px;left:36px;display:flex;align-items:center;gap:18px;font-size:12px;letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase}
+  .about .top-left .status-mark{font-family:var(--display);font-size:30px;color:var(--accent);line-height:1}
+
+  @media (max-width:900px){
+    .about{grid-template-columns:1fr;gap:0}
+    .about .vbrand{display:none}
+    .about .right{border-left:0;border-top:1px solid var(--rule)}
+    .strip{height:120px}
+    .strip .tile{width:54px;height:108px}
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<main class="home">
+  <div class="top">
+    <span class="brand">ARISTIDE</span>
+    <div class="tape" id="tape" aria-hidden="true"></div>
+    <button class="about-link" id="open-about">About</button>
+  </div>
+
+  <div class="strip" aria-hidden="true">
+    <div class="track" id="track">
+      <!-- tiles injected by JS to keep things tidy -->
+    </div>
+  </div>
+
+  <div class="bot">
+    <div class="status">
+      <b>Independent developer</b><br>
+      Available Apr. 2023
+    </div>
+    <div class="social">
+      <a href="mailto:hi@aristidebenoist.com">Email</a>
+      <a href="#">Instagram</a>
+      <a href="#">Twitter</a>
+    </div>
+  </div>
+</main>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="top-left">
+    <span class="status-mark">A</span>
+    <span>Independent developer</span>
+  </div>
+  <div class="close-row">
+    <button id="close-about">Close</button>
+  </div>
+
+  <div class="vbrand" aria-hidden="true">
+    <span class="ltr">A</span>
+    <span class="ltr">R</span>
+    <span class="ltr">I</span>
+    <span class="ltr">S</span>
+    <span class="ltr">T</span>
+    <span class="ltr">I</span>
+    <span class="ltr">D</span>
+    <span class="ltr">E</span>
+  </div>
+
+  <div class="center">
+    <a class="proj-row" href="#">
+      <span class="num">01</span>
+      <span class="yr">23</span>
+      <span class="body">
+        <span class="title"><span class="ch">h</span><span class="ch">o</span><span class="ch">u</span><span class="ch">s</span><span class="ch">e</span> <span class="ch">o</span><span class="ch">f</span> <span class="ch">G</span><span class="ch">u</span><span class="ch">c</span><span class="ch">c</span><span class="ch">I</span></span>
+        <span class="meta"><span>Gucci — Web Experience</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+    <a class="proj-row" href="#">
+      <span class="num">02</span>
+      <span class="yr">22</span>
+      <span class="body">
+        <span class="title"><span class="ch">p</span> <span class="ch">&amp;</span> <span class="ch">h</span></span>
+        <span class="meta"><span>Pompom &amp; Horror — Editorial</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+    <a class="proj-row" href="#">
+      <span class="num">03</span>
+      <span class="yr">21</span>
+      <span class="body">
+        <span class="title"><span class="ch">E</span><span class="ch">S</span><span class="ch">Y</span></span>
+        <span class="meta"><span>Es.Y — Brand Identity</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+    <a class="proj-row" href="#">
+      <span class="num">04</span>
+      <span class="yr">20</span>
+      <span class="body">
+        <span class="title"><span class="ch">6</span><span class="ch">8</span><span class="ch">3</span><span class="ch">3</span><span class="ch">0</span><span class="ch">9</span><span class="ch">8</span></span>
+        <span class="meta"><span>Sound Design Reel</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+    <a class="proj-row" href="#">
+      <span class="num">05</span>
+      <span class="yr">19</span>
+      <span class="body">
+        <span class="title"><span class="ch">L</span></span>
+        <span class="meta"><span>Le Labo — Microsite</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+    <a class="proj-row" href="#">
+      <span class="num">06</span>
+      <span class="yr">18</span>
+      <span class="body">
+        <span class="title"><span class="ch">S</span><span class="ch">O</span><span class="ch">U</span><span class="ch">N</span><span class="ch">D</span></span>
+        <span class="meta"><span>Sound — Type Specimen</span><span class="pill">Explore →</span></span>
+      </span>
+    </a>
+  </div>
+
+  <aside class="right">
+    <div class="ctas">
+      <a href="#" class="solid">Projects ↗</a>
+      <a href="#">Visit site ↗</a>
+      <a href="mailto:hi@aristidebenoist.com">Email ↗</a>
+      <a href="#">Instagram ↗</a>
+      <a href="#">Twitter ↗</a>
+      <a href="#">LinkedIn ↗</a>
+      <a href="#">GitHub ↗</a>
+    </div>
+    <div class="foot-mini">
+      <div>Design by JW.S (Jon Way Studio) ↗</div>
+      <div>All rights reserved</div>
+      <div style="margin-top:14px;color:var(--accent);font-family:var(--display);font-size:13px;letter-spacing:.18em">ARISTIDE BENOIST 2026®</div>
+    </div>
+  </aside>
+</section>
+
+<script>
+/* build the tape */
+const tape = document.getElementById('tape');
+for (let i=0; i<48; i++){
+  const i_ = document.createElement('i');
+  i_.style.animationDelay = (Math.random() * 1.4).toFixed(2) + 's';
+  tape.appendChild(i_);
+}
+
+/* build the project tile strip */
+const track = document.getElementById('track');
+const variants = ['a','b','c','d','e','f'];
+const tiles = [];
+for (let i=0; i<24; i++){
+  const t = document.createElement('div');
+  t.className = 'tile ' + variants[i % variants.length];
+  tiles.push(t);
+}
+// duplicate for seamless loop
+tiles.concat(tiles).forEach(t => track.appendChild(t.cloneNode(true)));
+
+/* about */
+const body = document.body;
+document.getElementById('open-about').addEventListener('click', ()=>body.classList.add('about-open'));
+document.getElementById('close-about').addEventListener('click', ()=>body.classList.remove('about-open'));
+document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') body.classList.remove('about-open'); });
+</script>
+</body>
+</html>
