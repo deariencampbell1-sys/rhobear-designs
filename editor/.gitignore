@@ -10,4 +10,5 @@ test-results/
 playwright-report/
 blob-report/
 .DS_Store
-*.log
+*.log_shot-*.png
+_shots.mjs
