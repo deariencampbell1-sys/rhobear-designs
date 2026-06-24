@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RHOBEAR Designs — the website editor that hands you the file back</title>
+<meta name="description" content="An open-source visual website editor. Open any HTML file, edit it on a live canvas, and export clean HTML, CSS, and a ZIP you own. MIT licensed. Bring your own model." />
+<meta property="og:title" content="RHOBEAR Designs — Website Editor" />
+<meta property="og:description" content="Open any HTML, edit on canvas, export clean code you own. MIT. Bring your own model." />
+<style>
+  /* ---- brand tokens (RHOBEAR Designs: deep navy + single red accent) ---- */
+  :root{
+    --bg:#0c0c16; --bg-2:#11111f; --panel:#1a1a2e; --line:#262640;
+    --ink:#ece9f5; --ink-2:#a7a4c2; --ink-3:#6f6c8c;
+    --red:#e94560; --red-deep:#c5324a;
+    --ui:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace;
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark;scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);
+    font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+  main,header,footer{position:relative;z-index:1}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit;text-decoration:none}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--red);font-weight:600}
+  h1,h2,h3{margin:0;line-height:1.05;letter-spacing:-.02em;font-weight:700;text-wrap:balance}
+  p{margin:0;text-wrap:pretty}
+  .muted{color:var(--ink-2)}
+
+  /* nav */
+  header{padding:22px 0}
+  .nav{display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--red);box-shadow:0 0 18px var(--red)}
+  .nav nav{display:flex;gap:26px;font-size:14px;color:var(--ink-2)}
+  .nav nav a:hover{color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:11px;font-weight:600;font-size:15px;transition:transform .15s ease,background .15s ease,border-color .15s}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:var(--red-deep);transform:translateY(-1px)}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--ink-3);transform:translateY(-1px)}
+
+  /* hero */
+  .hero{padding:78px 0 36px;display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}
+  .hero h1{font-size:clamp(40px,6vw,68px)}
+  .hero h1 .alt{color:var(--red);font-style:normal}
+  .lede{margin-top:22px;font-size:19px;color:var(--ink-2);max-width:30ch}
+  .cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+  .meta{margin-top:22px;display:flex;gap:18px;font-family:var(--mono);font-size:12.5px;color:var(--ink-3);letter-spacing:.04em}
+  .meta b{color:var(--ink-2);font-weight:600}
+
+  /* editor mock */
+  .mock{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg-2);box-shadow:0 30px 80px -40px #000}
+  .mock .bar{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .mock .bar i{width:11px;height:11px;border-radius:50%;background:var(--line);display:block}
+  .mock .bar i:first-child{background:var(--red)}
+  .mock .bar .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .mock .body{display:grid;grid-template-columns:54px 1fr 168px;height:300px}
+  .mock .rail{border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;padding:16px 0;align-items:center}
+  .mock .rail span{width:20px;height:20px;border-radius:6px;background:var(--line)}
+  .mock .rail span.on{background:var(--red);box-shadow:0 0 14px var(--red)}
+  .mock .canvas{padding:22px;display:flex;flex-direction:column;gap:13px;justify-content:center}
+  .mock .canvas .h{height:18px;width:62%;border-radius:5px;background:linear-gradient(90deg,var(--ink) ,var(--ink-3));opacity:.85}
+  .mock .canvas .l{height:9px;border-radius:5px;background:var(--line)}
+  .mock .canvas .l.w1{width:84%}.mock .canvas .l.w2{width:71%}
+  .mock .canvas .sel{outline:2px solid var(--red);outline-offset:5px;border-radius:6px}
+  .mock .insp{border-left:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+  .mock .insp .row{height:10px;border-radius:4px;background:var(--line)}
+  .mock .insp .row.lab{width:46%;background:var(--ink-3)}
+  .mock .chat{margin:0 16px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:11px 13px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+  .mock .chat .ai{width:22px;height:22px;border-radius:50%;background:var(--red);flex:none;box-shadow:0 0 14px var(--red)}
+
+  /* sections */
+  section{padding:64px 0}
+  .sec-head{max-width:54ch}
+  .sec-head h2{font-size:clamp(28px,3.5vw,40px);margin-top:14px}
+  .sec-head p{margin-top:14px;color:var(--ink-2);font-size:18px}
+
+  /* bento (asymmetric, not three equal cards) */
+  .bento{margin-top:40px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .card{border:1px solid var(--line);border-radius:15px;background:linear-gradient(180deg,var(--bg-2),var(--bg));padding:26px;transition:border-color .2s,transform .2s}
+  .card:hover{border-color:var(--red-deep);transform:translateY(-3px)}
+  .card h3{font-size:20px;margin-bottom:10px}
+  .card p{color:var(--ink-2);font-size:15.5px}
+  .card .k{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:.1em;text-transform:uppercase}
+  .c-a{grid-column:span 4}.c-b{grid-column:span 2}
+  .c-c{grid-column:span 2}.c-d{grid-column:span 2}.c-e{grid-column:span 2}
+  .c-wide{grid-column:span 6;display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
+
+  /* steps */
+  .steps{margin-top:40px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+  .step{background:var(--bg-2);padding:26px 22px}
+  .step .n{font-family:var(--mono);color:var(--red);font-size:13px}
+  .step h3{font-size:17px;margin:12px 0 8px}
+  .step p{font-size:14.5px;color:var(--ink-2)}
+
+  /* closing */
+  .close{text-align:center;padding:96px 0}
+  .close h2{font-size:clamp(32px,5vw,56px)}
+  .close p{margin:18px auto 0;max-width:46ch;color:var(--ink-2);font-size:19px}
+  .close .cta{justify-content:center}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--ink-3);font-size:14px}
+  .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .foot a:hover{color:var(--ink)}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;gap:36px;padding-top:48px}
+    .bento{grid-template-columns:repeat(2,1fr)}
+    .c-a,.c-b,.c-c,.c-d,.c-e{grid-column:span 2}
+    .c-wide{grid-column:span 2;grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    .nav nav{display:none}
+  }
+  @media(prefers-reduced-motion:reduce){.reveal{transition:none}*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="dot"></span> RHOBEAR Designs</div>
+    <nav>
+      <a href="#what">Editor</a>
+      <a href="#how">How it works</a>
+      <a href="#open">Open source</a>
+    </nav>
+    <a class="btn btn-ghost" href="https://github.com/deariencampbell1-sys/rhobear-designs">GitHub</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" style="padding-top:78px">
+    <div>
+      <span class="eyebrow">Visual website editor · MIT</span>
+      <h1 style="margin-top:18px">Edit any web page.<br>Walk away with the <span class="alt">file</span>.</h1>
+      <p class="lede">Open an HTML file, move things on a real canvas, and export clean HTML and CSS. No lock-in, no account, no export tax. The code stays yours from the first click.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#how">See how it works</a>
+        <a class="btn btn-ghost" href="https://github.com/deariencampbell1-sys/rhobear-designs">Read the source</a>
+      </div>
+      <div class="meta">
+        <span><b>MIT</b> licensed</span>
+        <span><b>Bring</b> your own model</span>
+        <span><b>Exports</b> HTML · CSS · ZIP</span>
+      </div>
+    </div>
+
+    <div class="mock reveal">
+      <div class="bar"><i></i><i></i><i></i><span class="tag">index.html — canvas</span></div>
+      <div class="body">
+        <div class="rail"><span class="on"></span><span></span><span></span><span></span></div>
+        <div class="canvas">
+          <div class="h sel"></div>
+          <div class="l w1"></div>
+          <div class="l w2"></div>
+          <div class="l w1"></div>
+        </div>
+        <div class="insp">
+          <div class="row lab"></div><div class="row"></div>
+          <div class="row lab"></div><div class="row"></div><div class="row"></div>
+        </div>
+      </div>
+      <div class="chat"><span class="ai"></span> “Make the heading larger and center it” — your model, your key</div>
+    </div>
+  </section>
+
+  <section id="what" class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">What it is</span>
+      <h2>A real editor on top of your own files, not a walled garden.</h2>
+      <p>Most builders trap your work behind their renderer. RHOBEAR Designs opens the HTML you already have, edits the actual DOM, and writes it back out clean. You can leave whenever you want and take everything with you.</p>
+    </div>
+
+    <div class="bento">
+      <div class="card c-a reveal">
+        <div class="k">Canvas</div>
+        <h3>Click, drag, resize — on the page itself</h3>
+        <p>Select any element and the inspector follows. Drag blocks in, resize with handles, double-click to type. What you move is the document, not a preview of it.</p>
+      </div>
+      <div class="card c-b reveal">
+        <div class="k">Import</div>
+        <h3>Open a file or a folder</h3>
+        <p>A single <code>.html</code> or a whole project with linked images and CSS.</p>
+      </div>
+      <div class="card c-c reveal">
+        <div class="k">Export</div>
+        <h3>Clean code, every time</h3>
+        <p>Download the document with inlined styles, or a ZIP of <code>index.html</code> + <code>styles.css</code> + assets.</p>
+      </div>
+      <div class="card c-d reveal">
+        <div class="k">Layers</div>
+        <h3>See the structure</h3>
+        <p>The element tree on one side, the style controls on the other. No mystery markup.</p>
+      </div>
+      <div class="card c-e reveal">
+        <div class="k">Devices</div>
+        <h3>Desktop, tablet, phone</h3>
+        <p>Switch widths to check the layout before you ship it.</p>
+      </div>
+      <div class="card c-wide reveal">
+        <div>
+          <div class="k">AI, as a chat bubble</div>
+          <h3 style="margin-bottom:12px">Ask for the change. Watch it land without the flicker.</h3>
+          <p class="muted">Connect any model with your own key. Type what you want in plain language and the editor applies it as a clean edit to the canvas, not a full reload. The AI never holds your project hostage; it just helps you move faster.</p>
+        </div>
+        <div class="mock" style="box-shadow:none">
+          <div class="chat" style="margin:14px;border-radius:10px"><span class="ai"></span> “Swap the hero to two columns”</div>
+          <div class="chat" style="margin:0 14px 14px;border-radius:10px;color:var(--ink-3)"><span class="ai" style="background:var(--line);box-shadow:none"></span> applied · 1 element changed · undo available</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Four steps. None of them lock you in.</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step"><div class="n">01</div><h3>Open</h3><p>Point it at an HTML file or a project folder from your disk.</p></div>
+      <div class="step"><div class="n">02</div><h3>Edit</h3><p>Move, restyle, and rewrite on the live canvas. Undo and redo the whole way.</p></div>
+      <div class="step"><div class="n">03</div><h3>Ask</h3><p>Hand the tedious changes to your model through the chat bubble.</p></div>
+      <div class="step"><div class="n">04</div><h3>Export</h3><p>Save the HTML or a full ZIP. Host it anywhere. You own it.</p></div>
+    </div>
+  </section>
+
+  <section id="open" class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Open source</span>
+      <h2>MIT licensed, runs on your machine, reads its own source out loud.</h2>
+      <p>The editor is GrapesJS for the canvas and serializer, wrapped in RHOBEAR chrome, with original code for import, export, and the AI bubble. Clone it, fork it, sell what you build with it. The Playwright suite checks that every toolbar button does what it says.</p>
+    </div>
+    <div class="cta reveal" style="margin-top:28px">
+      <a class="btn btn-primary" href="https://github.com/deariencampbell1-sys/rhobear-designs">Clone on GitHub</a>
+      <a class="btn btn-ghost" href="https://github.com/deariencampbell1-sys/rhobear-designs/blob/main/editor/README.md">Editor docs</a>
+    </div>
+  </section>
+
+  <section class="close wrap reveal">
+    <span class="eyebrow">Start now</span>
+    <h2>Your next page is one file away.</h2>
+    <p>Open it, shape it, take it with you.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/deariencampbell1-sys/rhobear-designs">Get RHOBEAR Designs</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="brand"><span class="dot"></span> RHOBEAR Designs</div>
+    <div>MIT licensed · part of the <a href="https://rhobear.ai">RHOBEAR</a> family</div>
+  </div>
+</footer>
+
+<script>
+  // starfield — quiet, brand-navy, never busy
+  (function(){
+    var c=document.getElementById('stars'),x=c.getContext('2d'),s=[],w,h;
+    function size(){w=c.width=innerWidth;h=c.height=innerHeight;s=[];var n=Math.min(140,(w*h)/16000);for(var i=0;i<n;i++)s.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.3+.2,a:Math.random()*.6+.15,d:Math.random()*.4+.1});}
+    function draw(){x.clearRect(0,0,w,h);for(var i=0;i<s.length;i++){var p=s[i];p.y+=p.d*.12;if(p.y>h)p.y=0;x.globalAlpha=p.a;x.fillStyle=i%9===0?'#e94560':'#d8d6ee';x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fill();}requestAnimationFrame(draw);}
+    size();draw();addEventListener('resize',size);
+  })();
+  // scroll reveal
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+</script>
+</body>
+</html>
