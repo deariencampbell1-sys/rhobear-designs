@@ -14,7 +14,8 @@ import elementsManifest from '../library/elements/manifest.json';
 
 import { createTemplatesGallery } from './templates-gallery.js';
 import { listProjects, saveProject, deleteProject, getProject } from './projects.js';
-import { chat as aiChat, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS, testConnection } from '../ai/llm-client.js';
+import { chat as aiChat, chatWithTools, parseEdit, SYSTEM_PROMPT, PROVIDER_LABELS, testConnection } from '../ai/llm-client.js';
+import { openAiToolsParam, runTool, TOOLS_SYSTEM_PROMPT } from '../ai/tools.js';
 import { createThreeMode } from './three-mode.js';
 
 const _ELEMENTS = Array.isArray(elementsManifest) ? elementsManifest : (elementsManifest.elements || []);
@@ -190,7 +191,14 @@ export function bootShell() {
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
   const three = createThreeMode({
     host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus,
-    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) {} toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved'); },
+    onSaveToStash: (el) => {
+      // Honor the write result — localStorage can be full (a few baked 3D embeds add up).
+      // Never tell the user it saved when it didn't.
+      const saved = addUserStash(el);
+      try { renderElementLibrary(); } catch (_e) {}
+      if (saved) toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved');
+      else { toast('Could not save — local storage is full. Remove a few saved items and try again.'); setStatus('Save failed: browser storage is full'); }
+    },
   });
 
   // templates gallery
@@ -561,6 +569,12 @@ export function bootShell() {
     const buRow = $('ai-baseurl-row'); const mdRow = $('ai-model-row');
     if (buRow) buRow.hidden = p !== 'compatible';
     if (mdRow) mdRow.hidden = !custom;
+    // In the dev server, default MiniMax/compatible to the same-origin proxy
+    // (/mm → MiniMax in vite.config) so it just works without CORS. Leave a
+    // user-entered Base URL untouched; only fill when empty.
+    if (p === 'compatible' && import.meta.env && import.meta.env.DEV) {
+      const bu = $('ai-baseurl'); if (bu && !bu.value.trim()) bu.value = '/mm/v1';
+    }
   }
   function addAiMsg(role, text) {
     const el = document.createElement('div');
@@ -597,11 +611,59 @@ export function bootShell() {
       addAiMsg('assistant', `Connected to ${label} ✓ — your key is saved locally on this device. Tell me what to change.`);
     }
   }
+  // Editor tool surface for a paired LLM (the "MCP tools"). Each method is the
+  // executor behind a tool spec in ai/tools.js; the model calls them by name.
+  let aiOutlineCache = [];
+  const editorAdapter = {
+    get_page_outline() {
+      aiOutlineCache = (live.getOutline && live.getOutline()) || [];
+      return aiOutlineCache.map((e, i) => ({ index: i, depth: e.depth, label: e.label, text: e.text }));
+    },
+    get_selection_html() { return (live.getSelectionHtml && live.getSelectionHtml()) || ''; },
+    select_element({ index }) {
+      const e = aiOutlineCache[index];
+      if (!e) throw new Error(`No element at index ${index} — call get_page_outline first.`);
+      live.selectNode(e.node);
+      return `selected [${index}] ${e.label || ''}`.trim();
+    },
+    replace_selection({ html }) {
+      const ok = live.applyAIEdit(html);
+      if (ok) setStatus('AI applied a change');
+      return ok ? 'replaced' : 'nothing selected (or invalid HTML) — try select_element first';
+    },
+    insert_html({ html, name }) { live.insertElement({ html, name: name || 'element' }); setStatus('AI inserted an element'); return 'inserted'; },
+  };
+
   async function sendAi(prompt) {
     const c = aiConfig();
     if (!c.key || !c.provider) { addAiMsg('assistant', 'No key set — click "Connect / change LLM key" below.'); return; }
     addAiMsg('user', prompt);
     const pending = addAiMsg('assistant', '…thinking');
+    // Tool-driven path: pair a local / OpenAI-compatible model with the editor tools so
+    // it can act directly. Falls back to single-shot chat for other providers or if the
+    // model doesn't support tool calls.
+    const canUseTools = (c.provider === 'compatible' || c.provider === 'openai') && mode === 'live';
+    if (canUseTools) {
+      try {
+        const user = `${prompt}\n\nUse the editor tools to inspect the page and make the change.`;
+        const { text, calls } = await chatWithTools({
+          apiKey: c.key, model: c.model, baseUrl: c.baseUrl,
+          system: TOOLS_SYSTEM_PROMPT, user, tools: openAiToolsParam(),
+          dispatch: (name, args) => runTool(name, args, editorAdapter),
+        });
+        const acted = calls.filter((k) => k.out && k.out.ok).map((k) => k.name);
+        pending.textContent = text || (acted.length ? `Done — ${acted.join(', ')}.` : 'Done.');
+        return;
+      } catch (err) {
+        // Tool calls unsupported (older/local model) or transport error — fall through
+        // to plain chat rather than failing the request.
+        if (!/tool|function/i.test(String(err && err.message))) {
+          pending.textContent = `Error: ${err.message}`;
+          pending.classList.add('rb-ai-msg--err');
+          return;
+        }
+      }
+    }
     const ctx = (mode === 'live') ? live.getSelectionHtml() : (build.getHtmlCss().html || '');
     const user = `${prompt}\n\nSelected element (return its complete replacement if you change it):\n\`\`\`html\n${ctx}\n\`\`\``;
     try {

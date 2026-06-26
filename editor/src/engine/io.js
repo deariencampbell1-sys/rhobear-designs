@@ -93,6 +93,18 @@ const ZIP_INDEX_FILENAME = 'index.html';
 /** Sub-directory inside ZIP exports where binary assets live. */
 const ZIP_ASSETS_DIR = 'assets';
 
+/**
+ * CSS appended to any export that contains a saved 3D object (`.rb-3d-embed`).
+ * Guarantees the object renders the way a 3D decoration should on a live page:
+ * a transparent, NON-BLOCKING float that never paints a page-colored slab and
+ * never swallows clicks/scroll on whatever it overlaps. Injected unconditionally
+ * for embeds so it also rescues OLDER saves whose inline style predates the
+ * `pointer-events:none` host fix.
+ */
+const EMBED_EXPORT_CSS =
+  '.rb-3d-embed{background:transparent!important;pointer-events:none}' +
+  '.rb-3d-embed canvas{background:transparent!important;pointer-events:none!important;display:block}';
+
 // ---------------------------------------------------------------------------
 // Small string helpers
 // ---------------------------------------------------------------------------
@@ -534,6 +546,12 @@ export function exportHtml(input, overrides) {
   const store = normalizeOverrides(overrides);
   const folded = store ? applyOverrides({ html, css }, store) : { html, css };
 
+  // If the page carries a saved 3D object, append the embed CSS so it floats
+  // transparent and never blocks the page (rescues old saves too).
+  const exportCss = /rb-3d-embed/.test(folded.html)
+    ? (folded.css ? folded.css + '\n' + EMBED_EXPORT_CSS : EMBED_EXPORT_CSS)
+    : folded.css;
+
   // Inject any scripts not already present in the body.
   const bodyWithScripts = assembleBodyWithScripts(folded.html, scripts);
 
@@ -542,7 +560,7 @@ export function exportHtml(input, overrides) {
   // body, trailing scripts preserved).
   return buildLiveDocument({
     html: bodyWithScripts,
-    css: folded.css,
+    css: exportCss,
     title,
   });
 }

@@ -139,6 +139,76 @@ async function google(key, model, system, user) {
   return (parts || []).map((p) => p.text || '').join('');
 }
 
+/**
+ * Tool-calling chat loop for the OpenAI-compatible path (local models + MiniMax).
+ * The model is handed the editor tools and may call them across several rounds; each
+ * call is run through `dispatch(name, args)` (bound to the editor in shell.js) and the
+ * result is fed back so the model can continue. Resolves to the final assistant text
+ * plus the list of calls made — so the UI can show what actually happened.
+ *
+ * Only the OpenAI-compatible providers go through here (that's the "pair a local LLM"
+ * surface). Anthropic/Google callers keep using `chat()`.
+ *
+ * @param {{
+ *   apiKey:string, model?:string, baseUrl?:string, system:string, user:string,
+ *   tools:Array<object>, dispatch:(name:string, args:object)=>Promise<any>|any,
+ *   maxRounds?:number,
+ * }} opts
+ * @returns {Promise<{ text:string, calls:Array<{name:string, args:object, out:any}> }>}
+ */
+export async function chatWithTools({ apiKey, model, baseUrl, system, user, tools, dispatch, maxRounds = 5 }) {
+  if (!apiKey) throw new Error('No API key set — add one in settings.');
+  const root = String(baseUrl || PROVIDER_BASE_URLS.compatible).replace(/\/+$/, '');
+  const url = `${root}/chat/completions`;
+  const m = model || PROVIDER_MODELS.compatible;
+  const messages = [{ role: 'system', content: system }, { role: 'user', content: user }];
+  const calls = [];
+
+  for (let round = 0; round < maxRounds; round++) {
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: m, max_tokens: 2048, messages, tools, tool_choice: 'auto' }),
+      });
+    } catch (_e) {
+      throw new Error(
+        `Could not reach ${root} — blocked before a response (network down, bad Base URL, or no CORS). Check the Base URL in settings.`,
+      );
+    }
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const base = (d.error && d.error.message) || `Provider error ${res.status}`;
+      const hint = (res.status === 401 || res.status === 403) ? ' — check your API key.'
+        : res.status === 404 ? ' — check the Base URL (API root ending in /v1).' : '';
+      throw new Error(base + hint);
+    }
+    const msg = d.choices && d.choices[0] && d.choices[0].message;
+    if (!msg) return { text: '', calls };
+    messages.push(msg);
+
+    const toolCalls = msg.tool_calls || [];
+    if (!toolCalls.length) return { text: msg.content || '', calls };
+
+    for (const call of toolCalls) {
+      const fnName = call.function && call.function.name;
+      let args = {};
+      try { args = JSON.parse((call.function && call.function.arguments) || '{}'); } catch (_e) { args = {}; }
+      let out;
+      try { out = await dispatch(fnName, args); } catch (e) { out = { ok: false, error: String((e && e.message) || e) }; }
+      calls.push({ name: fnName, args, out });
+      messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(out).slice(0, 4000) });
+    }
+  }
+  // Hit the round cap with tools still pending — summarize the work that got done.
+  const did = calls.filter((c) => c.out && c.out.ok).map((c) => c.name);
+  return {
+    text: did.length ? `Applied: ${did.join(', ')}.` : 'Reached the tool-call limit without a final answer.',
+    calls,
+  };
+}
+
 /** Split an assistant reply into the conversational text + any fenced HTML edit. */
 export function parseEdit(text) {
   const m = String(text || '').match(/```(?:html)?\s*([\s\S]*?)```/i);

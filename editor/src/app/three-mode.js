@@ -176,21 +176,33 @@ function suggestSceneName(json) {
  * a constant runtime scans for any unmounted `.rb-3d-embed` and mounts it — so it
  * works whether the script ran on page load (export) OR was re-executed after being
  * inserted in the editor (innerHTML-inserted scripts don't auto-run; we re-run them).
- * Not relying on document.currentScript means re-executed copies still work. */
+ * Not relying on document.currentScript means re-executed copies still work.
+ *
+ * Renders like a real 3D object should: a TRANSPARENT, NON-BLOCKING decoration.
+ * - alpha + explicit zero-alpha clear → only the object's pixels paint; the rest of
+ *   the canvas is see-through, so the page behind shows normally (no page-colored slab).
+ * - the canvas is `pointer-events:none` → it never swallows clicks / scroll on whatever
+ *   it overlaps. You move the OBJECT by moving its (invisible, weightless) host element
+ *   in the editor; on the page it just floats there and blocks nothing.
+ * - a gentle auto-spin replaces grab-to-orbit (no OrbitControls), so it reads as 3D
+ *   without hijacking the visitor's pointer. Opt out per-embed with data-rb-spin="0". */
 const EMBED_RUNTIME = `
 import * as THREE from 'https://esm.sh/three@0.161.0';
-import { OrbitControls } from 'https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js';
 const G = { box:()=>new THREE.BoxGeometry(1,1,1), sphere:()=>new THREE.SphereGeometry(0.7,32,32), cylinder:()=>new THREE.CylinderGeometry(0.5,0.5,1.4,32), cone:()=>new THREE.ConeGeometry(0.6,1.4,32), torus:()=>new THREE.TorusGeometry(0.6,0.22,24,80), plane:()=>new THREE.PlaneGeometry(2,2) };
 for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data-rb-mounted])')) {
   host.setAttribute('data-rb-mounted','1');
   let DATA; try { DATA = JSON.parse(host.getAttribute('data-rb-3d')); } catch (e) { continue; }
-  const W = host.clientWidth || 800, H = host.clientHeight || 520;
-  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-  renderer.setSize(W, H); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio)); host.appendChild(renderer.domElement);
+  const W = host.clientWidth || 360, H = host.clientHeight || 360;
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setSize(W, H); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  const cv = renderer.domElement; cv.style.pointerEvents='none'; cv.style.display='block'; cv.style.background='transparent';
+  host.appendChild(cv);
   const scene = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(50, W/H, 0.1, 100); cam.position.set(3,2,4);
+  const cam = new THREE.PerspectiveCamera(50, W/H, 0.1, 100); cam.position.set(3,2,4); cam.lookAt(0,0,0);
   scene.add(new THREE.AmbientLight(0xffffff, 0.75));
   const dl = new THREE.DirectionalLight(0xffffff, 1.15); dl.position.set(5,8,5); scene.add(dl);
+  const group = new THREE.Group(); scene.add(group);
   for (const o of (DATA.objects||[])) {
     const geo = (G[o.type]||G.box)();
     const mat = new THREE.MeshStandardMaterial({ color:o.color||'#2dd4bf', metalness:o.metalness??0, roughness:o.roughness??1 });
@@ -198,11 +210,11 @@ for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data
     if (o.position) mesh.position.set(o.position[0],o.position[1],o.position[2]);
     if (o.rotation) mesh.rotation.set(o.rotation[0],o.rotation[1],o.rotation[2]);
     if (o.scale) mesh.scale.set(o.scale[0],o.scale[1],o.scale[2]);
-    scene.add(mesh);
+    group.add(mesh);
   }
-  const ctr = new OrbitControls(cam, renderer.domElement); ctr.enableDamping = true; ctr.enableZoom = false; ctr.enablePan = false;
+  const spin = host.getAttribute('data-rb-spin') !== '0';
   new ResizeObserver(()=>{ const w=host.clientWidth,h=host.clientHeight; if(w&&h){ renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); } }).observe(host);
-  (function loop(){ requestAnimationFrame(loop); ctr.update(); renderer.render(scene,cam); })();
+  (function loop(){ requestAnimationFrame(loop); if(spin) group.rotation.y += 0.005; renderer.render(scene,cam); })();
 }`;
 
 function buildEmbedHtml(json, size) {
@@ -210,8 +222,9 @@ function buildEmbedHtml(json, size) {
   const px = Math.max(120, Math.min(900, Math.round(size || 360)));
   // A contained, free-standing object — NOT a full-width slab. `inline-block` so it
   // sits inline like an image (you can move / duplicate / delete it like any element),
-  // a modest default footprint so it never blankets the page, and a transparent
-  // background so only the object shows. Resize via the inspector's Width/Height.
-  return `<div class="rb-3d-embed" data-rb-3d="${attr}" style="display:inline-block;width:${px}px;height:${px}px;max-width:100%;position:relative;background:transparent;overflow:hidden;vertical-align:middle;cursor:grab">` +
+  // a modest default footprint so it never blankets the page, a transparent background
+  // so only the object shows, and `pointer-events:none` so on the exported page it never
+  // blocks clicks on what it overlaps. Resize via the inspector's Width/Height.
+  return `<div class="rb-3d-embed" data-rb-3d="${attr}" data-rb-spin="1" style="display:inline-block;width:${px}px;height:${px}px;max-width:100%;position:relative;background:transparent;overflow:visible;vertical-align:middle;line-height:0;pointer-events:none">` +
     `<script type="module">${EMBED_RUNTIME}</script></div>`;
 }

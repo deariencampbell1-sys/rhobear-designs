@@ -83,8 +83,12 @@ export function createLiveMode(refs) {
     injectStyle('rb-edit-transitions', EDIT_TRANSITIONS);
     injectStyle('rb-edit-cursor', EDIT_CURSOR);
     injectStyle('rb-overrides', '');
-    // force any 3D embed transparent (older saves had an opaque black bg inline)
-    injectStyle('rb-embed-fix', '.rb-3d-embed{background:transparent!important}');
+    // EDITOR-ONLY embed normalization (this <style> lives in the iframe head and is
+    // never exported). Force every 3D embed transparent, keep the host selectable /
+    // draggable even though its exported inline style is pointer-events:none, and stop
+    // the inner canvas from swallowing clicks — this also rescues OLDER saves whose
+    // baked-in OrbitControls canvas used to hijack every click over the embed.
+    injectStyle('rb-embed-fix', '.rb-3d-embed{background:transparent!important;pointer-events:auto!important}.rb-3d-embed canvas{pointer-events:none!important;background:transparent!important}');
     dropLine = doc.createElement('div'); dropLine.id = 'rb-drop-line';
     dropLine.style.cssText = 'position:fixed;height:3px;background:#2dd4bf;z-index:2147483647;pointer-events:none;box-shadow:0 0 8px #2dd4bf;display:none';
     doc.body.appendChild(dropLine);
