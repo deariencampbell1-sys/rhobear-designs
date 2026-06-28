@@ -25,7 +25,7 @@ const getElement = (id) => _ELEMENTS.find((e) => e.id === id);
 
 // User stash — items the user saved (e.g. a 3D scene), kept locally + shown in the Add panel.
 function userStash() { try { return JSON.parse(localStorage.getItem('rb-user-stash') || '[]'); } catch (_e) { return []; } }
-function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) {} }
+function addUserStash(el) { const a = userStash(); a.unshift(el); try { localStorage.setItem('rb-user-stash', JSON.stringify(a.slice(0, 100))); } catch (_e) { console.error('addUserStash:', _e); } }
 
 // Quick structural inserts (clean defaults — distinct from the category filters)
 const QUICK = [
@@ -123,7 +123,7 @@ export function bootShell() {
   const build = createBuildMode({ onStatus: setStatus, onSelectionChange });
   const three = createThreeMode({
     host: refs.threeHost, railEl: refs.threeRail, inspectorEl: refs.inspector3d, fileInput: refs.file3d, onStatus: setStatus,
-    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) {} toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved'); },
+    onSaveToStash: (el) => { addUserStash(el); try { renderElementLibrary(); } catch (_e) { console.error('renderElementLibrary on save:', _e); } toast('Saved to stash ✓ — find it in Edit Live Site → Add → Saved'); },
   });
 
   // templates gallery
@@ -513,7 +513,7 @@ export function bootShell() {
       const fromQuery = (url.searchParams.get('designs_api') || '').replace(/\/$/, '');
       const fromGlobal = (typeof window !== 'undefined' && window.__RB_DESIGNS_API__) || '';
       let fromLs = '';
-      try { fromLs = (localStorage.getItem('rb-designs-api') || '').replace(/\/$/, ''); } catch (_e) {}
+      try { fromLs = (localStorage.getItem('rb-designs-api') || '').replace(/\/$/, ''); } catch (_e) { console.warn('designs-api localStorage read:', _e); }
       const base = fromQuery || fromGlobal || fromLs || `${url.origin}/v1`;
       const r = await fetch(`${base}/pages/${encodeURIComponent(pageId)}`);
       const body = await r.json().catch(() => ({}));

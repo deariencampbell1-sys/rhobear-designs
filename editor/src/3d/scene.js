@@ -348,7 +348,7 @@ export function setupThreeScene(container, opts = {}) {
   function dispose() {
     stop();
     if (resizeObserver) {
-      try { resizeObserver.disconnect(); } catch (_) {}
+      try { resizeObserver.disconnect(); } catch (_) { console.error('resizeObserver disconnect:', _); }
       resizeObserver = null;
     }
     renderer.domElement.removeEventListener('pointermove', onPointerMove);

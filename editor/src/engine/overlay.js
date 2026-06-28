@@ -260,8 +260,8 @@ export function createOverlay(container, iframe, opts) {
   }
 
   function destroy() {
-    try { container.removeChild(hover); } catch (_e) {}
-    try { container.removeChild(selection); } catch (_e) {}
+    try { container.removeChild(hover); } catch (_e) { console.error('overlay destroy hover:', _e); }
+    try { container.removeChild(selection); } catch (_e) { console.error('overlay destroy selection:', _e); }
     setHidden(hover, true);
     setHidden(selection, true);
   }

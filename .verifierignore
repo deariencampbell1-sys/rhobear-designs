@@ -1,0 +1,6 @@
+# .verifierignore — vendored third-party code excluded from static analysis.
+# These are unmodified upstream dependencies that we vendor for build
+# reproducibility. We cannot fix upstream empty-catch blocks or route patterns.
+
+# GrapesJS vendored engine (including minified dist/ bundles)
+editor/src/vendor/grapesjs/

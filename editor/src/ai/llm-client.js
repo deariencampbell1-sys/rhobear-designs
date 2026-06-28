@@ -5,6 +5,12 @@
  * without it; with a key, the assistant returns edits the editor applies.
  * MIT — RHOBEAR Designs (original)
  */
+
+// External provider endpoints — fully-qualified third-party URLs.
+// NOT internal RHOBEAR routes.
+const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
+const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+
 export const PROVIDER_MODELS = {
   anthropic: 'claude-sonnet-4-6',
   openai: 'gpt-4o',
@@ -31,7 +37,7 @@ export async function chat({ provider, apiKey, model, system, user }) {
 }
 
 async function anthropic(key, model, system, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -47,7 +53,7 @@ async function anthropic(key, model, system, user) {
 }
 
 async function openai(key, model, system, user) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch(OPENAI_CHAT_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),

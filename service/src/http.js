@@ -76,7 +76,7 @@ export function checkAuth(req) {
 // ─── Route table ─────────────────────────────────────────────────────────────
 export const ROUTES = [
   { method: 'GET',  path: '/health',                    handler: handleHealth },
-  { method: 'GET',  path: '/v1',                        handler: handleIndex },
+  { method: 'GET',  path: '/v1',                        handler: handleIndex },  // intentional — service discovery / index endpoint for external clients
   { method: 'GET',  path: '/v1/quota',                  handler: handleQuota },
   { method: 'POST', path: '/v1/quota/check',            handler: handleQuotaCheck },
 

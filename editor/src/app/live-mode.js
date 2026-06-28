@@ -225,7 +225,7 @@ export function createLiveMode(refs) {
   }
   function setStyle(prop, value) {
     if (!selectedEl) return;
-    try { selectedEl.style.setProperty(prop, value); } catch (_e) {}
+    try { selectedEl.style.setProperty(prop, value); } catch (_e) { console.error('setProperty:', _e); }
     if (selectedPath) { store.setStyle(selectedPath, prop, value); injectStyle('rb-overrides', toStylesheet(store)); }
     dirty = true;
     if (overlay) overlay.showSelection(rectOf(selectedEl));
@@ -245,7 +245,7 @@ export function createLiveMode(refs) {
   function onDragOver(e) {
     if (!dragPayload) return;
     e.preventDefault();
-    try { e.dataTransfer.dropEffect = 'copy'; } catch (_e) {}
+    try { e.dataTransfer.dropEffect = 'copy'; } catch (_e) { console.error('dropEffect:', _e); }
     const t = e.target;
     if (t && t.nodeType === 1 && t !== dropLine) showDropLine(t, e);
   }
@@ -331,7 +331,7 @@ export function createLiveMode(refs) {
     }
     executeScripts(node);
     dirty = true; setStatus(`Inserted ${elObj.name || 'element'}`);
-    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) { console.error('scrollIntoView:', _e); }
     selectElement(node); refreshOutline();
   }
   function beginReplace() {
@@ -450,7 +450,7 @@ export function createLiveMode(refs) {
   function render3DEmbedSector(el) {
     const body = document.createElement('div'); body.style.padding = '0 14px 14px';
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rb-btn rb-btn--primary'; btn.style.width = '100%'; btn.textContent = '✦ Edit in 3D Studio';
-    btn.addEventListener('click', () => { try { onEdit3D && onEdit3D(JSON.parse(el.getAttribute('data-rb-3d'))); } catch (_e) {} });
+    btn.addEventListener('click', () => { try { onEdit3D && onEdit3D(JSON.parse(el.getAttribute('data-rb-3d'))); } catch (_e) { console.error('3D embed parse:', _e); } });
     body.appendChild(btn);
     return renderSector({ name: '3D scene', open: true, extra: body });
   }
@@ -623,7 +623,7 @@ export function createLiveMode(refs) {
     })(doc.body, 0);
     return out;
   }
-  function selectNode(node) { if (node) { selectElement(node); try { node.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} } }
+  function selectNode(node) { if (node) { selectElement(node); try { node.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) { console.error('selectNode scrollIntoView:', _e); } } }
 
   // ---- AI hooks: give the assistant context, apply its edits ----
   function getSelectionHtml() {
@@ -638,7 +638,7 @@ export function createLiveMode(refs) {
     if (selectedEl && selectedEl.parentNode) selectedEl.parentNode.replaceChild(node, selectedEl);
     else doc.body.appendChild(node);
     dirty = true; selectElement(node); refreshOutline(); snap();
-    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+    try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) { console.error('applyAIEdit scrollIntoView:', _e); }
     return true;
   }
 
