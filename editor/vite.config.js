@@ -52,9 +52,25 @@ export default defineConfig({
     // Allow serving the repo-root samples/ (one level above this editor app)
     // so the templates gallery can bundle template HTML via import.meta.glob.
     fs: { allow: ['..'] },
+    // Proxy the Designs API so the editor can call it from the browser
+    // (no CORS dance needed). The default points at the canonical local
+    // dev service on port 8765; override with RHOBEAR_DESIGNS_API_TARGET.
+    proxy: {
+      '/v1': {
+        target: process.env.RHOBEAR_DESIGNS_API_TARGET || 'http://127.0.0.1:8765',
+        changeOrigin: true,
+        // Don't rewrite — the service already lives at /v1/*.
+      },
+    },
   },
   preview: {
     port: 4173,
+    proxy: {
+      '/v1': {
+        target: process.env.RHOBEAR_DESIGNS_API_TARGET || 'http://127.0.0.1:8765',
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [vendorCjsToEsmPlugin],
   build: {

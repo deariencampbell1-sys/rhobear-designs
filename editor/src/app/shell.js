@@ -495,6 +495,44 @@ export function bootShell() {
   try { renderElementLibrary(); } catch (_e) { /* library optional */ }
   setStatus('Editor ready — open a page or build from scratch');
 
+  // ---- auto-load from RHOBEAR Designs API ---------------------------------
+  // `?designs_page_id=<id>` (optionally with `&designs_api=<baseUrl>`) tells
+  // the editor to fetch the page state from the Designs API and open it in
+  // Live mode for hand-editing. This is the entry point the agent uses.
+  //
+  // Resolution order for the API base URL:
+  //   1. `?designs_api=<baseUrl>` query param (per-link override)
+  //   2. `window.__RB_DESIGNS_API__` global (host page config)
+  //   3. `localStorage.rb-designs-api` (user preference set via settings)
+  //   4. `/v1` same-origin (when the editor is reverse-proxied behind the API)
+  (async function autoLoadFromApi() {
+    try {
+      const url = new URL(window.location.href);
+      const pageId = url.searchParams.get('designs_page_id');
+      if (!pageId) return;
+      const fromQuery = (url.searchParams.get('designs_api') || '').replace(/\/$/, '');
+      const fromGlobal = (typeof window !== 'undefined' && window.__RB_DESIGNS_API__) || '';
+      let fromLs = '';
+      try { fromLs = (localStorage.getItem('rb-designs-api') || '').replace(/\/$/, ''); } catch (_e) {}
+      const base = fromQuery || fromGlobal || fromLs || `${url.origin}/v1`;
+      const r = await fetch(`${base}/pages/${encodeURIComponent(pageId)}`);
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok || !body?.ok) {
+        setStatus(`Designs API: ${body?.error?.message || `failed (${r.status})`}`);
+        return;
+      }
+      const page = body.data;
+      if (!page.html) { setStatus(`Designs API: page ${pageId} has no html yet`); return; }
+      setMode('live');
+      loadedAny = true; hideEmpty();
+      const t = live.load(page.html, page.name || page.page_id);
+      setTitle(t || page.name || `Page ${pageId}`);
+      setStatus(`Loaded page ${pageId} from Designs API`);
+    } catch (err) {
+      setStatus(`Designs API load failed: ${err.message}`);
+    }
+  })();
+
   return { setMode, live, build, three, get mode() { return mode; } };
 }
 
