@@ -75,10 +75,13 @@ html, body {
    saturate(1.25) keeps the small brand mark crisp. */
 .rb-logo-img {
   width: 100%; height: 100%; display: block;
+  object-fit: contain;            /* fix: top mark was stretching/sitting off-center */
   filter: hue-rotate(180deg) saturate(1.25);
   border-radius: inherit;
 }
-.rb-bear { width: 78%; height: 78%; display: block; }
+/* One canonical bear everywhere — same source + same treatment as the top mark
+   (was 3 different bears: hue-rotated PNG up top + 2 hand-drawn cartoon SVGs). */
+.rb-bear { width: 78%; height: 78%; display: block; object-fit: contain; filter: hue-rotate(180deg) saturate(1.25); }
 .rb-ai-fab .rb-bear { width: 64%; height: 64%; }
 
 .rb-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
