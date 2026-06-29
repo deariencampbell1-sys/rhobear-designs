@@ -5,3 +5,5 @@ editor/src/vendor/
 # Minified / bundled dist artifacts.
 **/*.min.js
 **/dist/**
+# Model-generated demo/sample output — evidence, not authored source.
+samples/
