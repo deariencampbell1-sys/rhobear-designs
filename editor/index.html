@@ -195,12 +195,22 @@
             <option value="anthropic">Anthropic (Claude)</option>
             <option value="openai">OpenAI</option>
             <option value="google">Google (Gemini)</option>
+            <option value="compatible">Local / OpenAI-compatible (MiniMax, Ollama, vLLM…)</option>
           </select>
         </div>
         <div class="rb-setting">
           <span class="rb-setting__label">API key</span>
           <input type="password" class="rb-input" id="ai-key" placeholder="sk-…" data-testid="ai-key" />
           <span class="rb-setting__hint">Or use OAuth where the provider supports it (coming with the AI release).</span>
+        </div>
+        <div class="rb-setting">
+          <span class="rb-setting__label">Model <span class="rb-setting__opt">(optional)</span></span>
+          <input type="text" class="rb-input" id="ai-model" placeholder="leave blank for the provider default" data-testid="ai-model" />
+        </div>
+        <div class="rb-setting">
+          <span class="rb-setting__label">Base URL <span class="rb-setting__opt">(local / compatible only)</span></span>
+          <input type="text" class="rb-input" id="ai-base" placeholder="http://localhost:11434/v1" data-testid="ai-base" />
+          <span class="rb-setting__hint">For OpenAI-compatible endpoints, the model can call the editor tools to act on the page directly.</span>
         </div>
         <div class="rb-modal__actions">
           <button type="button" class="rb-btn" data-action="settings-close">Cancel</button>
