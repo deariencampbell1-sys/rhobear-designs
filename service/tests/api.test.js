@@ -47,6 +47,10 @@ async function handleReq(req, res) {
     const auth = (await import('../src/http.js')).checkAuth(req);
     if (!auth.ok) {
       const { fail } = await import('../src/http.js');
+      // Mirror server.js: no token configured → 503 fail-closed; otherwise 401.
+      if (auth.reason === 'unconfigured') {
+        return fail(res, 503, 'unconfigured', 'RHOBEAR_SERVICE_TOKEN is not set on the server — the agent API is fail-closed and refuses all calls until a token is configured.');
+      }
       return fail(res, 401, 'unauthorized', 'Missing or invalid `Authorization: Bearer $RHOBEAR_SERVICE_TOKEN`');
     }
   }
@@ -112,6 +116,22 @@ test('auth: missing token → 401', async () => {
 test('auth: wrong token → 401', async () => {
   const r = await fetch(base + '/v1/pages', { method: 'GET', headers: { authorization: 'Bearer wrong' } });
   assert.equal(r.status, 401);
+});
+
+test('auth: server token unconfigured → 503 fail-closed', async () => {
+  // The whole point of the fail-closed change: with no token configured the
+  // API refuses every protected call with 503, never silently opens.
+  const saved = CONFIG.serviceToken;
+  CONFIG.serviceToken = '';
+  try {
+    const r = await fetch(base + '/v1/pages', { method: 'GET', headers: { authorization: auth } });
+    assert.equal(r.status, 503);
+    const j = await r.json();
+    assert.equal(j.ok, false);
+    assert.equal(j.error.code, 'unconfigured');
+  } finally {
+    CONFIG.serviceToken = saved;
+  }
 });
 
 test('GET /v1/quota returns bypass state', async () => {

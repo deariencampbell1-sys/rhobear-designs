@@ -64,7 +64,7 @@ function constantTimeEquals(a, b) {
 
 export function checkAuth(req) {
   if (CONFIG.dev) return { ok: true, dev: true };
-  if (!CONFIG.serviceToken) return { ok: true, open: true }; // open if no token configured
+  if (!CONFIG.serviceToken) return { ok: false, reason: 'unconfigured' }; // FAIL-CLOSED: no token => refuse (never silently open to any caller/AI)
   const h = req.headers['authorization'] || '';
   const m = /^Bearer\s+(.+)$/i.exec(h);
   if (!m) return { ok: false, reason: 'missing' };
