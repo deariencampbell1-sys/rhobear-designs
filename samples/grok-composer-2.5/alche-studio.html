@@ -1,0 +1,363 @@
+<!--
+  Original URL: https://alche.studio/
+  Model: Grok Composer 2.5
+
+  Key observations:
+  - Ultra-dark immersive studio site for Unreal Engine / Fortnite metaverse work
+  - Bilingual JP/EN typography with restrained sans-serif hierarchy and wide letter-spacing on nav
+  - Full-viewport KV with scroll cue; works section uses date-led editorial cards with tag pills
+  - Mission → Vision arc with large bilingual statements; service blocks split Fortnite / UE / stellla
+  - News rail with dated entries; subtle grain, slow parallax, premium negative space
+
+  Challenges solved:
+  - Canvas particle field approximates immersive KV without original 3D assets
+  - Scroll-linked section labels (works_intro, mission_in, etc.) mirror live site rhythm
+  - Placeholder thumbnails preserve exact card proportions and tag taxonomy
+-->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alche, Inc</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --bg-elevated: #111111;
+      --bg-card: #161616;
+      --text: #f5f5f5;
+      --text-muted: #8a8a8a;
+      --text-dim: #5a5a5a;
+      --accent: #e8e8e8;
+      --border: rgba(255,255,255,0.08);
+      --tag-bg: rgba(255,255,255,0.06);
+      --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+      background: var(--grain); opacity: 0.35;
+    }
+    .nav-link {
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text-muted); transition: color 0.3s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .section-label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: lowercase;
+      color: var(--text-dim); font-family: monospace;
+    }
+    .work-card { border-top: 1px solid var(--border); transition: background 0.4s; }
+    .work-card:hover { background: var(--bg-elevated); }
+    .tag {
+      font-size: 10px; letter-spacing: 0.08em; padding: 4px 10px;
+      background: var(--tag-bg); border: 1px solid var(--border); border-radius: 2px;
+      color: var(--text-muted);
+    }
+    .placeholder-img {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      position: relative; overflow: hidden;
+    }
+    .placeholder-img::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+    }
+    .vision-text {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 300; line-height: 1.35; letter-spacing: -0.02em;
+    }
+    #kv-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .scroll-cue { animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50% { transform: translateY(8px); opacity: 1; }
+    }
+    .fade-up { opacity: 0; transform: translateY(40px); }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 mix-blend-difference">
+    <a href="#" class="text-sm font-medium tracking-widest uppercase">Alche</a>
+    <nav class="hidden md:flex gap-8">
+      <a href="#top" class="nav-link">TOP</a>
+      <a href="#works" class="nav-link">WORKS</a>
+      <a href="#about" class="nav-link">ABOUT</a>
+      <a href="#vision" class="nav-link">VISION</a>
+      <a href="#service" class="nav-link">SERVICE</a>
+    </nav>
+    <button id="menu-btn" class="md:hidden text-xs tracking-widest uppercase text-[var(--text-muted)]">Menu</button>
+  </header>
+
+  <!-- KV Hero -->
+  <section id="top" class="relative h-screen flex flex-col justify-end pb-16 px-6 md:px-12">
+    <canvas id="kv-canvas"></canvas>
+    <div class="relative z-10 max-w-4xl">
+      <p class="text-[var(--text-muted)] text-sm md:text-base font-light leading-relaxed mb-6 fade-up">
+        Architect worlds<br>that move hearts and spark hope.
+      </p>
+      <h1 class="text-4xl md:text-6xl font-light tracking-tight leading-tight fade-up" style="transition-delay:0.1s">
+        <span class="text-[var(--text-muted)]">没入型・体験型の</span><br>
+        エンターテインメント
+      </h1>
+    </div>
+    <div class="absolute bottom-8 right-6 md:right-12 flex items-center gap-3 text-[10px] tracking-[0.3em] uppercase text-[var(--text-dim)] scroll-cue">
+      scroll to explore →
+    </div>
+    <div class="absolute top-1/2 left-6 md:left-12 -translate-y-1/2 section-label" style="writing-mode:vertical-rl">kv</div>
+  </section>
+
+  <!-- News -->
+  <section class="px-6 md:px-12 py-16 border-t border-[var(--border)]">
+    <p class="section-label mb-8">News</p>
+    <div class="space-y-6 max-w-3xl">
+      <article class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 group cursor-pointer">
+        <time class="text-xs text-[var(--text-dim)] font-mono shrink-0">2025 06.26</time>
+        <p class="text-sm text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">Unreal Fest Bali 2025で登壇しました</p>
+      </article>
+      <article class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 group cursor-pointer">
+        <time class="text-xs text-[var(--text-dim)] font-mono shrink-0">2025 05.16</time>
+        <p class="text-sm text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">丸紅が提供する次世代ファッションメタバースアプリ「WEAR GO LAND」をAlche Studioが開発</p>
+      </article>
+      <article class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 group cursor-pointer">
+        <time class="text-xs text-[var(--text-dim)] font-mono shrink-0">2024 10.29</time>
+        <p class="text-sm text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">博報堂DYメディアパートナーズとクリエイティブチーム「ReIMAGINE」を結成</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Works -->
+  <section id="works" class="px-6 md:px-12 py-24">
+    <p class="section-label mb-4">works_intro</p>
+    <h2 class="text-2xl md:text-3xl font-light mb-16 tracking-tight">works</h2>
+
+    <div class="space-y-0">
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2026 01.17</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">KizunaAI "Hello, Fortnite"</h3>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">In-Game-Concert</span><span class="tag">fortnite</span><span class="tag">metaverse</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm"></div>
+        </div>
+      </a>
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2025 05.16</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">WEAR GO LAND</h3>
+            <p class="text-xs text-[var(--text-dim)] mb-2">15ブランド以上が参加、「IS:SUE」がアンバサダーに就任！</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">stellla</span><span class="tag">unreal_engine</span><span class="tag">metaverse</span><span class="tag">mobile</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm" style="background:linear-gradient(135deg,#2d1b4e,#4a1942,#1a1a2e)"></div>
+        </div>
+      </a>
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2025 02.20</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">DISCOAT 2025SS EXHIBITION in virtual</h3>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">stellla</span><span class="tag">unreal_engine</span><span class="tag">metaverse</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm" style="background:linear-gradient(135deg,#1e3a5f,#0d2137,#162447)"></div>
+        </div>
+      </a>
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2024 10.18</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">マツケンサンバⅡ Rise Up the World</h3>
+            <p class="text-xs text-[var(--text-dim)] mb-2">3000万PV突破！</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">fortnite</span><span class="tag">metaverse</span><span class="tag">In-Game-Concert</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm" style="background:linear-gradient(135deg,#3d2b1f,#5c3d2e,#2a1810)"></div>
+        </div>
+      </a>
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2024 07.29</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">逃走中 CREATED IN FORTNITE</h3>
+            <p class="text-xs text-[var(--text-dim)] mb-2">同時接続人数世界Top3(2.2万人)を達成</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">fortnite</span><span class="tag">metaverse</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm" style="background:linear-gradient(135deg,#1a472a,#0d2818,#163820)"></div>
+        </div>
+      </a>
+      <a href="#" class="work-card block py-8 md:py-10 group">
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-2 text-xs text-[var(--text-dim)] font-mono">2021 07.16</div>
+          <div class="md:col-span-7">
+            <h3 class="text-lg md:text-xl font-medium mb-2 group-hover:translate-x-2 transition-transform">SHIN SEKAI "nowhere" RADWIMPS ROLE PLAYING MUSIC</h3>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <span class="tag">metaverse</span><span class="tag">unreal_engine</span><span class="tag">mobile</span><span class="tag">In-Game-Concert</span>
+            </div>
+          </div>
+          <div class="md:col-span-3 placeholder-img aspect-video rounded-sm" style="background:linear-gradient(135deg,#2e1a3d,#4a2060,#1a1028)"></div>
+        </div>
+      </a>
+    </div>
+    <a href="#" class="inline-block mt-12 text-xs tracking-[0.2em] uppercase text-[var(--text-muted)] hover:text-[var(--text)] transition-colors border-b border-[var(--border)] pb-1">More Works</a>
+    <p class="section-label mt-24">works_outro</p>
+  </section>
+
+  <!-- Mission -->
+  <section id="about" class="px-6 md:px-12 py-32 border-t border-[var(--border)]">
+    <p class="section-label mb-16">mission_in</p>
+    <div class="grid md:grid-cols-2 gap-16 items-end">
+      <div>
+        <p class="section-label mb-6">mission</p>
+        <p class="vision-text text-[var(--text)]">
+          これまでにない<br>没入型・体験型のエンターテインメントを<br>生み出す
+        </p>
+      </div>
+      <div>
+        <p class="text-lg md:text-xl font-light text-[var(--text-muted)] leading-relaxed">
+          Pioneering immersive<br>and experiential entertainment like no other.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vision -->
+  <section id="vision" class="px-6 md:px-12 py-32 bg-[var(--bg-elevated)]">
+    <p class="section-label mb-6">vision</p>
+    <div class="max-w-5xl">
+      <p class="vision-text mb-8">
+        心を揺さぶり、希望を持てる<br>"世界"を作る
+      </p>
+      <p class="text-xl md:text-2xl font-light text-[var(--text-muted)] leading-relaxed">
+        Architect worlds<br>that move hearts and spark hope.
+      </p>
+    </div>
+    <p class="section-label mt-24">vision_out</p>
+  </section>
+
+  <!-- Service -->
+  <section id="service" class="px-6 md:px-12 py-32">
+    <p class="section-label mb-16">service_in</p>
+    <p class="section-label mb-8">service</p>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+      <a href="#" class="group block bg-[var(--bg-card)] border border-[var(--border)] p-8 md:p-12 hover:border-[var(--text-dim)] transition-colors">
+        <div class="placeholder-img aspect-[16/9] mb-8 rounded-sm" style="background:linear-gradient(135deg,#1a3a1a,#2d5a2d,#0d200d)"></div>
+        <h3 class="text-xl font-medium mb-4">Fortnite Creative Works</h3>
+        <p class="text-sm text-[var(--text-muted)] leading-relaxed mb-4">Fortnite上での体験制作に強みを持ち、エンターテイメント性と拡張性のある空間を企画・制作。</p>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">We specialize in creating experiences in Fortnite — planning and producing entertaining and scalable works.</p>
+      </a>
+      <a href="#" class="group block bg-[var(--bg-card)] border border-[var(--border)] p-8 md:p-12 hover:border-[var(--text-dim)] transition-colors">
+        <div class="placeholder-img aspect-[16/9] mb-8 rounded-sm" style="background:linear-gradient(135deg,#1a2a4a,#2a3a6a,#0d1530)"></div>
+        <h3 class="text-xl font-medium mb-4">Unreal Engine Works</h3>
+        <p class="text-sm text-[var(--text-muted)] leading-relaxed mb-4">クラウドレンダリングから各デバイス向けのコンテンツを制作。ゲームエンジンの可能性を従来の枠組みを超えたエンターテインメント領域に展開。</p>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">From Cloud Rendering, to devices including iOS, Android and PC, we create content for many platforms!</p>
+      </a>
+    </div>
+
+    <a href="#" class="block bg-[var(--bg-card)] border border-[var(--border)] p-8 md:p-12 hover:border-[var(--text-dim)] transition-colors">
+      <p class="text-2xl font-bold tracking-tight mb-6">stellla</p>
+      <p class="text-sm text-[var(--text-muted)] leading-relaxed max-w-3xl mb-4">
+        メタバース構築基盤として、ライブイベント、ファッションショー、そして工場・都市計画など産業系デジタル空間まで幅広く対応。
+      </p>
+      <p class="text-xs text-[var(--text-dim)] leading-relaxed max-w-3xl">
+        A metaverse platform for diverse digital applications from live events to industrial environments. Multi-platform support with Unreal Engine.
+      </p>
+    </a>
+  </section>
+
+  <footer class="px-6 md:px-12 py-12 border-t border-[var(--border)] flex flex-col md:flex-row justify-between gap-4">
+    <span class="text-xs text-[var(--text-dim)]">© Alche, Inc</span>
+    <span class="text-xs text-[var(--text-dim)] tracking-widest uppercase">Immersive Digital Worlds</span>
+  </footer>
+
+  <!-- Trade-offs note -->
+  <div class="px-6 md:px-12 py-8 text-[10px] text-[var(--text-dim)] border-t border-[var(--border)] leading-relaxed max-w-2xl">
+    <strong class="text-[var(--text-muted)]">Preserved well:</strong> bilingual hierarchy, works editorial rhythm, service taxonomy, dark immersive palette, scroll section labels.<br>
+    <strong class="text-[var(--text-muted)]">Trade-offs:</strong> KV uses 2D particle canvas instead of original Unreal cinematics; news links are non-functional placeholders.
+  </div>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray('.fade-up').forEach((el, i) => {
+      gsap.to(el, { opacity: 1, y: 0, duration: 1.2, delay: i * 0.15, ease: 'power3.out' });
+    });
+
+    gsap.utils.toArray('.work-card').forEach(card => {
+      gsap.from(card, {
+        scrollTrigger: { trigger: card, start: 'top 85%' },
+        opacity: 0, y: 30, duration: 0.8, ease: 'power2.out'
+      });
+    });
+
+    // KV particle field
+    const canvas = document.getElementById('kv-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * devicePixelRatio;
+      canvas.height = canvas.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 120; i++) {
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.5 + 0.3,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        a: Math.random() * 0.4 + 0.1
+      });
+    }
+
+    function drawKV() {
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+      ctx.clearRect(0, 0, w, h);
+      const grad = ctx.createRadialGradient(w*0.5, h*0.4, 0, w*0.5, h*0.4, w*0.6);
+      grad.addColorStop(0, 'rgba(30,40,80,0.15)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,210,255,${p.a})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(drawKV);
+    }
+    drawKV();
+  </script>
+</body>
+</html>

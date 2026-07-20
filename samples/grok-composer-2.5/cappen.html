@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+  =============================================================================
+  CAPPEN.COM RECREATION — Grok Composer 2.5
+  =============================================================================
+  Original URL: https://cappen.com/
+
+  Key Observations:
+  - Near-black (#0a0a0a) canvas with oversized condensed typography and generous whitespace
+  - Hero splits "HUMAN THINKERS" / portrait strip / "DIGITAL MAKERS" with DISCOVER CTA
+  - Portfolio is scroll-pinned: vertical scroll drives horizontal image galleries per project
+  - Six featured case studies: Amanda Braga, Credit Genie, JCPM Malls, Ministry of Supply,
+    LeadEdu, NeonDoor — each with year, tags, description, Launch Project link
+  - "BUILDING TOMORROW FOR TODAY" manifesto + card grid of work
+  - Infinite client marquee, services split (Digital Experience / Brand Strategy)
+  - Awards grid (Awwwards, CSSDA, FWA, Orpetron, GSAP, Design Rush)
+  - "LET'S TALK IDEAS" conversational contact bot with stepped form flow
+  - Persistent header: logo, FELIPE@CAPPEN.COM, menu overlay
+
+  Challenges Solved:
+  - Replicated scroll-driven horizontal galleries via GSAP ScrollTrigger pin + scrub
+  - Gradient placeholders replace all brand imagery/logos without breaking layout rhythm
+  - Sticky project info panels with parallax image strips per case study
+  - Chat-bot UI with progressive disclosure mimicking the original multi-step form
+  - CSS marquee + GSAP hero/section reveals in a single self-contained file
+  =============================================================================
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cappen — Award-Winning Website Development Studio in Miami</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a3a3a3;
+      --text-muted: #666666;
+      --accent-warm: #e8a87c;
+      --accent-cool: #6b8cce;
+      --accent-neon: #c8f542;
+      --accent-rose: #d4737c;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --font-display: 'Inter', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-display);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: rgba(255,255,255,0.15); }
+
+    .gradient-ph {
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+    }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .ph-hero-1 { background: linear-gradient(135deg, #2a1810 0%, #8b5a3c 40%, #1a0f0a 100%); }
+    .ph-hero-2 { background: linear-gradient(160deg, #1a1a2e 0%, #4a6fa5 50%, #0f0f1a 100%); }
+    .ph-hero-3 { background: linear-gradient(145deg, #1f1020 0%, #7c3a6b 45%, #0d0a0d 100%); }
+    .ph-hero-4 { background: linear-gradient(120deg, #0f1a14 0%, #3d7a5c 50%, #0a0f0c 100%); }
+    .ph-hero-5 { background: linear-gradient(170deg, #1a1510 0%, #c9a227 40%, #12100a 100%); }
+    .ph-hero-6 { background: linear-gradient(155deg, #101820 0%, #5b7db1 55%, #0a0e14 100%); }
+    .ph-hero-7 { background: linear-gradient(140deg, #201018 0%, #b85c6f 50%, #100a0c 100%); }
+    .ph-hero-8 { background: linear-gradient(125deg, #0f1810 0%, #4a8f6a 45%, #0a120e 100%); }
+
+    .ph-amanda { background: linear-gradient(135deg, #1a0a0a 0%, #c41e3a 30%, #2d0f1a 70%, #0a0505 100%); }
+    .ph-credit { background: linear-gradient(145deg, #0a1420 0%, #1e6fd9 40%, #0d1a2a 100%); }
+    .ph-jcpm { background: linear-gradient(160deg, #1a1008 0%, #e67e22 35%, #2a1810 100%); }
+    .ph-mos { background: linear-gradient(150deg, #121212 0%, #555555 40%, #0a0a0a 100%); }
+    .ph-leadedu { background: linear-gradient(140deg, #0a1a14 0%, #27ae60 45%, #081510 100%); }
+    .ph-neondoor { background: linear-gradient(135deg, #0f0020 0%, #ff00aa 30%, #00ffff 60%, #0a0015 100%); }
+
+    .display-text {
+      font-size: clamp(3.5rem, 12vw, 11rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 40s linear infinite;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .horizontal-scroll-wrap {
+      display: flex;
+      gap: 1.5rem;
+      will-change: transform;
+    }
+
+    .project-panel {
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .scroll-hint {
+      animation: pulse-hint 2s ease-in-out infinite;
+    }
+    @keyframes pulse-hint {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .menu-overlay {
+      transform: translateY(-100%);
+      transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .menu-overlay.open { transform: translateY(0); }
+
+    .bot-message {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.4s ease;
+    }
+    .bot-message.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-bottom-color: var(--text-primary);
+    }
+
+    .award-card {
+      border: 1px solid var(--border-subtle);
+      transition: border-color 0.3s ease, background 0.3s ease;
+    }
+    .award-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .work-card:hover .work-card-img { transform: scale(1.03); }
+    .work-card-img { transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--text-primary);
+      border-radius: 50%;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .noise-overlay {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .tag-pill {
+      border: 1px solid var(--border-subtle);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .reveal { opacity: 0; transform: translateY(40px); }
+
+    .tradeoffs-note {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- HEADER -->
+  <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 mix-blend-difference">
+    <a href="#" class="flex items-center gap-2 group" aria-label="Cappen Home">
+      <div class="w-10 h-10 rounded-full gradient-ph ph-hero-2 flex items-center justify-center text-xs font-bold tracking-widest">C</div>
+    </a>
+    <div class="flex items-center gap-6 md:gap-10">
+      <a href="mailto:felipe@cappen.com" class="hidden sm:block text-xs tracking-[0.15em] uppercase hover:opacity-70 transition-opacity">felipe@cappen.com</a>
+      <button id="menuBtn" class="flex flex-col gap-1.5 p-2 group" aria-label="Open menu">
+        <span class="block w-6 h-px bg-white transition-transform group-hover:scale-x-75 origin-right"></span>
+        <span class="block w-4 h-px bg-white transition-transform group-hover:scale-x-125 origin-right"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MENU OVERLAY -->
+  <nav id="menuOverlay" class="menu-overlay fixed inset-0 z-[60] bg-[var(--bg-primary)] flex flex-col justify-center items-center gap-8" aria-hidden="true">
+    <button id="menuClose" class="absolute top-6 right-6 md:right-10 text-xs tracking-[0.2em] uppercase hover:opacity-60">close</button>
+    <a href="#work" class="text-4xl md:text-6xl font-bold tracking-tight hover:opacity-60 transition-opacity menu-link">Work</a>
+    <a href="#about" class="text-4xl md:text-6xl font-bold tracking-tight hover:opacity-60 transition-opacity menu-link">About</a>
+    <a href="#awards" class="text-4xl md:text-6xl font-bold tracking-tight hover:opacity-60 transition-opacity menu-link">Awards</a>
+    <a href="#contact" class="text-4xl md:text-6xl font-bold tracking-tight hover:opacity-60 transition-opacity menu-link">Contact</a>
+    <p class="mt-8 text-sm text-[var(--text-secondary)] tracking-widest uppercase">felipe@cappen.com</p>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <section id="hero" class="min-h-screen flex flex-col justify-center relative px-6 md:px-10 pt-24 pb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-10 items-center">
+        <h1 class="display-text reveal" data-reveal>Human<br/>Thinkers</h1>
+
+        <div class="hero-strip flex gap-3 overflow-hidden justify-center py-8 lg:py-0">
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-1 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-2 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-3 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-4 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-5 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-6 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-7 flex-shrink-0 reveal" data-reveal></div>
+          <div class="w-16 md:w-24 lg:w-28 aspect-[3/4] rounded-sm gradient-ph ph-hero-8 flex-shrink-0 reveal" data-reveal></div>
+        </div>
+
+        <h1 class="display-text text-right reveal" data-reveal>Digital<br/>Makers</h1>
+      </div>
+
+      <div class="mt-16 lg:mt-24 max-w-xl reveal" data-reveal>
+        <p class="text-[var(--text-secondary)] text-sm md:text-base leading-relaxed mb-8">
+          A multi-awarded interactive digital studio crafting<br class="hidden md:block"/>
+          immersive &amp; interactive experiences for global brands since 2006.
+        </p>
+        <a href="#work" class="inline-flex items-center gap-3 text-xs tracking-[0.25em] uppercase group">
+          <span class="w-12 h-px bg-white group-hover:w-20 transition-all duration-300"></span>
+          Discover
+        </a>
+      </div>
+
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 scroll-hint">
+        <span class="text-[10px] tracking-[0.3em] uppercase text-[var(--text-muted)]">Scroll</span>
+        <div class="w-px h-8 bg-gradient-to-b from-white/50 to-transparent"></div>
+      </div>
+    </section>
+
+    <!-- SCROLL-DRIVEN PROJECTS -->
+    <section id="work" class="relative">
+
+      <!-- Amanda Braga -->
+      <article class="project-panel" data-project="amanda">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">Amanda Braga</h2>
+                <span class="text-sm text-[var(--text-muted)]">2020</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Amanda Braga's portfolio is a digital runway, an editorial stage where fashion, motion, and narrative collide. Built as a seamless scroll journey, the site transforms her body of work into a cinematic experience.
+              </p>
+              <span class="tag-pill inline-block px-3 py-1.5 rounded-full mb-6">Website</span>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for next project</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-amanda flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-7 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-3 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-amanda flex-shrink-0 opacity-80"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-1 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-5 flex-shrink-0"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Credit Genie -->
+      <article class="project-panel" data-project="credit-genie">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">Credit Genie</h2>
+                <span class="text-sm text-[var(--text-muted)]">2025</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Credit Genie partnered with us to transform their new design into a living digital product. Our team translated static layouts into smooth, performant code with subtle animations and thoughtful transitions.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-6">
+                <span class="tag-pill px-3 py-1.5 rounded-full">Front-End Dev</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">Wordpress</span>
+              </div>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for more</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-credit flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-2 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-6 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-credit flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-4 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-2 flex-shrink-0"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- JCPM Malls -->
+      <article class="project-panel" data-project="jcpm">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">JCPM Malls</h2>
+                <span class="text-sm text-[var(--text-muted)]">2025</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Cappen partnered with Grupo JCPM to reimagine the digital presence of seven of Brazil's leading shopping centers, creating a modular, scalable platform designed around user experience.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-6">
+                <span class="tag-pill px-3 py-1.5 rounded-full">Website</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">UX Design</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">UI Design</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">Web Dev</span>
+              </div>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for next project</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-jcpm flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-5 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-jcpm flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-1 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-8 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-jcpm flex-shrink-0 opacity-70"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Ministry of Supply -->
+      <article class="project-panel" data-project="mos">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">Ministry of Supply</h2>
+                <span class="text-sm text-[var(--text-muted)]">2019</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Ministry of Supply partnered with Cappen to create the digital core of the Mercury Jacket—the world's first intelligent heated jacket with full temperature control through touch and voice via Alexa.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-6">
+                <span class="tag-pill px-3 py-1.5 rounded-full">Mobile APP</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">Alexa Skills</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">iOS &amp; Android</span>
+              </div>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for more</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-mos flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-6 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-mos flex-shrink-0 opacity-90"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-4 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-mos flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-2 flex-shrink-0"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- LeadEdu -->
+      <article class="project-panel" data-project="leadedu">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">LeadEdu</h2>
+                <span class="text-sm text-[var(--text-muted)]">2025</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Cappen partnered with LeadEdu to design and develop a new website with a clean, modern interface and improved UX—delivering a digital experience that reflects the brand's mission.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-6">
+                <span class="tag-pill px-3 py-1.5 rounded-full">Website</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">UX/UI</span>
+                <span class="tag-pill px-3 py-1.5 rounded-full">Webflow Dev</span>
+              </div>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for next project</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-leadedu flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-4 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-leadedu flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-8 flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-leadedu flex-shrink-0 opacity-80"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-hero-3 flex-shrink-0"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- NeonDoor -->
+      <article class="project-panel" data-project="neondoor">
+        <div class="sticky top-0 min-h-screen flex flex-col lg:flex-row">
+          <div class="lg:w-[42%] px-6 md:px-10 lg:px-16 py-16 lg:py-24 flex flex-col justify-between z-10 bg-[var(--bg-primary)]">
+            <div>
+              <div class="flex items-baseline justify-between mb-6">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">NeonDoor</h2>
+                <span class="text-sm text-[var(--text-muted)]">2021</span>
+              </div>
+              <p class="text-[var(--text-secondary)] text-sm leading-relaxed mb-8 max-w-md">
+                Neon Door is a mind-bending portal into the future of digital literature — where storytelling meets immersive interaction with layered scroll effects and neon-drenched visuals.
+              </p>
+              <span class="tag-pill inline-block px-3 py-1.5 rounded-full mb-6">Website</span>
+              <a href="#" class="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase border border-[var(--border-subtle)] px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                Launch Project
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 11L11 1M11 1H3M11 1V9" stroke="currentColor" stroke-width="1.5"/></svg>
+              </a>
+            </div>
+            <p class="text-[10px] tracking-[0.25em] uppercase text-[var(--text-muted)] mt-8 scroll-hint hidden lg:block">Keep scrolling for more</p>
+          </div>
+          <div class="lg:w-[58%] overflow-hidden relative">
+            <div class="horizontal-scroll-wrap project-gallery px-6 md:px-10 py-8 lg:py-24" data-gallery>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-neondoor flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-neondoor flex-shrink-0 opacity-90"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-3 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-neondoor flex-shrink-0"></div>
+              <div class="w-[50vw] md:w-[30vw] lg:w-[22vw] aspect-square rounded-lg gradient-ph ph-hero-7 flex-shrink-0"></div>
+              <div class="w-[70vw] md:w-[45vw] lg:w-[35vw] aspect-[16/9] rounded-lg gradient-ph ph-neondoor flex-shrink-0 opacity-70"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="px-6 md:px-10 py-24 md:py-40 border-t border-[var(--border-subtle)]">
+      <h2 class="section-title uppercase mb-8 reveal" data-reveal>
+        Building Tomorrow<br/>
+        <span class="text-[var(--text-muted)]">For</span> Today
+      </h2>
+      <p class="text-[var(--text-secondary)] max-w-2xl text-sm md:text-base leading-relaxed mb-6 reveal" data-reveal>
+        A multi-awarded digital studio crafting immersive &amp; interactive experiences for global brands since 2006.
+      </p>
+      <p class="text-lg md:text-2xl font-medium max-w-3xl leading-snug reveal" data-reveal>
+        We are a collaborative engine for bold ideas, beautiful code, and digital experiences that actually matter.
+      </p>
+
+      <!-- Work card grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-20">
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-amanda mb-4 overflow-hidden"></div>
+          <span class="tag-pill inline-block px-3 py-1 rounded-full mb-3">Website</span>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Designing a bold scrolling experience that became a global design reference.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">Amanda Braga</p>
+        </a>
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-credit mb-4 overflow-hidden"></div>
+          <div class="flex gap-2 mb-3">
+            <span class="tag-pill px-3 py-1 rounded-full">Front-End Dev</span>
+            <span class="tag-pill px-3 py-1 rounded-full">Wordpress</span>
+          </div>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Translating design vision into a living platform with fluid animation.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">Credit Genie</p>
+        </a>
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-jcpm mb-4 overflow-hidden"></div>
+          <div class="flex gap-2 mb-3">
+            <span class="tag-pill px-3 py-1 rounded-full">Website</span>
+            <span class="tag-pill px-3 py-1 rounded-full">UX Design</span>
+          </div>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Building a scalable digital ecosystem for Brazil's leading mall group.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">JCPM Malls</p>
+        </a>
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-mos mb-4 overflow-hidden"></div>
+          <div class="flex gap-2 mb-3">
+            <span class="tag-pill px-3 py-1 rounded-full">Mobile APP</span>
+            <span class="tag-pill px-3 py-1 rounded-full">Alexa Skills</span>
+          </div>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Bringing wearable tech to life through mobile and voice integration.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">Ministry of Supply</p>
+        </a>
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-leadedu mb-4 overflow-hidden"></div>
+          <div class="flex gap-2 mb-3">
+            <span class="tag-pill px-3 py-1 rounded-full">Website</span>
+            <span class="tag-pill px-3 py-1 rounded-full">UX/UI</span>
+          </div>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Building a modern platform that reflects LeadEdu's mission.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">LeadEdu</p>
+        </a>
+        <a href="#" class="work-card group block reveal" data-reveal>
+          <div class="work-card-img aspect-[4/3] rounded-lg gradient-ph ph-neondoor mb-4 overflow-hidden"></div>
+          <span class="tag-pill inline-block px-3 py-1 rounded-full mb-3">Website</span>
+          <h3 class="text-lg font-semibold group-hover:opacity-70 transition-opacity">Reimagining NeonDoor as the world's first immersive literary experience.</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-2">NeonDoor</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="px-6 md:px-10 py-24 md:py-32 border-t border-[var(--border-subtle)]">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+        <div class="reveal" data-reveal>
+          <div class="flex gap-4 mb-10">
+            <div class="w-24 h-32 rounded-lg gradient-ph ph-hero-2"></div>
+            <div class="w-24 h-32 rounded-lg gradient-ph ph-hero-5 mt-8"></div>
+            <div class="w-24 h-32 rounded-lg gradient-ph ph-hero-3"></div>
+          </div>
+          <h3 class="text-xl md:text-2xl font-semibold leading-relaxed mb-6">
+            We are a forward-thinking creative studio with a passion for blending design and technology.
+          </h3>
+          <p class="text-[var(--text-secondary)] text-sm leading-relaxed">
+            Our team of innovators, designers, and developers collaborates with global brands to create unforgettable digital experiences. From immersive websites to interactive installations, we challenge the status quo to deliver work that is as functional as it is beautiful.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-12 reveal" data-reveal>
+          <div>
+            <h4 class="text-xs tracking-[0.2em] uppercase text-[var(--text-muted)] mb-6">Digital Experience</h4>
+            <ul class="space-y-3 text-sm text-[var(--text-secondary)]">
+              <li>Product Development</li>
+              <li>Websites &amp; Platforms</li>
+              <li>Mobile Applications</li>
+              <li>Headless E-commerce</li>
+              <li>Immersive Experience</li>
+              <li>Installations &amp; Activations</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-xs tracking-[0.2em] uppercase text-[var(--text-muted)] mb-6">Brand Strategy</h4>
+            <ul class="space-y-3 text-sm text-[var(--text-secondary)]">
+              <li>Brand &amp; Visual Identity</li>
+              <li>Product Design (UX &amp; UI)</li>
+              <li>MVP Definition &amp; Prototyping</li>
+              <li>Design &amp; Innovation Sprints</li>
+              <li>Design Systems &amp; Style Guides</li>
+              <li>2D &amp; 3D Motion Design</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLIENT MARQUEE -->
+    <section class="py-16 border-t border-[var(--border-subtle)] overflow-hidden">
+      <div class="marquee-track">
+        <div class="flex items-center gap-12 px-6 text-sm md:text-base tracking-wide text-[var(--text-muted)] whitespace-nowrap">
+          <span>Gatorade</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>McDonald's</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Royal Caribbean</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Our Today</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Ministry of Supply</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Microsoft</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Amanda Braga</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Samsung</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Shopping Riomar</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Beach Park</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Grupo JCPM</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Iquine</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Pitú</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Salvador Shopping</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Alvoar</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Betânia Lácteos</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Rede D'Or</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Caoa</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Vivo</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>MV Sistemas</span><span class="text-[var(--text-secondary)]">/</span>
+        </div>
+        <div class="flex items-center gap-12 px-6 text-sm md:text-base tracking-wide text-[var(--text-muted)] whitespace-nowrap" aria-hidden="true">
+          <span>Gatorade</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>McDonald's</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Royal Caribbean</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Our Today</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Ministry of Supply</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Microsoft</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Amanda Braga</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Samsung</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Shopping Riomar</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Beach Park</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Grupo JCPM</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Iquine</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Pitú</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Salvador Shopping</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Alvoar</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Betânia Lácteos</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Rede D'Or</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Caoa</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>Vivo</span><span class="text-[var(--text-secondary)]">/</span>
+          <span>MV Sistemas</span><span class="text-[var(--text-secondary)]">/</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- AWARDS -->
+    <section id="awards" class="px-6 md:px-10 py-24 md:py-32 border-t border-[var(--border-subtle)]">
+      <div class="flex gap-4 overflow-x-auto pb-4 mb-16 scrollbar-hide">
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-1 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-4 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-6 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-2 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-7 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-5 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-3 flex-shrink-0"></div>
+        <div class="w-20 h-20 rounded-lg gradient-ph ph-hero-8 flex-shrink-0"></div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">Awwwards</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOD 5×</li>
+            <li>HM ×13</li>
+            <li>DOD 2×</li>
+            <li>ME 1×</li>
+          </ul>
+        </div>
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">CSS Design Awards</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOD ×2</li>
+            <li>DA ×2</li>
+          </ul>
+        </div>
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">Design Rush</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOD ×1</li>
+          </ul>
+        </div>
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">The FWA</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOD ×3</li>
+            <li>DOD ×2</li>
+          </ul>
+        </div>
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">Orpetron</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOD ×2</li>
+            <li>UI ×2</li>
+          </ul>
+        </div>
+        <div class="award-card rounded-xl p-6 reveal" data-reveal>
+          <h3 class="font-bold text-lg mb-4">GSAP</h3>
+          <ul class="text-xs text-[var(--text-secondary)] space-y-1.5">
+            <li>SOW ×1</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT BOT -->
+    <section id="contact" class="px-6 md:px-10 py-24 md:py-40 border-t border-[var(--border-subtle)]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="section-title uppercase mb-2 reveal" data-reveal>Let's Talk Ideas</h2>
+        <div class="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)] mb-12 reveal" data-reveal>
+          <span>TO: CAPPEN</span>
+          <span class="text-[var(--text-secondary)]">( FELIPE@CAPPEN.COM )</span>
+        </div>
+
+        <div id="chatContainer" class="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 md:p-10 min-h-[420px] flex flex-col">
+          <div id="chatMessages" class="flex-1 space-y-6 mb-8">
+            <div class="bot-message visible">
+              <p class="text-sm md:text-base leading-relaxed">
+                <span class="mr-2">👋</span> Hey there! I'm the Cappen Bot. Ready to help you shape your next digital project. Just share a few details with me and I'll guide you to a tailored proposal.
+              </p>
+              <p class="text-sm md:text-base mt-4 text-[var(--text-secondary)]">
+                Shall we get started?<br/>
+                <span class="text-[var(--text-primary)]">👉 Hit Enter</span>
+              </p>
+            </div>
+          </div>
+
+          <div id="chatInputArea" class="border-t border-[var(--border-subtle)] pt-6">
+            <div id="inputStep" class="flex items-center gap-3">
+              <label id="inputLabel" class="text-sm text-[var(--text-secondary)] whitespace-nowrap"></label>
+              <input type="text" id="chatInput" class="chat-input flex-1 bg-transparent border-b border-[var(--border-subtle)] py-2 text-sm focus:border-white transition-colors" autocomplete="off" />
+              <button id="enterBtn" class="text-xs tracking-[0.15em] uppercase px-4 py-2 border border-[var(--border-subtle)] rounded-full hover:bg-white hover:text-black transition-all flex items-center gap-2">
+                Enter
+                <span class="cursor-dot"></span>
+              </button>
+            </div>
+            <div id="sendArea" class="hidden mt-4 text-center">
+              <button id="sendBtn" class="text-xs tracking-[0.2em] uppercase px-8 py-3 bg-white text-black rounded-full hover:opacity-80 transition-opacity font-semibold">
+                Send Request
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="px-6 md:px-10 py-12 border-t border-[var(--border-subtle)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full gradient-ph ph-hero-2 flex items-center justify-center text-[10px] font-bold">C</div>
+      <span class="text-xs text-[var(--text-muted)]">© 2006–2026 Cappen. Miami, FL.</span>
+    </div>
+    <div class="flex gap-6 text-xs tracking-[0.15em] uppercase text-[var(--text-muted)]">
+      <a href="#" class="hover:text-white transition-colors">Instagram</a>
+      <a href="#" class="hover:text-white transition-colors">LinkedIn</a>
+      <a href="#" class="hover:text-white transition-colors">Awwwards</a>
+    </div>
+  </footer>
+
+  <!-- TRADE-OFFS NOTE -->
+  <aside class="tradeoffs-note px-6 md:px-10 py-10 text-xs text-[var(--text-muted)] leading-relaxed max-w-4xl">
+    <p class="font-semibold text-[var(--text-secondary)] uppercase tracking-widest mb-3">Preserved Elements &amp; Trade-offs — Model: Grok Composer 2.5</p>
+    <p>
+      <strong>Preserved:</strong> Dark near-black palette (#0a0a0a), oversized hero typography (HUMAN THINKERS / DIGITAL MAKERS),
+      scroll-pinned horizontal project galleries via GSAP ScrollTrigger, all six case studies with metadata and tags,
+      manifesto section, services split, infinite client marquee, awards grid, multi-step contact bot UI, fixed header
+      with email and fullscreen menu, and subtle film-grain noise overlay.
+    </p>
+    <p class="mt-3">
+      <strong>Trade-offs:</strong> Brand photography, logos, and award badge images replaced with animated CSS gradients
+      to remain self-contained and rights-free. WebGL/canvas effects and ambient audio from NeonDoor omitted.
+      Lenis smooth-scroll and CMS-driven project routing not replicated — galleries use simplified pin+scrub math.
+      Chat bot is front-end only (no form submission backend). Custom condensed display font approximated with Inter
+      at heavy weights. Secondary project carousel and 3D hero portraits reduced to gradient placeholders.
+    </p>
+  </aside>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Menu toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const menuClose = document.getElementById('menuClose');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    menuBtn.addEventListener('click', () => {
+      menuOverlay.classList.add('open');
+      menuOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    });
+
+    function closeMenu() {
+      menuOverlay.classList.remove('open');
+      menuOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    menuClose.addEventListener('click', closeMenu);
+    document.querySelectorAll('.menu-link').forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // Hero reveal
+    gsap.utils.toArray('[data-reveal]').forEach((el, i) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        delay: i * 0.05,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 90%',
+          toggleActions: 'play none none none'
+        }
+      });
+    });
+
+    // Hero strip parallax
+    gsap.to('.hero-strip', {
+      x: -60,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1
+      }
+    });
+
+    // Horizontal scroll galleries
+    document.querySelectorAll('.project-panel').forEach(panel => {
+      const gallery = panel.querySelector('[data-gallery]');
+      if (!gallery) return;
+
+      const getScrollAmount = () => -(gallery.scrollWidth - gallery.parentElement.offsetWidth + 48);
+
+      gsap.to(gallery, {
+        x: getScrollAmount,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: panel,
+          start: 'top top',
+          end: () => `+=${Math.abs(getScrollAmount()) + window.innerHeight}`,
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+          anticipatePin: 1
+        }
+      });
+    });
+
+    // Contact bot flow
+    const steps = [
+      { label: 'Hi, my name is', key: 'name', type: 'text' },
+      { label: 'You can email me at', key: 'email', type: 'email' },
+      { label: 'My project is a', key: 'project', type: 'select', options: ['website development', 'mobile app', 'e-commerce', '2D / 3D product design', 'immersive experience', 'brand & visual identity', 'motion design', 'installation / activation'] },
+      { label: 'My budget range is', key: 'budget', type: 'select', options: ['up to 5k', '5k to 20k', '20 to 50k', '50k to 100k', 'over 100k'] },
+      { label: 'Additional note:', key: 'note', type: 'text' }
+    ];
+
+    let currentStep = -1;
+    const formData = {};
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const inputLabel = document.getElementById('inputLabel');
+    const inputStep = document.getElementById('inputStep');
+    const sendArea = document.getElementById('sendArea');
+    const enterBtn = document.getElementById('enterBtn');
+
+    function addMessage(text, isUser = false) {
+      const div = document.createElement('div');
+      div.className = 'bot-message';
+      div.innerHTML = `<p class="text-sm md:text-base ${isUser ? 'text-right text-[var(--text-secondary)]' : ''}">${text}</p>`;
+      chatMessages.appendChild(div);
+      requestAnimationFrame(() => div.classList.add('visible'));
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showStep() {
+      if (currentStep >= steps.length) {
+        inputStep.classList.add('hidden');
+        sendArea.classList.remove('hidden');
+        addMessage('...');
+        return;
+      }
+
+      const step = steps[currentStep];
+      inputLabel.textContent = step.label;
+
+      if (step.type === 'select') {
+        chatInput.replaceWith(createSelect(step));
+      } else {
+        if (!document.getElementById('chatInput')) {
+          const input = document.createElement('input');
+          input.type = step.type;
+          input.id = 'chatInput';
+          input.className = 'chat-input flex-1 bg-transparent border-b border-[var(--border-subtle)] py-2 text-sm focus:border-white transition-colors';
+          input.autocomplete = 'off';
+          inputStep.insertBefore(input, enterBtn);
+          input.addEventListener('keydown', handleEnter);
+        }
+        document.getElementById('chatInput').focus();
+      }
+    }
+
+    function createSelect(step) {
+      const select = document.createElement('select');
+      select.id = 'chatInput';
+      select.className = 'chat-input flex-1 bg-transparent border-b border-[var(--border-subtle)] py-2 text-sm focus:border-white transition-colors cursor-pointer';
+      step.options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+      return select;
+    }
+
+    function handleEnter(e) {
+      if (e.key === 'Enter') advanceStep();
+    }
+
+    function advanceStep() {
+      const input = document.getElementById('chatInput');
+      const value = input.value.trim();
+      if (!value && currentStep >= 0) return;
+
+      if (currentStep === -1) {
+        currentStep = 0;
+        showStep();
+        return;
+      }
+
+      formData[steps[currentStep].key] = value;
+      addMessage(value, true);
+
+      const oldInput = document.getElementById('chatInput');
+      oldInput.remove();
+
+      currentStep++;
+      showStep();
+    }
+
+    chatInput.addEventListener('keydown', handleEnter);
+    enterBtn.addEventListener('click', advanceStep);
+
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      sendArea.classList.add('hidden');
+      addMessage('🙌 Thanks for reaching out!<br/><br/>We\'re already on it and will follow up with next steps soon.');
+    });
+
+    // Init first step prompt
+    inputLabel.textContent = '';
+    chatInput.placeholder = 'Press Enter to begin...';
+    chatInput.focus();
+
+    // Resize refresh
+    window.addEventListener('resize', () => ScrollTrigger.refresh());
+  </script>
+</body>
+</html>

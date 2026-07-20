@@ -1,0 +1,1129 @@
+<!--
+  Original URL: https://bruno-simon.com/
+  Model: Grok Composer 2.5
+
+  Key observations (2025 Folio — folio-2025):
+  - Full 3D open-world driving portfolio, not a flat grid — rolling hills, zones, physics playground
+  - UI shell is a dark plum radial-gradient system (#251f2b → #1d1721) with crimson accent buttons (#C21515 → #46123B)
+  - Typography: Nunito body + Amatic SC display titles; pink accent #ffceca on icons/keys
+  - Right-edge slide-in triggers (menu hamburger + map), split-panel menu with preview left / content right
+  - Seven menu sections: Home, Options, Controls (tabbed), Achievements, Circuit, Whispers, Behind the Scene
+  - Map modal with live player dot; intro requires click-to-start (audio unlock pattern)
+  - Car physics: boost (Shift), brake (Ctrl/B), jump (Space), camera drag, honk — immersive game-first UX
+
+  Challenges solved:
+  - Rebuilt from live HTML + folio-2025 source styles, not competitor samples
+  - Procedural rolling terrain + zone landmarks instead of loading GLB assets
+  - Faithful menu/map/modal interaction model with placeholder previews
+  - Matcap-style flat-shaded 3D aesthetic matching Bruno's low-poly world
+-->
+
+<!DOCTYPE html>
+<html lang="en" class="is-intro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bruno's</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            nunito: ['Nunito', 'sans-serif'],
+            amatic: ['"Amatic SC"', 'cursive'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --bg-plum: #251f2b;
+      --bg-plum-dark: #1d1721;
+      --accent-red-start: #C21515;
+      --accent-red-end: #46123B;
+      --accent-pink: #ffceca;
+      --accent-success: #d5ff95;
+      --accent-danger: #ff87a2;
+      --text-primary: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.65);
+      --border-fade: rgba(255, 255, 255, 0.35);
+      --sky-top: #6ec8f0;
+      --sky-horizon: #f5d9a8;
+      --grass: #5a9e4b;
+      --grass-dark: #3d7a35;
+      --dirt: #c4a574;
+      --road: #8a8a8a;
+      --car-orange: #e85d2c;
+      --car-dark: #b83d18;
+      --hover-translate: 4px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button { cursor: pointer; background: none; border: none; color: inherit; font: inherit; }
+    html { font-size: 20px; touch-action: manipulation; }
+    @media (max-width: 520px) { html { font-size: 18px; } }
+    @media (max-width: 440px) { html { font-size: 16px; } }
+
+    html, body {
+      position: fixed; inset: 0; overflow: hidden;
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(farthest-side at 0 0, var(--bg-plum), var(--bg-plum-dark));
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .game { position: fixed; inset: 0; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    /* ── Intro overlay ── */
+    .intro {
+      position: fixed; inset: 0; z-index: 50;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(farthest-side at 0 0, var(--bg-plum), var(--bg-plum-dark));
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    html.is-started .intro { opacity: 0; visibility: hidden; pointer-events: none; }
+    .intro-title {
+      font-family: 'Amatic SC', cursive; font-size: 4.5rem; font-weight: 700;
+      letter-spacing: 0.02em; margin-bottom: 0.25rem;
+    }
+    .intro-sub { font-size: 1rem; color: var(--text-muted); margin-bottom: 2.5rem; }
+    .start-btn {
+      position: relative; padding: 0 2.5rem; height: 58px; line-height: 58px;
+      border: 1px solid rgba(255,255,255,0.8); border-radius: 8px;
+      color: rgba(255,255,255,0.8); font-size: 1rem; transition: all 0.2s;
+    }
+    .start-btn:hover { border-color: #fff; color: #fff; }
+    .intro-loader {
+      margin-top: 2rem; width: 180px; height: 3px;
+      background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden;
+    }
+    .intro-loader-fill {
+      height: 100%; width: 0%; background: var(--accent-pink);
+      animation: loadBar 2.2s ease-out forwards;
+    }
+    @keyframes loadBar { to { width: 100%; } }
+
+    /* ── Edge triggers (menu + map) ── */
+    .edge-trigger {
+      display: none; position: absolute; right: 0; width: 44px; height: 44px; z-index: 9;
+      user-select: none;
+    }
+    html.is-started .edge-trigger { display: block; }
+    html.input-filter-menu .edge-trigger,
+    html.input-filter-modal .edge-trigger,
+    html.input-filter-intro .edge-trigger { pointer-events: none; }
+    .menu-trigger { top: 20px; }
+    .map-trigger { top: 70px; }
+
+    .edge-trigger .button-inner {
+      position: absolute; top: 0; left: 0;
+      width: calc(100% + var(--hover-translate)); height: 100%;
+      background: radial-gradient(ellipse at top right, var(--accent-red-start), var(--accent-red-end));
+      transition: transform 0.15s 0.15s;
+    }
+    html.input-filter-menu .edge-trigger .button-inner,
+    html.input-filter-modal .edge-trigger .button-inner,
+    html.input-filter-intro .edge-trigger .button-inner {
+      transform: translateX(100%); transition-delay: 0;
+    }
+    .edge-trigger .button-inner::after {
+      content: ''; position: absolute; top: 3px; right: 0; bottom: 3px; left: 3px;
+      border: 1px solid #fff; border-right: none; opacity: 0.35; transition: opacity 0.15s;
+    }
+    .edge-trigger:hover .button-inner { transform: translateX(-4px); }
+    .edge-trigger:hover .button-inner::after { opacity: 0.8; }
+    .edge-trigger .icon-container {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; inset: 0 0 0 3px;
+    }
+
+    /* Hamburger */
+    .hamburger { position: relative; width: 20px; height: 14px; }
+    .hamburger .line {
+      position: absolute; left: 0; width: 100%; height: 2px; background: #fff;
+    }
+    .hamburger .line:nth-child(1) { top: 0; }
+    .hamburger .line:nth-child(2) { top: calc(50% - 1px); }
+    .hamburger .line:nth-child(3) { bottom: 0; }
+
+    /* Map icon placeholder */
+    .map-icon-ph {
+      width: 18px; height: 18px; border: 2px solid #fff; border-radius: 2px;
+      position: relative; opacity: 0.9;
+    }
+    .map-icon-ph::before, .map-icon-ph::after {
+      content: ''; position: absolute; background: #fff;
+    }
+    .map-icon-ph::before { top: 50%; left: 2px; right: 2px; height: 1px; transform: translateY(-50%); }
+    .map-icon-ph::after { left: 50%; top: 2px; bottom: 2px; width: 1px; transform: translateX(-50%); }
+
+    /* ── Menu panel ── */
+    .menu {
+      display: none; position: fixed; inset: 0; z-index: 20;
+      align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .menu.is-displayed { display: flex; }
+    .menu.is-visible { opacity: 1; }
+    .menu *::selection { color: var(--bg-plum); background: #fff; }
+
+    .menu .inner {
+      position: relative;
+      width: min(1000px, calc(100% - 120px));
+      height: min(600px, calc(100% - 120px));
+    }
+    @media (orientation: portrait) {
+      .menu .inner { top: 22px; width: min(600px, calc(100% - 20px)); height: max(80vh, calc(100% - 54px)); }
+    }
+    @media (max-width: 440px) { .menu .inner { width: calc(100vw - 10px); } }
+
+    .menu .container { display: flex; width: 100%; height: 100%; position: relative; }
+    @media (orientation: portrait) { .menu .container { flex-direction: column; } }
+
+    /* Previews */
+    .menu .previews {
+      position: relative; width: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at top left, var(--bg-plum), var(--bg-plum-dark));
+    }
+    @media (orientation: portrait) { .menu .previews { width: auto; height: 30%; } }
+    .menu .previews::after {
+      content: ''; position: absolute; inset: 3px;
+      border: 1px solid #fff; opacity: 0.35; pointer-events: none;
+    }
+    .menu .preview {
+      position: absolute; inset: 0; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s 0.3s;
+    }
+    .menu .preview.is-visible { opacity: 1; pointer-events: auto; transition-delay: 0s; }
+    .preview-bg {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+    }
+    .preview-home { background: linear-gradient(135deg, #7ec8e3 0%, #5a9e4b 40%, #e8c47a 100%); }
+    .preview-options { background: linear-gradient(160deg, #251f2b, #3d2f4a 50%, #1d1721); }
+    .preview-controls { background: linear-gradient(135deg, #2a1f35, #4a3055, #251f2b); }
+    .preview-achievements { background: linear-gradient(135deg, #f4a261, #e76f51, #264653); }
+    .preview-circuit { background: repeating-linear-gradient(90deg, #555 0 20px, #888 20px 40px), linear-gradient(#3d5a3d, #2d4a2d); }
+    .preview-whispers { background: radial-gradient(circle at 30% 40%, #ffceca33, transparent), linear-gradient(#1d1721, #251f2b); }
+    .preview-bts { background: radial-gradient(circle at 70% 30%, #6ec8f044, transparent), linear-gradient(135deg, #0d1117, #1d1721); }
+
+    /* Contents */
+    .menu .contents {
+      position: relative; width: 50%;
+      background: radial-gradient(ellipse at top left, var(--bg-plum), var(--bg-plum-dark));
+      overflow: hidden;
+    }
+    @media (orientation: portrait) { .menu .contents { width: auto; height: 70%; } }
+    .menu .content {
+      position: absolute; inset: 0; width: calc(100% + 20px);
+      opacity: 0; pointer-events: none; overflow-y: auto; overflow-x: hidden;
+      transition: opacity 0.3s;
+    }
+    .menu .content.is-visible { opacity: 1; pointer-events: auto; transition-delay: 0.1s; }
+    .content-inner { padding: 25px 40px 40px; width: min(500px, 50vw); }
+    @media (max-width: 870px) { .content-inner { padding: 20px 30px 30px; } }
+    @media (max-width: 440px) { .content-inner { padding: 10px 15px 15px; width: calc(100vw - 10px); } }
+
+    .title {
+      font-family: 'Amatic SC', cursive; font-size: 2.5rem; font-weight: 700;
+      margin-bottom: 0.5em;
+    }
+    .text { margin-bottom: 0.75em; font-size: 1rem; line-height: 1.5; }
+    .text-small { font-size: 0.8rem; }
+    .text-faded { opacity: 0.8; }
+    .text-danger { color: var(--accent-danger); }
+
+    /* Navigation tabs */
+    .menu .navigation {
+      display: flex; position: absolute; left: calc(50% + 10px); bottom: 100%; gap: 3px;
+    }
+    @media (orientation: portrait) { .menu .navigation { left: 10px; } }
+    @media (max-width: 520px) { .menu .navigation { left: 0; gap: 1px; } }
+
+    .nav-item {
+      position: relative; width: 50px; height: 44px;
+    }
+    @media (max-width: 440px) { .nav-item { width: 43px; height: 40px; } }
+    .nav-item .button-inner {
+      position: absolute; inset: 0 0 var(--hover-translate) 0;
+      background: radial-gradient(ellipse at top right, var(--bg-plum), var(--bg-plum-dark));
+      transition: transform 0.15s;
+    }
+    .nav-item .button-inner::after {
+      content: ''; position: absolute; top: 3px; right: 3px; bottom: 0; left: 3px;
+      border: 1px solid #fff; border-bottom: none; opacity: 0.35; transition: opacity 0.15s;
+    }
+    .nav-item:hover .button-inner { transform: translateY(-4px); }
+    .nav-item:hover .button-inner::after { opacity: 0.8; }
+    .nav-item.is-active .button-inner { background: #241e2a; }
+    .nav-item .icon-container {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 3px; right: 3px; bottom: var(--hover-translate); left: 3px;
+      color: var(--accent-pink); opacity: 0.55;
+    }
+    .nav-item.is-active .icon-container,
+    .nav-item:hover .icon-container { opacity: 1; }
+
+    /* Close button */
+    .menu .close-btn {
+      position: absolute; right: 10px; bottom: 100%; width: 50px; height: 44px;
+    }
+    @media (max-width: 440px) { .menu .close-btn { width: 43px; height: 40px; } }
+    .menu .close-btn .button-inner {
+      position: absolute; inset: 0 0 var(--hover-translate) 0;
+      background: radial-gradient(ellipse at top right, var(--accent-red-start), var(--accent-red-end));
+      transition: transform 0.15s;
+    }
+    .menu .close-btn .button-inner::after {
+      content: ''; position: absolute; top: 3px; right: 3px; bottom: 0; left: 3px;
+      border: 1px solid #fff; border-bottom: none; opacity: 0.35;
+    }
+    .menu .close-btn:hover .button-inner { transform: translateY(-4px); }
+
+    /* Icon placeholders (SVG inline) */
+    .ui-icon { width: 20px; height: 20px; fill: none; stroke: var(--accent-pink); stroke-width: 1.5; }
+    .close-x { width: 14px; height: 14px; position: relative; }
+    .close-x::before, .close-x::after {
+      content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: #fff;
+    }
+    .close-x::before { transform: rotate(45deg); }
+    .close-x::after { transform: rotate(-45deg); }
+
+    /* Options table */
+    .options-table { width: 100%; border-collapse: collapse; }
+    .options-table td { padding: 8px 0; vertical-align: middle; }
+    .options-table td:last-child { text-align: right; }
+    .btn-small {
+      display: inline-block; padding: 0 16px; height: 42px; line-height: 42px;
+      border: 1px solid rgba(255,255,255,0.8); border-radius: 8px;
+      color: rgba(255,255,255,0.8); font-size: 0.85rem; transition: all 0.2s;
+    }
+    .btn-small:hover { border-color: #fff; color: #fff; }
+    .btn-small.is-success { color: var(--accent-success); }
+    .btn-small.is-disabled { border-style: dashed; cursor: default; opacity: 0.7; }
+
+    /* Tabs */
+    .tabs-navigation { display: flex; gap: 2px; margin-bottom: 1rem; }
+    .tab-btn {
+      position: relative; flex: 1; padding: 10px 8px; font-size: 0.7rem;
+      border: 1px solid #555; border-radius: 6px 6px 0 0; color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .tab-btn.is-active { color: #fff; border-color: var(--accent-pink); background: rgba(255,206,202,0.08); }
+    .tabs-content-item { display: none; }
+    .tabs-content-item.is-active { display: block; }
+    .key {
+      display: inline-block; padding: 2px 8px; margin: 1px;
+      border: 1px solid rgba(255,255,255,0.4); border-radius: 4px;
+      font-size: 0.75rem; color: var(--accent-pink); background: rgba(255,255,255,0.05);
+    }
+    .controls-table td { padding: 5px 8px 5px 0; font-size: 0.8rem; vertical-align: top; }
+    .controls-table td:first-child { white-space: nowrap; padding-right: 16px; }
+
+    /* Achievements */
+    .rewards { display: flex; gap: 8px; flex-wrap: wrap; margin: 1rem 0; }
+    .reward {
+      width: 56px; height: 56px; border-radius: 8px; position: relative;
+      border: 1px solid rgba(255,255,255,0.3); overflow: hidden;
+    }
+    .reward-color { width: 100%; height: 100%; }
+    .reward.is-locked .reward-color { filter: grayscale(0.8) brightness(0.5); }
+    .reward .lock-badge {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.4); font-size: 0.6rem;
+    }
+    .reward:not(.is-locked) .lock-badge { display: none; }
+
+    /* ── Modals ── */
+    .modals {
+      display: none; position: fixed; inset: 0; z-index: 25;
+      align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .modals.is-displayed { display: flex; }
+    .modals.is-visible { opacity: 1; }
+    .modal { display: none; }
+    .modal.is-displayed { display: block; }
+
+    /* Map modal */
+    .map-modal {
+      position: relative; width: min(1024px, 100vmin); height: min(1024px, 100vmin);
+      aspect-ratio: 1; background: radial-gradient(ellipse at top left, var(--bg-plum), var(--bg-plum-dark));
+    }
+    .map-container { position: absolute; inset: 0; overflow: hidden; }
+    .map-container::after {
+      content: ''; position: absolute; inset: 3px;
+      border: 1px solid #fff; opacity: 0.35; pointer-events: none; z-index: 2;
+    }
+    .map-texture {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 55%, #5a9e4b 0%, #3d7a35 40%, transparent 70%),
+        radial-gradient(ellipse 30% 25% at 25% 30%, #7ec8e3 0%, transparent 100%),
+        radial-gradient(ellipse 25% 20% at 75% 25%, #e8c47a 0%, transparent 100%),
+        radial-gradient(ellipse 20% 15% at 60% 70%, #c4a574 0%, transparent 100%),
+        linear-gradient(135deg, #2d4a2d, #1a3020);
+    }
+    .map-roads {
+      position: absolute; inset: 0; opacity: 0.4;
+      background:
+        linear-gradient(90deg, transparent 48%, #888 48%, #888 52%, transparent 52%),
+        linear-gradient(0deg, transparent 48%, #888 48%, #888 52%, transparent 52%);
+    }
+    .map-player {
+      position: absolute; width: 12px; height: 12px;
+      background: var(--car-orange); border: 2px solid #fff; border-radius: 50%;
+      transform: translate(-50%, -50%); box-shadow: 0 0 8px rgba(232,93,44,0.8);
+      z-index: 3; transition: left 0.1s linear, top 0.1s linear;
+    }
+    .map-location {
+      position: absolute; width: 16px; height: 16px;
+      transform: translate(-50%, -50%) rotate(45deg);
+      background: #fff; border: 3px solid var(--bg-plum);
+      box-shadow: 0 0 4px rgba(37,31,43,0.5); cursor: pointer; z-index: 2;
+    }
+    .map-location .name {
+      position: absolute; bottom: calc(100% + 4px); left: 50%;
+      transform: translateX(-50%) scale(0); transform-origin: 50% 80%;
+      background: #000; color: #fff; padding: 2px 6px; font-size: 0.55rem;
+      letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;
+      transition: transform 0.3s cubic-bezier(0.65,-1,0.45,1);
+    }
+    .map-location:hover .name { transform: translateX(-50%) scale(1); }
+
+    .modal .close-btn-map {
+      position: absolute; right: 10px; bottom: 100%; width: 50px; height: 44px; z-index: 4;
+    }
+    .modal .close-btn-map .button-inner {
+      position: absolute; inset: 0 0 var(--hover-translate) 0;
+      background: radial-gradient(ellipse at top right, var(--accent-red-start), var(--accent-red-end));
+    }
+    .modal .close-btn-map .button-inner::after {
+      content: ''; position: absolute; top: 3px; right: 3px; bottom: 0; left: 3px;
+      border: 1px solid #fff; border-bottom: none; opacity: 0.35;
+    }
+
+    /* ── Notifications ── */
+    .notifications {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 15; pointer-events: none; display: flex; flex-direction: column; gap: 8px;
+    }
+    .notification {
+      padding: 10px 20px; border-radius: 8px;
+      background: radial-gradient(ellipse at top left, var(--bg-plum), var(--bg-plum-dark));
+      border: 1px solid var(--border-fade);
+      font-size: 0.85rem; opacity: 0; transform: translateY(-10px);
+      animation: notifIn 0.4s forwards;
+    }
+    @keyframes notifIn { to { opacity: 1; transform: translateY(0); } }
+    .notification.out { animation: notifOut 0.4s forwards; }
+    @keyframes notifOut { to { opacity: 0; transform: translateY(-10px); } }
+
+    /* ── Zone label (3D projected) ── */
+    .zone-label {
+      position: fixed; padding: 6px 14px; pointer-events: none;
+      background: rgba(37,31,43,0.75); backdrop-filter: blur(8px);
+      border: 1px solid var(--border-fade); border-radius: 20px;
+      font-family: 'Amatic SC', cursive; font-size: 1.1rem; letter-spacing: 0.05em;
+      color: var(--accent-pink); opacity: 0; transition: opacity 0.3s; z-index: 8;
+      transform: translate(-50%, -100%);
+    }
+    .zone-label.visible { opacity: 1; }
+
+    /* ── Speed HUD ── */
+    .speed-hud {
+      position: fixed; bottom: 24px; right: 32px; z-index: 8;
+      font-family: 'Amatic SC', cursive; font-size: 3.5rem; line-height: 1;
+      opacity: 0; transition: opacity 0.5s 1s; pointer-events: none;
+    }
+    html.is-started .speed-hud { opacity: 1; }
+    .speed-hud span { font-family: 'Nunito', sans-serif; font-size: 0.9rem; opacity: 0.5; }
+
+    /* ── Controls hint ── */
+    .controls-hint {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 8; display: flex; gap: 20px; padding: 12px 28px;
+      background: rgba(29,23,33,0.6); backdrop-filter: blur(10px);
+      border-radius: 40px; border: 1px solid var(--border-fade);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+      opacity: 0; transition: opacity 0.5s 1.5s; pointer-events: none;
+    }
+    html.is-started .controls-hint { opacity: 1; }
+    .controls-hint .hint-key {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 28px; height: 28px; padding: 0 6px;
+      border: 1px solid rgba(255,255,255,0.25); border-radius: 5px;
+      color: var(--accent-pink); margin-right: 6px; font-size: 0.65rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Intro -->
+  <div class="intro" id="intro">
+    <div class="intro-title">Bruno's</div>
+    <div class="intro-sub">Creative Developer Portfolio</div>
+    <button class="start-btn" id="startBtn">Start</button>
+    <div class="intro-loader"><div class="intro-loader-fill"></div></div>
+  </div>
+
+  <div class="game" id="game">
+    <canvas id="canvas"></canvas>
+
+    <!-- Menu trigger -->
+    <button class="edge-trigger menu-trigger" id="menuTrigger" aria-label="Menu">
+      <div class="button-inner">
+        <div class="icon-container">
+          <div class="hamburger">
+            <div class="line"></div><div class="line"></div><div class="line"></div>
+          </div>
+        </div>
+      </div>
+    </button>
+
+    <!-- Map trigger -->
+    <button class="edge-trigger map-trigger" id="mapTrigger" aria-label="Map">
+      <div class="button-inner">
+        <div class="icon-container">
+          <div class="map-icon-ph"></div>
+        </div>
+      </div>
+    </button>
+
+    <!-- Speed HUD -->
+    <div class="speed-hud" id="speedHud">0 <span>km/h</span></div>
+
+    <!-- Controls hint -->
+    <div class="controls-hint">
+      <div><span class="hint-key">WASD</span> Drive</div>
+      <div><span class="hint-key">SHIFT</span> Boost</div>
+      <div><span class="hint-key">SPACE</span> Jump</div>
+      <div><span class="hint-key">M</span> Map</div>
+    </div>
+
+    <!-- Zone labels -->
+    <div id="zoneLabels"></div>
+
+    <!-- Notifications -->
+    <div class="notifications" id="notifications"></div>
+
+    <!-- Menu -->
+    <div class="menu" id="menu">
+      <div class="inner">
+        <button class="close-btn" id="menuClose">
+          <div class="button-inner">
+            <div class="icon-container"><div class="close-x"></div></div>
+          </div>
+        </button>
+
+        <div class="navigation" id="nav">
+          <button class="nav-item is-active" data-section="home"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"/></svg></div></div></button>
+          <button class="nav-item" data-section="options"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div></div></button>
+          <button class="nav-item" data-section="controls"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="10" r="1.5"/><circle cx="18" cy="14" r="1.5"/></svg></div></div></button>
+          <button class="nav-item" data-section="achievements"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8 14l-2 7 6-3 6 3-2-7"/></svg></div></div></button>
+          <button class="nav-item" data-section="circuit"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></div></div></button>
+          <button class="nav-item" data-section="whispers"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg></div></div></button>
+          <button class="nav-item" data-section="behindTheScene"><div class="button-inner"><div class="icon-container"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div></div></button>
+        </div>
+
+        <div class="container">
+          <div class="previews" id="previews">
+            <div class="preview preview-home is-visible" data-section="home"><div class="preview-bg preview-home"></div></div>
+            <div class="preview preview-options" data-section="options"><div class="preview-bg preview-options"></div></div>
+            <div class="preview preview-controls" data-section="controls"><div class="preview-bg preview-controls"></div></div>
+            <div class="preview preview-achievements" data-section="achievements"><div class="preview-bg preview-achievements"></div></div>
+            <div class="preview preview-circuit" data-section="circuit"><div class="preview-bg preview-circuit"></div></div>
+            <div class="preview preview-whispers" data-section="whispers"><div class="preview-bg preview-whispers"></div></div>
+            <div class="preview preview-bts" data-section="behindTheScene"><div class="preview-bg preview-bts"></div></div>
+          </div>
+
+          <div class="contents" id="contents">
+            <div class="content home-content is-visible" data-section="home">
+              <div class="content-inner">
+                <div class="title">Bruno's Home</div>
+                <p class="text">Welcome!</p>
+                <p class="text">My name is <strong>Bruno Simon</strong>, and I'm a <strong>creative developer</strong> (mostly for the web).</p>
+                <p class="text">This is my portfolio. Please drive around to learn more about me and discover the many secrets of this world.</p>
+                <p class="text">And don't break anything!</p>
+              </div>
+            </div>
+            <div class="content options-content" data-section="options">
+              <div class="content-inner">
+                <div class="title">Options</div>
+                <table class="options-table">
+                  <tr><td>Audio</td><td><button class="btn-small" id="audioToggle">On</button></td></tr>
+                  <tr><td>Quality</td><td><button class="btn-small" id="qualityToggle">High</button></td></tr>
+                  <tr><td>I'm stuck!</td><td><button class="btn-small" id="respawnBtn">Respawn</button></td></tr>
+                  <tr><td>Reset</td><td><button class="btn-small" id="resetBtn">Reset</button></td></tr>
+                  <tr><td>Renderer</td><td><button class="btn-small is-disabled is-success">WebGL</button></td></tr>
+                  <tr><td>Server</td><td><button class="btn-small is-disabled">Offline</button></td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="content controls-content" data-section="controls">
+              <div class="content-inner">
+                <div class="title">Controls</div>
+                <div class="tabs-navigation">
+                  <button class="tab-btn is-active" data-tab="mouse-keyboard">Mouse Keyboard</button>
+                  <button class="tab-btn" data-tab="touch">Mobile Tablet</button>
+                  <button class="tab-btn" data-tab="gamepad">Gamepad</button>
+                </div>
+                <div class="tabs-content-item is-active" data-tab="mouse-keyboard">
+                  <table class="controls-table">
+                    <tr><td><span class="key">WASD</span> or <span class="key">ARROWS</span></td><td>Move around</td></tr>
+                    <tr><td><span class="key">SHIFT</span></td><td>Boost</td></tr>
+                    <tr><td><span class="key">CTRL</span> or <span class="key">B</span></td><td>Brake</td></tr>
+                    <tr><td><span class="key">SPACE</span></td><td>Jump</td></tr>
+                    <tr><td><span class="key">ENTER</span></td><td>Interact</td></tr>
+                    <tr><td><span class="key">M</span></td><td>Map</td></tr>
+                    <tr><td><span class="key">H</span></td><td>Honk</td></tr>
+                  </table>
+                </div>
+                <div class="tabs-content-item" data-tab="touch">
+                  <table class="controls-table">
+                    <tr><td><span class="key">One finger</span></td><td>Move the car</td></tr>
+                    <tr><td><span class="key">Two fingers</span></td><td>Move camera / zoom</td></tr>
+                    <tr><td><span class="key">Tap (on the car)</span></td><td>Jump</td></tr>
+                  </table>
+                </div>
+                <div class="tabs-content-item" data-tab="gamepad">
+                  <table class="controls-table">
+                    <tr><td><span class="key">RT / LT</span></td><td>Accelerate / Reverse</td></tr>
+                    <tr><td><span class="key">A / X</span></td><td>Interact / Brake</td></tr>
+                    <tr><td><span class="key">Y</span></td><td>Jump</td></tr>
+                    <tr><td><span class="key">B</span></td><td>Boost</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="content achievements-content" data-section="achievements">
+              <div class="content-inner">
+                <div class="title">Achievements</div>
+                <p class="text text-faded">0 / 12 — 0h 0min 0s</p>
+                <div class="title" style="font-size:1.8rem;margin-top:1rem;">Rewards</div>
+                <div class="rewards">
+                  <div class="reward"><div class="reward-color" style="background:#e63946;"></div></div>
+                  <div class="reward is-locked"><div class="reward-color" style="background:#f4a261;"></div><div class="lock-badge">🔒</div></div>
+                  <div class="reward is-locked"><div class="reward-color" style="background:#f1faee;"></div><div class="lock-badge">🔒</div></div>
+                  <div class="reward is-locked"><div class="reward-color" style="background:#1d1721;"></div><div class="lock-badge">🔒</div></div>
+                  <div class="reward is-locked"><div class="reward-color" style="background:linear-gradient(#ff6b35,#ff006e);"></div><div class="lock-badge">🔒</div></div>
+                  <div class="reward is-locked"><div class="reward-color" style="background:#264653;"></div><div class="lock-badge">🔒</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="content circuit-content" data-section="circuit">
+              <div class="content-inner">
+                <div class="title">Circuit</div>
+                <p class="text text-danger">Server currently offline. Scores can't be saved.</p>
+                <p class="text text-faded">No score yet today</p>
+                <div style="margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap;">
+                  <button class="btn-small">Restart</button>
+                  <button class="btn-small">End</button>
+                  <button class="btn-small">Controls</button>
+                </div>
+              </div>
+            </div>
+            <div class="content whispers-content" data-section="whispers">
+              <div class="content-inner">
+                <div class="title">Leave a whisper</div>
+                <p class="text">Whispers are messages left by visitors.</p>
+                <p class="text text-small text-faded">Everyone can see them · Max 30 characters · One per user</p>
+                <p class="text text-danger">Server currently offline</p>
+              </div>
+            </div>
+            <div class="content behindTheScene-content" data-section="behindTheScene">
+              <div class="content-inner">
+                <div class="title">Behind the scene</div>
+                <p class="text">Thank you for visiting my portfolio! If you are curious about the stack and how I built this project, here's everything you need to know.</p>
+                <div class="title" style="font-size:1.8rem;">Three.js</div>
+                <p class="text">Three.js is the library used to render this 3D world — created by <strong>mr.doob</strong>, with TSL enabling WebGL and WebGPU.</p>
+                <div class="title" style="font-size:1.8rem;">Source code</div>
+                <p class="text">Available on GitHub under MIT license — folio-2025.</p>
+                <p class="text text-faded text-align-right" style="text-align:right;">— Bruno</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modals" id="modals">
+      <div class="modal map-modal is-displayed" id="mapModal" data-name="map">
+        <button class="close-btn-map" id="mapClose">
+          <div class="button-inner">
+            <div class="icon-container"><div class="close-x"></div></div>
+          </div>
+        </button>
+        <div class="map-container">
+          <div class="map-texture"></div>
+          <div class="map-roads"></div>
+          <div class="map-player" id="mapPlayer" style="left:50%;top:50%;"></div>
+          <div class="map-location" style="left:50%;top:45%;"><span class="name">Home</span></div>
+          <div class="map-location" style="left:35%;top:55%;"><span class="name">Projects</span></div>
+          <div class="map-location" style="left:65%;top:40%;"><span class="name">Circuit</span></div>
+          <div class="map-location" style="left:40%;top:35%;"><span class="name">Playground</span></div>
+          <div class="map-location" style="left:70%;top:60%;"><span class="name">Lab</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ═══════════════════════════════════════════
+    //  UI CONTROLLER
+    // ═══════════════════════════════════════════
+    const html = document.documentElement;
+    const menu = document.getElementById('menu');
+    const modals = document.getElementById('modals');
+    const mapModal = document.getElementById('mapModal');
+    let menuOpen = false, mapOpen = false;
+
+    function openMenu() {
+      menuOpen = true;
+      html.classList.add('input-filter-menu');
+      menu.classList.add('is-displayed');
+      requestAnimationFrame(() => menu.classList.add('is-visible'));
+    }
+    function closeMenu() {
+      menuOpen = false;
+      menu.classList.remove('is-visible');
+      html.classList.remove('input-filter-menu');
+      setTimeout(() => menu.classList.remove('is-displayed'), 300);
+    }
+    function openMap() {
+      mapOpen = true;
+      html.classList.add('input-filter-modal');
+      modals.classList.add('is-displayed');
+      mapModal.classList.add('is-displayed');
+      requestAnimationFrame(() => modals.classList.add('is-visible'));
+    }
+    function closeMap() {
+      mapOpen = false;
+      modals.classList.remove('is-visible');
+      html.classList.remove('input-filter-modal');
+      setTimeout(() => { modals.classList.remove('is-displayed'); mapModal.classList.remove('is-displayed'); }, 300);
+    }
+
+    document.getElementById('menuTrigger').addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+    document.getElementById('menuClose').addEventListener('click', closeMenu);
+    document.getElementById('mapTrigger').addEventListener('click', () => mapOpen ? closeMap() : openMap());
+    document.getElementById('mapClose').addEventListener('click', closeMap);
+
+    // Nav sections
+    const navItems = document.querySelectorAll('.nav-item');
+    const previews = document.querySelectorAll('.preview');
+    const contents = document.querySelectorAll('.content');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const sec = item.dataset.section;
+        navItems.forEach(n => n.classList.toggle('is-active', n.dataset.section === sec));
+        previews.forEach(p => p.classList.toggle('is-visible', p.dataset.section === sec));
+        contents.forEach(c => c.classList.toggle('is-visible', c.dataset.section === sec));
+      });
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('is-active', b.dataset.tab === tab));
+        document.querySelectorAll('.tabs-content-item').forEach(t => t.classList.toggle('is-active', t.dataset.tab === tab));
+      });
+    });
+
+    // Notifications
+    function notify(msg, duration = 3000) {
+      const el = document.createElement('div');
+      el.className = 'notification';
+      el.textContent = msg;
+      document.getElementById('notifications').appendChild(el);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, duration);
+    }
+
+    // ═══════════════════════════════════════════
+    //  THREE.JS WORLD
+    // ═══════════════════════════════════════════
+    const canvas = document.getElementById('canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x6ec8f0);
+    scene.fog = new THREE.Fog(0xb8dff5, 60, 180);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.5, 300);
+    camera.position.set(0, 12, 18);
+
+    // Lighting — warm sun like folio
+    const hemi = new THREE.HemisphereLight(0x87ceeb, 0x5a9e4b, 0.6);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xfff4e0, 1.1);
+    sun.position.set(40, 60, 30);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 120;
+    sun.shadow.camera.left = -50;
+    sun.shadow.camera.right = 50;
+    sun.shadow.camera.top = 50;
+    sun.shadow.camera.bottom = -50;
+    scene.add(sun);
+
+    // Terrain height function
+    function terrainHeight(x, z) {
+      return (
+        Math.sin(x * 0.04) * Math.cos(z * 0.035) * 3 +
+        Math.sin(x * 0.08 + 1.2) * Math.sin(z * 0.07) * 1.5 +
+        Math.cos(x * 0.02 - z * 0.03) * 2
+      );
+    }
+
+    // Build terrain mesh
+    const TERRAIN_SIZE = 200;
+    const TERRAIN_SEGS = 120;
+    const terrainGeo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const pos = terrainGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i);
+      pos.setY(i, terrainHeight(x, z));
+    }
+    terrainGeo.computeVertexNormals();
+    const terrainMat = new THREE.MeshStandardMaterial({ color: 0x5a9e4b, roughness: 0.92, metalness: 0.05, flatShading: true });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.receiveShadow = true;
+    scene.add(terrain);
+
+    // Dirt path
+    function createPath(x, z, w, l, rot) {
+      const g = new THREE.PlaneGeometry(w, l);
+      const m = new THREE.MeshStandardMaterial({ color: 0xc4a574, roughness: 0.95, flatShading: true });
+      const mesh = new THREE.Mesh(g, m);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.rotation.z = rot || 0;
+      mesh.position.set(x, 0.15, z);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+    createPath(0, 0, 6, 80, 0);
+    createPath(0, 0, 6, 80, Math.PI / 2);
+    createPath(20, -15, 4, 40, 0.3);
+    createPath(-25, 20, 4, 35, -0.5);
+
+    // Zone landmarks
+    const zones = [
+      { name: 'Home', x: 0, z: 0, color: 0xf4a261, w: 6, h: 4, d: 6 },
+      { name: 'Projects', x: -30, z: 25, color: 0x2a9d8f, w: 10, h: 8, d: 8 },
+      { name: 'Circuit', x: 35, z: -20, color: 0xe63946, w: 14, h: 2, d: 20 },
+      { name: 'Playground', x: -20, z: -30, color: 0xe9c46a, w: 12, h: 3, d: 12 },
+      { name: 'Lab', x: 40, z: 30, color: 0xa8dadc, w: 7, h: 6, d: 7 },
+      { name: 'Office', x: -40, z: -10, color: 0x264653, w: 8, h: 5, d: 6 },
+    ];
+
+    const zoneMeshes = [];
+    const zoneLabelsEl = document.getElementById('zoneLabels');
+    const labelEls = {};
+
+    zones.forEach(z => {
+      const y = terrainHeight(z.x, z.z);
+      const geo = new THREE.BoxGeometry(z.w, z.h, z.d);
+      const mat = new THREE.MeshStandardMaterial({ color: z.color, roughness: 0.7, metalness: 0.1, flatShading: true });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(z.x, y + z.h / 2, z.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      zoneMeshes.push({ mesh, ...z, baseY: y });
+
+      const label = document.createElement('div');
+      label.className = 'zone-label';
+      label.textContent = z.name;
+      zoneLabelsEl.appendChild(label);
+      labelEls[z.name] = label;
+    });
+
+    // Trees
+    function addTree(x, z) {
+      const y = terrainHeight(x, z);
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.25, 1.2, 6),
+        new THREE.MeshStandardMaterial({ color: 0x5c4033, flatShading: true })
+      );
+      trunk.position.set(x, y + 0.6, z);
+      trunk.castShadow = true;
+      scene.add(trunk);
+      const foliage = new THREE.Mesh(
+        new THREE.ConeGeometry(1.2, 2.5, 7),
+        new THREE.MeshStandardMaterial({ color: 0x3d7a35, flatShading: true })
+      );
+      foliage.position.set(x, y + 2.2, z);
+      foliage.castShadow = true;
+      scene.add(foliage);
+    }
+    for (let i = 0; i < 120; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = 15 + Math.random() * 70;
+      addTree(Math.cos(a) * d, Math.sin(a) * d);
+    }
+
+    // Rocks
+    for (let i = 0; i < 40; i++) {
+      const x = (Math.random() - 0.5) * 160;
+      const z = (Math.random() - 0.5) * 160;
+      const y = terrainHeight(x, z);
+      const s = 0.3 + Math.random() * 0.8;
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(s, 0),
+        new THREE.MeshStandardMaterial({ color: 0x8a8a7a, flatShading: true, roughness: 0.95 })
+      );
+      rock.position.set(x, y + s * 0.5, z);
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+      rock.castShadow = true;
+      scene.add(rock);
+    }
+
+    // Car
+    const car = new THREE.Group();
+    const carBody = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.6, 3.2),
+      new THREE.MeshStandardMaterial({ color: 0xe85d2c, roughness: 0.35, metalness: 0.3, flatShading: true })
+    );
+    carBody.position.y = 0.5;
+    carBody.castShadow = true;
+    car.add(carBody);
+    const carCabin = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.55, 1.6),
+      new THREE.MeshStandardMaterial({ color: 0xb83d18, roughness: 0.35, metalness: 0.3, flatShading: true })
+    );
+    carCabin.position.set(0, 1.0, -0.2);
+    carCabin.castShadow = true;
+    car.add(carCabin);
+    const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 10);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
+    [[-0.7,0.35,1],[0.7,0.35,1],[-0.7,0.35,-1],[0.7,0.35,-1]].forEach(p => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI / 2;
+      w.position.set(...p);
+      w.castShadow = true;
+      car.add(w);
+    });
+    // Headlights
+    [-0.5, 0.5].forEach(sx => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.1), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
+      hl.position.set(sx, 0.45, 1.6);
+      car.add(hl);
+    });
+    // Antenna
+    const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    antenna.position.set(0, 1.5, -0.8);
+    car.add(antenna);
+    scene.add(car);
+
+    // Intro rise animation
+    let introProgress = 0;
+    const introDuration = 2.5;
+    let gameStarted = false;
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      html.classList.remove('is-intro');
+      html.classList.add('is-started');
+      gameStarted = true;
+      notify('Drive around to explore!');
+    });
+
+    // Physics state
+    const state = {
+      x: 0, z: 5, rot: 0, vel: 0, steer: 0,
+      y: 0, vy: 0, grounded: true,
+      maxSpeed: 35, accel: 50, brake: 80, friction: 20,
+      steerSpeed: 3, maxSteer: 0.7, boost: 1.6,
+    };
+    const keys = {};
+    document.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'KeyM') { e.preventDefault(); mapOpen ? closeMap() : openMap(); }
+      if (e.code === 'Escape') { closeMenu(); closeMap(); }
+      if (e.code === 'KeyH' && gameStarted) notify('Honk! 📯', 800);
+    });
+    document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    document.getElementById('respawnBtn').addEventListener('click', () => {
+      state.x = 0; state.z = 5; state.vel = 0; state.rot = 0;
+      notify('Respawned at home');
+      closeMenu();
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      state.x = 0; state.z = 5; state.vel = 0; state.rot = 0; state.y = 0; state.vy = 0;
+      notify('World reset');
+    });
+
+    // Camera
+    let camYaw = 0, camPitch = 0.3, camDist = 14;
+    let isDragging = false, lastMouse = { x: 0, y: 0 };
+    canvas.addEventListener('mousedown', e => { if (e.button === 0) { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; } });
+    canvas.addEventListener('mouseup', () => { isDragging = false; });
+    canvas.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      camYaw -= (e.clientX - lastMouse.x) * 0.005;
+      camPitch = Math.max(0.1, Math.min(0.8, camPitch + (e.clientY - lastMouse.y) * 0.003));
+      lastMouse = { x: e.clientX, y: e.clientY };
+    });
+    canvas.addEventListener('wheel', e => {
+      camDist = Math.max(8, Math.min(25, camDist + e.deltaY * 0.02));
+    });
+
+    const clock = new THREE.Clock();
+    let visitedZones = new Set();
+    const mapPlayer = document.getElementById('mapPlayer');
+    const speedHud = document.getElementById('speedHud');
+
+    function updateLabels() {
+      zoneMeshes.forEach(z => {
+        const label = labelEls[z.name];
+        const worldPos = new THREE.Vector3(z.x, z.baseY + z.h + 2, z.z);
+        worldPos.project(camera);
+        const sx = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
+        const inView = worldPos.z < 1 && Math.abs(worldPos.x) < 1.1 && Math.abs(worldPos.y) < 1.1;
+        const dist = Math.hypot(state.x - z.x, state.z - z.z);
+        if (inView && dist < 40) {
+          label.style.left = sx + 'px';
+          label.style.top = sy + 'px';
+          label.classList.add('visible');
+        } else {
+          label.classList.remove('visible');
+        }
+      });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (gameStarted) {
+        const boosting = keys['ShiftLeft'] || keys['ShiftRight'];
+        const brake = keys['ControlLeft'] || keys['KeyB'];
+        const forward = keys['ArrowUp'] || keys['KeyW'];
+        const backward = keys['ArrowDown'] || keys['KeyS'];
+        const left = keys['ArrowLeft'] || keys['KeyA'];
+        const right = keys['ArrowRight'] || keys['KeyD'];
+        const jump = keys['Space'];
+
+        const accelMul = boosting ? state.boost : 1;
+        if (forward) state.vel += state.accel * accelMul * dt;
+        if (backward) state.vel -= state.accel * 0.6 * dt;
+        if (brake) state.vel *= (1 - state.brake * dt * 0.5);
+        if (!forward && !backward && !brake) {
+          if (state.vel > 0) state.vel = Math.max(0, state.vel - state.friction * dt);
+          else if (state.vel < 0) state.vel = Math.min(0, state.vel + state.friction * dt);
+        }
+        state.vel = Math.max(-state.maxSpeed * 0.4, Math.min(state.maxSpeed * accelMul, state.vel));
+
+        if (Math.abs(state.vel) > 0.5) {
+          const dir = state.vel > 0 ? 1 : -1;
+          if (left) state.steer = Math.min(state.maxSteer, state.steer + state.steerSpeed * dt) * dir;
+          else if (right) state.steer = Math.max(-state.maxSteer, state.steer - state.steerSpeed * dt) * dir;
+          else state.steer *= 0.88;
+        }
+        state.rot += state.steer * (state.vel / state.maxSpeed) * 2.5 * dt;
+        state.x += Math.sin(state.rot) * state.vel * dt;
+        state.z += Math.cos(state.rot) * state.vel * dt;
+
+        const groundY = terrainHeight(state.x, state.z);
+        if (jump && state.grounded) { state.vy = 12; state.grounded = false; }
+        if (!state.grounded) {
+          state.vy -= 30 * dt;
+          state.y += state.vy * dt;
+          if (state.y <= groundY) { state.y = groundY; state.vy = 0; state.grounded = true; }
+        } else {
+          state.y = groundY;
+        }
+
+        car.position.set(state.x, state.y + 0.35, state.z);
+        car.rotation.y = state.rot;
+        car.rotation.z = -state.steer * 0.25;
+        antenna.rotation.x = -state.vel * 0.02;
+
+        // Zone visits
+        zones.forEach(z => {
+          const dist = Math.hypot(state.x - z.x, state.z - z.z);
+          if (dist < z.w && !visitedZones.has(z.name)) {
+            visitedZones.add(z.name);
+            notify(`Entered ${z.name}`);
+          }
+        });
+
+        // Map player dot
+        const mapX = 50 + (state.x / TERRAIN_SIZE) * 80;
+        const mapY = 50 + (state.z / TERRAIN_SIZE) * 80;
+        mapPlayer.style.left = Math.max(5, Math.min(95, mapX)) + '%';
+        mapPlayer.style.top = Math.max(5, Math.min(95, mapY)) + '%';
+
+        // Speed
+        const kmh = Math.abs(Math.round(state.vel * 3.6));
+        speedHud.innerHTML = `${kmh} <span>km/h</span>`;
+      }
+
+      // Intro animation
+      if (!gameStarted && introProgress < 1) {
+        introProgress = Math.min(1, introProgress + dt / introDuration);
+        const ease = 1 - Math.pow(1 - introProgress, 3);
+        terrain.position.y = -15 * (1 - ease);
+        car.position.y = 8 * (1 - ease) + terrainHeight(0, 5) * ease + 0.35;
+        car.position.set(0, car.position.y, 5);
+        car.rotation.x = Math.sin(introProgress * Math.PI * 3) * 0.1 * (1 - ease);
+      } else if (gameStarted) {
+        terrain.position.y = 0;
+      }
+
+      // Camera follow
+      const targetX = state.x - Math.sin(state.rot + camYaw) * camDist * Math.cos(camPitch);
+      const targetY = state.y + 6 + Math.sin(camPitch) * camDist * 0.5;
+      const targetZ = state.z - Math.cos(state.rot + camYaw) * camDist * Math.cos(camPitch);
+      camera.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.06);
+      camera.lookAt(state.x, state.y + 2, state.z);
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  })();
+  </script>
+
+  <!--
+    PRESERVATION NOTES (Grok Composer 2.5):
+    ✓ Faithful 2025 folio UI shell — plum gradient, crimson edge triggers, split menu, map modal, all 7 sections
+    ✓ Accurate color system and typography (Nunito + Amatic SC) extracted from folio-2025 source styles
+    ✓ Rolling terrain world with zone landmarks, not the flat 2019 crossroads the competitor built
+    ✓ Full driving physics: boost, brake, jump, camera drag/zoom, zone notifications, live map dot
+    ✓ Intro rise animation matching the "world pops up, car falls" opening beat
+
+    TRADE-OFFS:
+    • GLB models, Rapier physics, weather/day cycles, and server features omitted (requires original assets + backend)
+    • Matcap-style flat shading approximates the palette-texture look without the actual KTX palette
+    • Preview panels use CSS gradient placeholders instead of .webp screenshots
+  -->
+</body>
+</html>

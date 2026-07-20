@@ -1,0 +1,592 @@
+<!--
+  Original URL: https://activetheory.net/
+  Model: Grok Composer 2.5
+
+  Key observations:
+  - V6: full-screen WebGL stage — foggy LA street at night, wet crosswalk, palm trees, traffic light
+  - Central cyan-glowing portal frame with jellyfish/spirit particle inside; "ACTIVE THEORY" title overlay
+  - NB Architekt typography, black canvas, pastel neon accents (#0bed90, #94dbff, #B38AFF)
+  - Right-edge vertical nav: WORK / LAB / ABOUT; VIEW WORK CTA; contact envelope bottom-right
+  - Particle curl-noise interactions, scene transitions (Home → Work spine gallery → Clean Room lab → About)
+
+  Challenges solved:
+  - Procedural fog street + portal frame in Three.js from UIL color data and reference screenshots
+  - GSAP scene transitions mimicking Hydra/UIL navigation without proprietary engine
+  - Mouse-reactive particle field inside portal capturing the "spirit" energy aesthetic
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Active Theory · Creative Digital Experiences</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #000000;
+      --fog: #1a2530;
+      --fog-light: #3d4f5f;
+      --cyan: #0bed90;
+      --sky: #94dbff;
+      --purple: #B38AFF;
+      --halo: #cceeff;
+      --text: #eeeeee;
+      --text-muted: #aaaaaa;
+      --crosswalk: #e8eef2;
+      --pavement: #2a3540;
+      --glow: rgba(11, 237, 144, 0.35);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      touch-action: none;
+    }
+    button { cursor: pointer; background: none; border: none; color: inherit; font: inherit; }
+    #stage { position: fixed; inset: 0; z-index: 0; }
+    #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+    #ui * { pointer-events: auto; }
+
+    /* Portal title overlay */
+    #portal-title {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(28px, 5vw, 56px);
+      font-weight: 700; letter-spacing: 0.18em;
+      text-align: center; white-space: nowrap;
+      text-shadow: 0 0 40px var(--glow), 0 0 80px rgba(148,219,255,0.3);
+      pointer-events: none; transition: opacity 0.8s, transform 0.8s;
+      z-index: 5;
+    }
+    #portal-title.hidden { opacity: 0; transform: translate(-50%, -40%); }
+
+    /* VIEW WORK button */
+    #view-work-btn {
+      position: absolute; left: 50%; bottom: 18%;
+      transform: translateX(-50%);
+      padding: 14px 36px; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.2em; color: var(--text);
+      border: 1px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+    }
+    #view-work-btn:hover {
+      border-color: var(--cyan);
+      background: rgba(11,237,144,0.08);
+      box-shadow: 0 0 30px var(--glow);
+    }
+
+    /* Right nav */
+    #side-nav {
+      position: absolute; right: 40px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 28px;
+      align-items: flex-end;
+    }
+    .nav-link {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+      color: var(--text-muted); transition: color 0.3s, transform 0.3s;
+      position: relative;
+    }
+    .nav-link::before {
+      content: ''; position: absolute; right: -16px; top: 50%;
+      width: 0; height: 1px; background: var(--cyan);
+      transition: width 0.3s;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-link:hover::before, .nav-link.active::before { width: 10px; }
+
+    /* Logo + contact */
+    #logo-mark {
+      position: absolute; top: 32px; right: 40px;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    }
+    #contact-btn {
+      position: absolute; bottom: 32px; right: 40px;
+      width: 40px; height: 40px;
+      border: 1px solid rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.3s;
+    }
+    #contact-btn:hover { border-color: var(--cyan); }
+    #contact-btn svg { width: 16px; height: 16px; fill: none; stroke: var(--text); stroke-width: 1.5; }
+
+    /* Scene panels */
+    .scene-panel {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.8s, visibility 0.8s;
+      padding: 80px;
+      pointer-events: none;
+    }
+    .scene-panel.active { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    /* Work gallery */
+    #work-panel { flex-direction: column; gap: 40px; }
+    .work-spine {
+      display: flex; gap: 4px; align-items: stretch; height: 60vh; max-height: 500px;
+    }
+    .work-pane {
+      flex: 1; min-width: 60px; max-width: 120px;
+      background: linear-gradient(180deg, var(--fog-light), var(--fog));
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: flex 0.6s cubic-bezier(0.4,0,0.2,1), border-color 0.3s;
+    }
+    .work-pane:hover, .work-pane.expanded {
+      flex: 3; max-width: 400px; border-color: var(--cyan);
+    }
+    .work-pane .pane-inner {
+      position: absolute; inset: 0; padding: 20px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      background: linear-gradient(0deg, rgba(0,0,0,0.8), transparent 60%);
+    }
+    .work-pane h3 {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%) rotate(180deg);
+    }
+    .work-pane .detail { opacity: 0; transition: opacity 0.4s; }
+    .work-pane.expanded .detail { opacity: 1; }
+    .work-pane .detail h4 { font-size: 18px; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .work-pane .detail p { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+    /* Lab panel */
+    #lab-panel .lab-content { max-width: 600px; text-align: center; }
+    #lab-panel h2 {
+      font-size: clamp(24px, 4vw, 40px); font-weight: 300;
+      letter-spacing: 0.12em; margin-bottom: 24px;
+      color: var(--sky);
+    }
+    #lab-panel p { font-size: 14px; line-height: 1.8; color: var(--text-muted); }
+    .hex-grid {
+      display: flex; gap: 12px; justify-content: center; margin-top: 40px; flex-wrap: wrap;
+    }
+    .hex {
+      width: 80px; height: 92px;
+      background: rgba(162,174,221,0.1);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      border: 1px solid rgba(162,174,221,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; letter-spacing: 0.1em; color: var(--text-muted);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .hex:hover { background: rgba(11,237,144,0.15); transform: scale(1.05); }
+
+    /* About panel */
+    #about-panel .about-content { max-width: 520px; }
+    #about-panel h2 {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 300;
+      line-height: 1.15; letter-spacing: 0.06em; margin-bottom: 32px;
+    }
+    #about-panel p { font-size: 13px; line-height: 1.9; color: var(--text-muted); margin-bottom: 16px; }
+
+    /* Contact overlay */
+    #contact-panel {
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+    }
+    #contact-panel .contact-box {
+      border: 1px solid rgba(255,255,255,0.15); padding: 48px;
+      max-width: 440px; text-align: center;
+    }
+    #contact-panel h3 { font-size: 14px; letter-spacing: 0.2em; margin-bottom: 24px; }
+    #contact-panel a { color: var(--cyan); text-decoration: none; font-size: 13px; letter-spacing: 0.08em; }
+    #contact-close {
+      position: absolute; top: 32px; right: 40px;
+      font-size: 11px; letter-spacing: 0.15em; color: var(--text-muted);
+    }
+
+    /* Loading bar */
+    #load-bar {
+      position: fixed; bottom: 0; left: 0; height: 2px;
+      background: var(--cyan); width: 0%; z-index: 100;
+      transition: width 0.1s;
+    }
+
+    .tradeoffs {
+      position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: rgba(255,255,255,0.25); z-index: 20;
+      pointer-events: none; text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+
+  <div id="ui">
+    <div id="logo-mark">AT</div>
+
+    <h1 id="portal-title">ACTIVE THEORY</h1>
+    <button id="view-work-btn">VIEW WORK</button>
+
+    <nav id="side-nav">
+      <button class="nav-link active" data-scene="home">WORK</button>
+      <button class="nav-link" data-scene="lab">LAB</button>
+      <button class="nav-link" data-scene="about">ABOUT</button>
+    </nav>
+
+    <button id="contact-btn" aria-label="Contact">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+    </button>
+
+    <!-- Work scene -->
+    <div class="scene-panel" id="work-panel">
+      <div class="work-spine">
+        <div class="work-pane" data-project="0">
+          <h3>MUSEUM OF WEED</h3>
+          <div class="pane-inner">
+            <div class="detail">
+              <h4>MUSEUM OF WEED</h4>
+              <p>2017 · VICE · INSTALLATION</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-pane" data-project="1">
+          <h3>GOOGLE BLOCKLY</h3>
+          <div class="pane-inner">
+            <div class="detail">
+              <h4>GOOGLE BLOCKLY</h4>
+              <p>2019 · GOOGLE · WEB</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-pane" data-project="2">
+          <h3>SPOTIFY WRAPPED</h3>
+          <div class="pane-inner">
+            <div class="detail">
+              <h4>SPOTIFY WRAPPED</h4>
+              <p>2020 · SPOTIFY · EXPERIENCE</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-pane" data-project="3">
+          <h3>PORSCHE DREAM</h3>
+          <div class="pane-inner">
+            <div class="detail">
+              <h4>PORSCHE DREAM MACHINE</h4>
+              <p>2021 · PORSCHE · 3D</p>
+            </div>
+          </div>
+        </div>
+        <div class="work-pane" data-project="4">
+          <h3>ADOBE MAX</h3>
+          <div class="pane-inner">
+            <div class="detail">
+              <h4>ADOBE MAX</h4>
+              <p>2022 · ADOBE · EVENT</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted)">SCROLL TO EXPLORE · CLICK TO EXPAND</p>
+    </div>
+
+    <!-- Lab scene -->
+    <div class="scene-panel" id="lab-panel">
+      <div class="lab-content">
+        <h2>// THE LAB →</h2>
+        <p>Our home for innovation, where prototypes turn into production projects. Experimentation with WebGL, AI, and multiplayer experiences.</p>
+        <div class="hex-grid">
+          <div class="hex">WEBGL</div>
+          <div class="hex">AI</div>
+          <div class="hex">MULTI</div>
+          <div class="hex">HYDRA</div>
+          <div class="hex">TOOLS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About scene -->
+    <div class="scene-panel" id="about-panel">
+      <div class="about-content">
+        <h2>Creative<br>Digital<br>Experiences</h2>
+        <p>Founded in 2012. We blend story, art & technology as an in-house team of passionate makers.</p>
+        <p>Our industry-leading web toolset consistently delivers award-winning work through quality & performance.</p>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="scene-panel" id="contact-panel">
+      <button id="contact-close">CLOSE ✕</button>
+      <div class="contact-box">
+        <h3>GET IN TOUCH</h3>
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:20px;line-height:1.7">Let's build something extraordinary together.</p>
+        <a href="#">hello@activetheory.net</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="load-bar"></div>
+  <p class="tradeoffs">Preserved: fog street atmosphere, portal glow, spine work gallery, scene nav. Trade-off: simplified 3D vs proprietary Hydra pipeline.</p>
+
+<script>
+(function() {
+  'use strict';
+
+  let scene, camera, renderer, portalGroup, spiritParticles, streetGroup;
+  let mouseX = 0, mouseY = 0;
+  let currentScene = 'home';
+  let loadPct = 0;
+
+  const loadBar = document.getElementById('load-bar');
+  const loadTimer = setInterval(() => {
+    loadPct += Math.random() * 12 + 3;
+    if (loadPct >= 100) { loadPct = 100; clearInterval(loadTimer); }
+    loadBar.style.width = loadPct + '%';
+    if (loadPct >= 100) setTimeout(() => gsap.to(loadBar, { opacity: 0, duration: 0.5 }), 400);
+  }, 80);
+
+  initThree();
+
+  function initThree() {
+    const canvas = document.getElementById('stage');
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x0a1018);
+
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x1a2530, 0.045);
+
+    camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
+    camera.position.set(0, 1.6, 8);
+
+    // Street ground
+    const groundGeo = new THREE.PlaneGeometry(40, 40);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a3540, roughness: 0.3, metalness: 0.1 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // Crosswalk stripes
+    streetGroup = new THREE.Group();
+    for (let i = -5; i <= 5; i++) {
+      const stripe = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xe8eef2, transparent: true, opacity: 0.7 })
+      );
+      stripe.rotation.x = -Math.PI / 2;
+      stripe.position.set(i * 1.2, 0.01, 2);
+      stripe.rotation.z = Math.PI / 6;
+      streetGroup.add(stripe);
+    }
+    scene.add(streetGroup);
+
+    // Palm tree placeholders (cylinders + spheres)
+    function makePalm(x, z) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.25, 8, 6),
+        new THREE.MeshStandardMaterial({ color: 0x3d3020, roughness: 0.9 })
+      );
+      trunk.position.y = 4;
+      g.add(trunk);
+      for (let i = 0; i < 6; i++) {
+        const leaf = new THREE.Mesh(
+          new THREE.BoxGeometry(0.05, 3, 0.3),
+          new THREE.MeshStandardMaterial({ color: 0x1a3020 })
+        );
+        const a = (i / 6) * Math.PI * 2;
+        leaf.position.set(Math.cos(a) * 1.5, 8, Math.sin(a) * 1.5);
+        leaf.rotation.set(0.5, a, 0.3);
+        g.add(leaf);
+      }
+      g.position.set(x, 0, z);
+      return g;
+    }
+    scene.add(makePalm(-6, -4));
+    scene.add(makePalm(7, -3));
+    scene.add(makePalm(-5, 6));
+    scene.add(makePalm(8, 5));
+
+    // Portal frame
+    portalGroup = new THREE.Group();
+    portalGroup.position.set(0, 2.5, -1);
+
+    const frameMat = new THREE.MeshBasicMaterial({ color: 0x0bed90, transparent: true, opacity: 0.9 });
+    const frameW = 4.5, frameH = 3.2, thick = 0.06;
+    const top = new THREE.Mesh(new THREE.BoxGeometry(frameW, thick, thick), frameMat);
+    top.position.y = frameH / 2;
+    const bot = top.clone(); bot.position.y = -frameH / 2;
+    const left = new THREE.Mesh(new THREE.BoxGeometry(thick, frameH, thick), frameMat);
+    left.position.x = -frameW / 2;
+    const right = left.clone(); right.position.x = frameW / 2;
+    portalGroup.add(top, bot, left, right);
+
+    // Portal interior glow plane
+    const innerGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(frameW - 0.2, frameH - 0.2),
+      new THREE.MeshBasicMaterial({ color: 0x0a1520, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+    );
+    portalGroup.add(innerGlow);
+
+    // Spirit particles inside portal
+    const spCount = 800;
+    const spGeo = new THREE.BufferGeometry();
+    const spPos = new Float32Array(spCount * 3);
+    for (let i = 0; i < spCount; i++) {
+      spPos[i*3] = (Math.random()-0.5) * 3.5;
+      spPos[i*3+1] = (Math.random()-0.5) * 2.5;
+      spPos[i*3+2] = (Math.random()-0.5) * 0.5;
+    }
+    spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
+    const spMat = new THREE.PointsMaterial({
+      color: 0x94dbff, size: 0.06, transparent: true, opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+    spiritParticles = new THREE.Points(spGeo, spMat);
+    portalGroup.add(spiritParticles);
+
+    scene.add(portalGroup);
+
+    // Silhouette figure
+    const fig = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 1.8, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0x0a0a0a })
+    );
+    fig.position.set(-1.2, 0.9, -0.5);
+    portalGroup.add(fig);
+
+    // Traffic light placeholder
+    const tlGroup = new THREE.Group();
+    tlGroup.position.set(5, 0, -2);
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 5, 8),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
+    );
+    pole.position.y = 2.5;
+    tlGroup.add(pole);
+    const lightBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.8, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    lightBox.position.y = 5;
+    tlGroup.add(lightBox);
+    const redLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff2020 })
+    );
+    redLight.position.set(0, 5.2, 0.11);
+    tlGroup.add(redLight);
+    scene.add(tlGroup);
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0x3d4f5f, 0.6));
+    const portalLight = new THREE.PointLight(0x0bed90, 2, 15);
+    portalLight.position.set(0, 2.5, 0);
+    scene.add(portalLight);
+    const rimLight = new THREE.DirectionalLight(0x94dbff, 0.4);
+    rimLight.position.set(-5, 10, 5);
+    scene.add(rimLight);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    document.addEventListener('mousemove', e => {
+      mouseX = (e.clientX / innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / innerHeight - 0.5) * 2;
+    });
+
+    animate();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = Date.now() * 0.001;
+
+    // Spirit particle dance
+    const pos = spiritParticles.geometry.attributes.position.array;
+    for (let i = 0; i < pos.length; i += 3) {
+      pos[i] += Math.sin(t * 2 + i) * 0.002 + mouseX * 0.003;
+      pos[i+1] += Math.cos(t * 1.5 + i * 0.5) * 0.003 + mouseY * 0.002;
+      pos[i+2] += Math.sin(t + i * 0.3) * 0.001;
+    }
+    spiritParticles.geometry.attributes.position.needsUpdate = true;
+
+    // Subtle camera sway
+    if (currentScene === 'home') {
+      camera.position.x += (mouseX * 0.8 - camera.position.x) * 0.02;
+      camera.position.y += (1.6 + mouseY * 0.3 - camera.position.y) * 0.02;
+      camera.lookAt(0, 2, -2);
+    }
+
+    // Portal glow pulse
+    portalGroup.children.forEach((c, i) => {
+      if (c.material && c.material.opacity !== undefined && i < 4) {
+        c.material.opacity = 0.7 + Math.sin(t * 2) * 0.2;
+      }
+    });
+
+    renderer.render(scene, camera);
+  }
+
+  // ── Scene navigation ──
+  const panels = {
+    home: null,
+    work: document.getElementById('work-panel'),
+    lab: document.getElementById('lab-panel'),
+    about: document.getElementById('about-panel'),
+    contact: document.getElementById('contact-panel')
+  };
+  const portalTitle = document.getElementById('portal-title');
+  const viewWorkBtn = document.getElementById('view-work-btn');
+
+  function goToScene(name) {
+    currentScene = name;
+    Object.entries(panels).forEach(([k, el]) => {
+      if (el) el.classList.toggle('active', k === name);
+    });
+    const isHome = name === 'home';
+    portalTitle.classList.toggle('hidden', !isHome);
+    viewWorkBtn.style.display = isHome ? 'block' : 'none';
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.classList.toggle('active', link.dataset.scene === name || (name === 'work' && link.dataset.scene === 'home'));
+    });
+
+    // Camera transitions
+    if (name === 'home') {
+      gsap.to(camera.position, { x: 0, y: 1.6, z: 8, duration: 1.5, ease: 'power2.inOut' });
+    } else if (name === 'work') {
+      gsap.to(camera.position, { x: 0, y: 0.5, z: 14, duration: 1.5, ease: 'power2.inOut' });
+    } else {
+      gsap.to(camera.position, { x: 0, y: 2, z: 10, duration: 1.5, ease: 'power2.inOut' });
+    }
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const scene = link.dataset.scene;
+      goToScene(scene === 'home' ? 'work' : scene);
+    });
+  });
+
+  viewWorkBtn.addEventListener('click', () => goToScene('work'));
+  document.getElementById('contact-btn').addEventListener('click', () => goToScene('contact'));
+  document.getElementById('contact-close').addEventListener('click', () => goToScene('home'));
+
+  // Work pane expand
+  document.querySelectorAll('.work-pane').forEach(pane => {
+    pane.addEventListener('click', () => {
+      document.querySelectorAll('.work-pane').forEach(p => p.classList.remove('expanded'));
+      pane.classList.add('expanded');
+    });
+  });
+})();
+</script>
+</body>
+</html>

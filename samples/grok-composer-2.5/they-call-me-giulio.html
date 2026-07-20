@@ -1,0 +1,572 @@
+<!--
+  Original URL: https://www.theycallmegiulio.com/
+  Model: Grok Composer 2.5
+
+  Key observations:
+  - Cinematic cyberpunk portfolio: pure black canvas, monospace terminal aesthetic (Ubuntu Mono)
+  - Loader is a ritual — bracket-syntax progress [[loading]] [00%], blurred hero silhouette, philosophical copy
+  - Palette: ice-blue text (#d9eaf5), slate highlights (#7f9eb3), muted body (#566e7f), electric blue accent (#0000ff)
+  - ENTER CTA uses corner-bracket border micro-interaction (1px rails + corner pixels)
+  - Post-enter: immersive WebGL corridor with scroll-driven storytelling, project grid, radial menu
+
+  Challenges solved:
+  - Faithful loader timing/typography from live HTML source (not competitor samples)
+  - Procedural cyberpunk Three.js scene replacing GLB assets — neon grid, particle rain, wireframe towers
+  - Scroll-synced section reveals + bracket-style navigation overlay
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+  <title>They Call Me Giulio :: Creative Technologist & Developer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #000000;
+      --caption: #30383e;
+      --text-muted: #566e7f;
+      --highlight: #7f9eb3;
+      --ice: #d9eaf5;
+      --electric: #0000ff;
+      --guestbook: #24646b;
+      --panel: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: auto; }
+    body {
+      font-family: 'Ubuntu Mono', monospace;
+      background: var(--bg);
+      color: var(--ice);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { cursor: pointer; background: none; border: none; color: inherit; font: inherit; }
+    ::selection { background: var(--electric); color: #fff; }
+
+    /* ── Loader ── */
+    #loader-wrapper {
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 1.2s ease, visibility 1.2s;
+    }
+    #loader-wrapper.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #loader-wrap { position: relative; display: inline-block; }
+    #loader-hero {
+      width: auto; height: 100vh; max-width: 100vw;
+      filter: blur(20px);
+      object-fit: contain;
+      background: linear-gradient(180deg, #0a0a1a 0%, #000 40%, #001133 100%);
+      aspect-ratio: 9/16;
+      min-width: 280px;
+    }
+    @media (orientation: portrait) and (min-width: 769px) {
+      #loader-hero { width: 100vw; height: auto; }
+    }
+    #loader-caption {
+      position: absolute; top: 10%; left: 0; z-index: 1001;
+      padding: 12px 16px; color: var(--caption); line-height: 1.4;
+      max-width: 240px; font-size: 13px;
+    }
+    #loader-text {
+      position: fixed; bottom: 10%; z-index: 1001;
+      max-width: 400px; color: var(--text-muted); font-size: 14px; line-height: 1.6;
+    }
+    @media (orientation: landscape) {
+      #loader-text { right: calc(50% - 50vh); }
+    }
+    @media (orientation: portrait) and (min-width: 769px) {
+      #loader-text { right: 0; }
+    }
+    @media (max-width: 768px) {
+      #loader-text { left: 32px; right: 32px; max-width: none; }
+      #loader-caption { top: 0; font-size: 14px; }
+    }
+    .tcmg-highlight { color: var(--highlight); }
+    #loader-percentage { color: var(--ice); }
+    #enter-cta {
+      margin-top: 48px; padding: 14px 48px;
+      background: transparent; color: var(--ice);
+      position: relative; letter-spacing: 0.1em;
+      transition: opacity 1s ease;
+    }
+    #enter-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+    #enter-cta .corner {
+      position: absolute; background: rgba(255,255,255,0.1);
+      transition: background 0.3s ease;
+    }
+    #enter-cta:not(:disabled):hover .corner { background: rgba(255,255,255,0.3); }
+    #enter-cta .corner.t { top: 0; left: 0; width: 100%; height: 1px; }
+    #enter-cta .corner.r { top: 0; right: 0; width: 1px; height: 100%; }
+    #enter-cta .corner.b { bottom: 0; left: 0; width: 100%; height: 1px; }
+    #enter-cta .corner.l { top: 0; left: 0; width: 1px; height: 100%; }
+    #enter-cta .corner::before {
+      content: ''; position: absolute; width: 2px; height: 2px; background: #fff;
+    }
+    #enter-cta .corner.b::before { left: auto; right: 0; }
+    #enter-cta .corner.l::before { top: auto; bottom: 0; }
+
+    /* ── Experience shell ── */
+    #experience { opacity: 0; pointer-events: none; transition: opacity 1s ease 0.3s; }
+    #experience.active { opacity: 1; pointer-events: auto; }
+    #webgl-canvas { position: fixed; inset: 0; z-index: 0; }
+    #scroll-container { position: relative; z-index: 1; height: 500vh; pointer-events: none; }
+
+    /* ── Fixed UI ── */
+    .ui-layer { position: fixed; z-index: 50; pointer-events: none; }
+    .ui-layer * { pointer-events: auto; }
+
+    #top-bar {
+      top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 24px 32px;
+    }
+    .status-pill {
+      font-size: 11px; color: var(--caption); letter-spacing: 0.05em;
+      border: 1px solid var(--border); padding: 6px 12px;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    }
+    .status-pill span { color: var(--electric); }
+
+    #menu-btn {
+      width: 48px; height: 48px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 6px;
+      border: 1px solid var(--border); background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px); transition: border-color 0.3s;
+    }
+    #menu-btn:hover { border-color: var(--highlight); }
+    #menu-btn span { display: block; width: 18px; height: 1px; background: var(--ice); transition: transform 0.3s; }
+    #menu-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    #menu-btn.open span:nth-child(2) { opacity: 0; }
+    #menu-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    #radial-menu {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0.4s;
+    }
+    #radial-menu.open { opacity: 1; visibility: visible; }
+    .menu-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px;
+      max-width: 520px; width: 90%;
+    }
+    .menu-item {
+      padding: 32px 24px; border: 1px solid var(--border);
+      background: var(--panel); text-align: left;
+      transition: background 0.3s, border-color 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .menu-item:hover { background: rgba(0,0,255,0.08); border-color: var(--electric); }
+    .menu-item .bracket { color: var(--caption); font-size: 11px; margin-bottom: 8px; }
+    .menu-item h3 { font-size: 18px; font-weight: 700; color: var(--ice); letter-spacing: 0.08em; }
+    .menu-item p { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+    .menu-close {
+      position: absolute; top: 24px; right: 32px;
+      font-size: 12px; color: var(--highlight); letter-spacing: 0.15em;
+    }
+
+    /* ── Scroll sections (overlay copy) ── */
+    .section-copy {
+      position: fixed; left: 32px; bottom: 80px; max-width: 420px;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s, transform 0.6s; pointer-events: none;
+    }
+    .section-copy.visible { opacity: 1; transform: translateY(0); }
+    .section-copy .label { font-size: 11px; color: var(--caption); margin-bottom: 12px; }
+    .section-copy h2 { font-size: 22px; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+    .section-copy p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+    #projects-panel {
+      position: fixed; right: 32px; top: 50%; transform: translateY(-50%);
+      width: 280px; opacity: 0; transition: opacity 0.6s; pointer-events: none;
+    }
+    #projects-panel.visible { opacity: 1; pointer-events: auto; }
+    .project-card {
+      border: 1px solid var(--border); background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); margin-bottom: 8px; padding: 12px;
+      cursor: pointer; transition: border-color 0.3s, transform 0.3s;
+    }
+    .project-card:hover { border-color: var(--electric); transform: translateX(-4px); }
+    .project-thumb {
+      width: 100%; aspect-ratio: 16/10; margin-bottom: 10px;
+      background: linear-gradient(135deg, #0a0a2e, #001a66);
+      position: relative; overflow: hidden;
+    }
+    .project-thumb::after {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,255,0.03) 2px, rgba(0,0,255,0.03) 4px);
+    }
+    .project-card h4 { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; }
+    .project-card span { font-size: 10px; color: var(--highlight); }
+
+    #progress-rail {
+      position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+      width: 1px; height: 120px; background: var(--border);
+    }
+    #progress-fill {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: var(--electric); transition: height 0.1s;
+    }
+
+    #cursor-dot {
+      position: fixed; width: 8px; height: 8px; border-radius: 50%;
+      background: var(--electric); pointer-events: none; z-index: 300;
+      mix-blend-mode: screen; transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s;
+    }
+    #cursor-ring {
+      position: fixed; width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(0,0,255,0.4); pointer-events: none; z-index: 299;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s, border-color 0.3s;
+    }
+
+    .tradeoffs {
+      position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: var(--caption); z-index: 10; opacity: 0.4;
+      pointer-events: none; text-align: center; max-width: 90%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader-wrapper">
+    <div id="loader-wrap">
+      <div id="loader-caption">
+        <p>[[</p>
+        <p>&nbsp;&nbsp;&nbsp;[<span class="tcmg-highlight">loading</span>]</p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;]]]</p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span id="loader-percentage">00%</span>]</p>
+        <p>&nbsp;&nbsp;[[[][]</p>
+      </div>
+      <div id="loader-hero" role="img" aria-label="Cyberpunk hero silhouette placeholder"></div>
+    </div>
+    <div id="loader-text">
+      <p>Technology accelerates time.</p>
+      <p>Emotions slow it down, transmuting it into memory.</p>
+      <p style="margin-top:16px">I'm a Creative Technologist.</p>
+      <p style="margin-top:32px" class="tcmg-highlight">They call me Giulio.</p>
+      <button id="enter-cta" disabled>
+        ENTER
+        <span class="corner t"></span><span class="corner r"></span>
+        <span class="corner b"></span><span class="corner l"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main experience -->
+  <div id="experience">
+    <canvas id="webgl-canvas"></canvas>
+    <div id="scroll-container"></div>
+
+    <div class="ui-layer" id="top-bar">
+      <div class="status-pill">SYS::<span>ONLINE</span> // v5.0</div>
+      <button id="menu-btn" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="section-copy" id="copy-intro">
+      <div class="label">[[ 00 / ORIGIN ]]</div>
+      <h2>Memory is the only technology that never obsolesces.</h2>
+      <p>Building high-performance digital experiences through interactive design and advanced front-end engineering.</p>
+    </div>
+    <div class="section-copy" id="copy-work">
+      <div class="label">[[ 01 / SELECTED ]]</div>
+      <h2>Projects shaped by emotion, engineered for speed.</h2>
+      <p>Scroll to traverse the corridor. Each frame holds a story frozen in electric light.</p>
+    </div>
+    <div class="section-copy" id="copy-lab">
+      <div class="label">[[ 02 / LAB ]]</div>
+      <h2>Experiments in WebGL, shaders, and narrative.</h2>
+      <p>Prototypes that test the boundary between interface and cinema.</p>
+    </div>
+    <div class="section-copy" id="copy-contact">
+      <div class="label">[[ 03 / SIGNAL ]]</div>
+      <h2>Open frequency.</h2>
+      <p style="color:var(--guestbook)">guestbook@channel.open — leave a trace.</p>
+    </div>
+
+    <div id="projects-panel">
+      <div class="project-card" data-index="0">
+        <div class="project-thumb"></div>
+        <h4>NEON CORRIDOR</h4>
+        <span>WebGL / 2024</span>
+      </div>
+      <div class="project-card" data-index="1">
+        <div class="project-thumb" style="background:linear-gradient(135deg,#0a1a0a,#003300)"></div>
+        <h4>DATA RAIN</h4>
+        <span>Three.js / 2023</span>
+      </div>
+      <div class="project-card" data-index="2">
+        <div class="project-thumb" style="background:linear-gradient(135deg,#1a0a1a,#330033)"></div>
+        <h4>MEMORY PALACE</h4>
+        <span>React / 2024</span>
+      </div>
+    </div>
+
+    <div id="progress-rail"><div id="progress-fill" style="height:0%"></div></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+  </div>
+
+  <!-- Radial menu -->
+  <div id="radial-menu">
+    <button class="menu-close" id="menu-close">[ CLOSE ]</button>
+    <div class="menu-grid">
+      <button class="menu-item" data-section="0">
+        <div class="bracket">[[ 00 ]]</div>
+        <h3>ORIGIN</h3>
+        <p>Philosophy & approach</p>
+      </button>
+      <button class="menu-item" data-section="1">
+        <div class="bracket">[[ 01 ]]</div>
+        <h3>WORK</h3>
+        <p>Selected projects</p>
+      </button>
+      <button class="menu-item" data-section="2">
+        <div class="bracket">[[ 02 ]]</div>
+        <h3>LAB</h3>
+        <p>Experiments & shaders</p>
+      </button>
+      <button class="menu-item" data-section="3">
+        <div class="bracket">[[ 03 ]]</div>
+        <h3>CONTACT</h3>
+        <p>Guestbook & signal</p>
+      </button>
+    </div>
+  </div>
+
+  <p class="tradeoffs">Preserved: loader ritual, bracket UI language, cyberpunk palette, scroll-driven 3D corridor. Trade-off: simplified project detail pages vs full SPA routing.</p>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Loader sequence ──
+  const pct = document.getElementById('loader-percentage');
+  const enterBtn = document.getElementById('enter-cta');
+  const loaderWrap = document.getElementById('loader-wrapper');
+  const experience = document.getElementById('experience');
+  let loadProgress = 0;
+
+  const loadInterval = setInterval(() => {
+    loadProgress += Math.random() * 8 + 2;
+    if (loadProgress >= 100) {
+      loadProgress = 100;
+      clearInterval(loadInterval);
+      enterBtn.disabled = false;
+      gsap.to('#loader-caption', { opacity: 1, duration: 0.8 });
+      gsap.to('#loader-text', { opacity: 1, duration: 0.8 });
+      gsap.to('#loader-hero', { filter: 'blur(8px)', duration: 2, ease: 'power2.out' });
+    }
+    pct.textContent = String(Math.floor(loadProgress)).padStart(2, '0') + '%';
+  }, 120);
+
+  enterBtn.addEventListener('click', () => {
+    if (enterBtn.disabled) return;
+    gsap.to(loaderWrap, {
+      opacity: 0, duration: 1.2, onComplete: () => {
+        loaderWrap.classList.add('hidden');
+        experience.classList.add('active');
+        initThree();
+        enableScroll();
+      }
+    });
+  });
+
+  // ── Custom cursor ──
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateCursor() {
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // ── Menu ──
+  const menuBtn = document.getElementById('menu-btn');
+  const radialMenu = document.getElementById('radial-menu');
+  document.getElementById('menu-close').addEventListener('click', closeMenu);
+  menuBtn.addEventListener('click', () => {
+    menuBtn.classList.toggle('open');
+    radialMenu.classList.toggle('open');
+  });
+  function closeMenu() {
+    menuBtn.classList.remove('open');
+    radialMenu.classList.remove('open');
+  }
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const section = parseInt(item.dataset.section);
+      scrollToSection(section);
+      closeMenu();
+    });
+  });
+
+  // ── Three.js cyberpunk scene ──
+  let renderer, scene, camera, particles, towers, gridHelper, animId;
+  let scrollProgress = 0;
+
+  function initThree() {
+    const canvas = document.getElementById('webgl-canvas');
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000);
+
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000011, 0.035);
+
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 2, 12);
+
+    // Ground grid
+    const gridGeo = new THREE.PlaneGeometry(80, 80, 40, 40);
+    const gridMat = new THREE.MeshBasicMaterial({
+      color: 0x0000ff, wireframe: true, transparent: true, opacity: 0.15
+    });
+    const grid = new THREE.Mesh(gridGeo, gridMat);
+    grid.rotation.x = -Math.PI / 2;
+    grid.position.y = -0.01;
+    scene.add(grid);
+
+    // Wireframe towers
+    towers = new THREE.Group();
+    for (let i = 0; i < 24; i++) {
+      const h = 2 + Math.random() * 12;
+      const w = 0.3 + Math.random() * 0.8;
+      const geo = new THREE.BoxGeometry(w, h, w);
+      const mat = new THREE.MeshBasicMaterial({
+        color: i % 3 === 0 ? 0x0000ff : 0x1a1a3a,
+        wireframe: true, transparent: true, opacity: 0.4 + Math.random() * 0.4
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      const angle = (i / 24) * Math.PI * 2;
+      const radius = 6 + Math.random() * 14;
+      mesh.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
+      towers.add(mesh);
+    }
+    scene.add(towers);
+
+    // Particle rain
+    const pCount = 3000;
+    const pGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 60;
+      positions[i * 3 + 1] = Math.random() * 30;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 60;
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0x7f9eb3, size: 0.04, transparent: true, opacity: 0.6 });
+    particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    // Central hero placeholder (silhouette block)
+    const heroGeo = new THREE.BoxGeometry(1.2, 3.5, 0.4);
+    const heroMat = new THREE.MeshBasicMaterial({ color: 0x0a0a2e });
+    const hero = new THREE.Mesh(heroGeo, heroMat);
+    hero.position.set(0, 1.75, -2);
+    scene.add(hero);
+
+    // Neon ring around hero
+    const ringGeo = new THREE.TorusGeometry(2.5, 0.02, 8, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.7 });
+    const neonRing = new THREE.Mesh(ringGeo, ringMat);
+    neonRing.rotation.x = Math.PI / 2;
+    neonRing.position.set(0, 0.1, -2);
+    scene.add(neonRing);
+
+    // Ambient light hint
+    const light = new THREE.PointLight(0x0000ff, 1, 30);
+    light.position.set(0, 5, 0);
+    scene.add(light);
+
+    window.addEventListener('resize', onResize);
+    animate();
+  }
+
+  function onResize() {
+    if (!camera) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    const t = Date.now() * 0.001;
+
+    // Scroll-driven camera
+    const camZ = 12 - scrollProgress * 35;
+    const camY = 2 + Math.sin(scrollProgress * Math.PI) * 3;
+    const camX = Math.sin(scrollProgress * Math.PI * 2) * 4;
+    camera.position.set(camX, camY, camZ);
+    camera.lookAt(0, 1.5, camZ - 15);
+
+    towers.rotation.y = t * 0.02 + scrollProgress * 0.5;
+
+    // Particle rain fall
+    const pos = particles.geometry.attributes.position.array;
+    for (let i = 0; i < pos.length; i += 3) {
+      pos[i + 1] -= 0.02 + scrollProgress * 0.03;
+      if (pos[i + 1] < 0) pos[i + 1] = 30;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+
+  // ── Scroll system ──
+  const copies = [
+    document.getElementById('copy-intro'),
+    document.getElementById('copy-work'),
+    document.getElementById('copy-lab'),
+    document.getElementById('copy-contact')
+  ];
+  const projectsPanel = document.getElementById('projects-panel');
+  const progressFill = document.getElementById('progress-fill');
+  let scrollEnabled = false;
+
+  function enableScroll() {
+    scrollEnabled = true;
+    document.body.style.overflow = 'auto';
+    document.body.style.height = '500vh';
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+  }
+
+  function onScroll() {
+    if (!scrollEnabled) return;
+    const max = document.body.scrollHeight - window.innerHeight;
+    scrollProgress = Math.min(1, window.scrollY / max);
+    progressFill.style.height = (scrollProgress * 100) + '%';
+
+    const section = Math.min(3, Math.floor(scrollProgress * 4));
+    copies.forEach((el, i) => el.classList.toggle('visible', i === section));
+    projectsPanel.classList.toggle('visible', section === 1);
+  }
+
+  function scrollToSection(idx) {
+    const max = document.body.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: (idx / 3) * max, behavior: 'smooth' });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+  =============================================================================
+  BRAND APPART — High-fidelity recreation
+  =============================================================================
+  Original URL: https://www.brandappart.com/
+  Model: Grok Composer 2.5
+
+  KEY OBSERVATIONS:
+  - Paris-based design studio targeting bold startups; conversion-first layout
+  - Light/white canvas with oversized editorial typography and tight tracking
+  - Persistent "book a call now" CTA in header; repeated contact CTAs throughout
+  - Hero uses rapid image transitions / collage of client work
+  - Featured work grid: Incard, Sowbeez, Forbes, Sobry, We are, Stables, Jaws Group
+  - Service sections numbered (00) with bold headlines, inline testimonials, image rows
+  - "Trusted by +40 founders" testimonial carousel feel
+  - "Small team, big results" photo grid
+  - Minimal footer with navigation links
+
+  CHALLENGES SOLVED:
+  - Replaced all brand imagery with CSS gradient placeholders (no external assets)
+  - Simulated Webflow-style scroll reveals and hero image cycling via GSAP
+  - Built responsive work grid and service image rows without CDN image dependencies
+  - Maintained conversion hierarchy: CTAs, testimonials, and bold headings at scale
+  =============================================================================
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand Appart – Design studio for bold startups</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-bg: #fafafa;
+      --color-surface: #ffffff;
+      --color-text: #0a0a0a;
+      --color-text-muted: #6b6b6b;
+      --color-border: #e8e8e8;
+      --color-accent: #111111;
+      --color-cta: #0a0a0a;
+      --color-cta-hover: #2a2a2a;
+      --color-highlight: #f4f4f4;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --radius-sm: 0.5rem;
+      --radius-md: 1rem;
+      --radius-lg: 1.5rem;
+      --radius-xl: 2rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+
+    .display-xl {
+      font-size: clamp(3rem, 8vw, 7.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+    }
+
+    .display-lg {
+      font-size: clamp(2.25rem, 5vw, 4.5rem);
+      line-height: 1;
+      letter-spacing: -0.035em;
+      font-weight: 800;
+    }
+
+    .display-md {
+      font-size: clamp(1.75rem, 3.5vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: var(--color-cta);
+      color: #fff;
+      border-radius: 9999px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: background 0.25s ease, transform 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-cta-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      border-radius: 9999px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--color-text);
+      background: var(--color-highlight);
+    }
+
+    .placeholder-img {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .placeholder-img::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    }
+
+    .hero-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .work-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+    }
+
+    .work-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.08);
+    }
+
+    .service-number {
+      font-size: clamp(4rem, 10vw, 9rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      color: var(--color-border);
+      user-select: none;
+    }
+
+    .testimonial-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+    }
+
+    .avatar-placeholder {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .team-cell {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: transform 0.35s ease;
+    }
+
+    .team-cell:hover { transform: scale(1.03); }
+
+    .marquee-track {
+      display: flex;
+      gap: 1rem;
+      width: max-content;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .nav-scrolled {
+      background: rgba(250, 250, 250, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    blockquote {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.6;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    .image-row-item {
+      flex: 0 0 auto;
+      width: clamp(200px, 22vw, 320px);
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .tradeoffs {
+      background: #1a1a1a;
+      color: #a0a0a0;
+      font-size: 0.8rem;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <div class="max-w-[1400px] mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2 group" aria-label="Brand Appart home">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-600 flex items-center justify-center text-white text-xs font-bold tracking-tight">BA</div>
+        <span class="hidden sm:block text-sm font-bold tracking-tight">Brand Appart</span>
+      </a>
+
+      <div class="flex items-center gap-4 sm:gap-6">
+        <button class="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors" aria-label="Switch to French">FR</button>
+        <a href="#contact" class="btn-primary text-xs sm:text-sm">
+          book a call now
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="pt-28 sm:pt-32 pb-16 sm:pb-24">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <p class="text-sm text-[var(--color-text-muted)] mb-8 fade-up hero-loc">Paris, France</p>
+
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-16">
+          <div>
+            <h1 class="display-xl fade-up hero-title mb-6">
+              Design studio<br />for <span class="italic font-light">bold</span><br />startups
+            </h1>
+            <p class="text-lg text-[var(--color-text-muted)] max-w-md fade-up hero-sub leading-relaxed">
+              We create innovative and purposeful designs that capture attention and drive meaningful results.
+            </p>
+          </div>
+
+          <!-- Hero image carousel -->
+          <div class="relative aspect-[4/3] lg:aspect-square fade-up hero-visual" id="hero-carousel">
+            <div class="hero-slide" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"></div>
+            <div class="hero-slide" style="background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);"></div>
+            <div class="hero-slide" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #48dbfb 100%);"></div>
+            <div class="hero-slide" style="background: linear-gradient(135deg, #0c0c0c 0%, #434343 100%);"></div>
+            <div class="hero-slide" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            <div class="hero-slide" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURED WORK -->
+    <section class="py-16 sm:py-24 bg-[var(--color-surface)]" id="work">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12 sm:mb-16">
+          <div>
+            <h2 class="display-lg fade-up">Featured<br />work</h2>
+            <p class="text-[var(--color-text-muted)] mt-4 max-w-lg fade-up">
+              We create innovative and purposeful designs that not only capture attention but also drive meaningful results.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5" id="work-grid">
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #0f0f0f, #2d2d2d);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Incard</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>Fintech</span>
+                <span>2024</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #ff9a56, #ff6b95);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Sowbeez</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>B2C App</span>
+                <span>2023</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #1e3a5f, #4a90d9);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Forbes</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>Web 3.0</span>
+                <span>2023</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #f7971e, #ffd200);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Sobry</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>Electrical</span>
+                <span>2026</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #834d9b, #d04ed6);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">We are</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>B2B SaaS</span>
+                <span>2024</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #11998e, #38ef7d);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Stables</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>Web 3.0</span>
+                <span>2022</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+          <a href="#" class="work-card group fade-up work-item sm:col-span-2 lg:col-span-1">
+            <div class="aspect-[4/3] placeholder-img" style="background: linear-gradient(145deg, #232526, #414345);"></div>
+            <div class="p-5">
+              <h3 class="text-xl font-bold tracking-tight mb-1 group-hover:underline">Jaws Group</h3>
+              <div class="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+                <span>Agency</span>
+                <span>2026</span>
+              </div>
+              <p class="text-sm font-semibold mt-3 flex items-center gap-1">Discover case <span class="group-hover:translate-x-1 transition-transform">→</span></p>
+            </div>
+          </a>
+
+        </div>
+
+        <!-- Testimonial -->
+        <div class="mt-16 sm:mt-24 max-w-3xl mx-auto testimonial-card fade-up">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-6">Testimonial</p>
+          <blockquote class="mb-8">
+            "Amazing experience with Brand Appart! The team immediately understood my vision and turned it into a clear, modern, and impactful brand identity. Professional, responsive, and creative. I couldn't recommend them more!"
+          </blockquote>
+          <div class="flex items-center gap-4">
+            <div class="avatar-placeholder" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+            <div>
+              <p class="font-bold text-sm">Eddy Jellal</p>
+              <p class="text-sm text-[var(--color-text-muted)]">Co-Founder @Qonnect & @PDF Wizzard</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA block -->
+        <div class="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 fade-up" id="contact">
+          <a href="#" class="btn-outline">contact sales</a>
+          <a href="#" class="btn-primary text-base px-8 py-4">
+            <div class="avatar-placeholder w-8 h-8" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+            Book a free discovery call
+          </a>
+        </div>
+
+        <div class="text-center mt-8">
+          <a href="#" class="text-sm font-bold underline underline-offset-4 hover:no-underline fade-up">See more work →</a>
+        </div>
+
+        <!-- Work marquee strip -->
+        <div class="mt-16 overflow-hidden" id="work-marquee">
+          <div class="marquee-track">
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #ff6b6b, #feca57);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #0c0c0c, #434343);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #834d9b, #d04ed6);"></div>
+            <div class="w-48 h-32 rounded-xl placeholder-img" style="background: linear-gradient(135deg, #f7971e, #ffd200);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT WE SHIP -->
+    <section class="py-16 sm:py-24" id="services">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="mb-20 sm:mb-28">
+          <h2 class="display-lg fade-up mb-4">
+            <strong>What we ship.</strong><br />
+            <span class="text-[var(--color-text-muted)] font-normal">Our ways to move fast</span>
+          </h2>
+          <a href="#" class="text-sm font-bold underline underline-offset-4 fade-up">See our case studies →</a>
+        </div>
+
+        <!-- Service 01: Branding -->
+        <article class="mb-24 sm:mb-32 service-block">
+          <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div class="lg:col-span-2">
+              <span class="service-number fade-up">(00)</span>
+            </div>
+            <div class="lg:col-span-10">
+              <h3 class="display-md fade-up mb-6">Branding that drives conversion &amp; funding.</h3>
+              <p class="text-[var(--color-text-muted)] text-lg leading-relaxed max-w-3xl fade-up mb-10">
+                We clarify your positioning, define a distinctive tone of voice, and build a visual system that works across acquisition and product. Each sprint ships a robust logo, pragmatic brand guidelines, and a social kit so you can launch fast. The goal is simple: perceived value up.
+              </p>
+
+              <div class="testimonial-card mb-10 fade-up">
+                <blockquote class="mb-6 text-base">
+                  "Working with Brand Appart has been an absolute pleasure. Beyond their creativity and professionalism, there's a real sense of kindness and care in everything they do. The team is always open, generous, and never gets stuck on small details — they never say no."
+                </blockquote>
+                <div class="flex items-center gap-4">
+                  <div class="avatar-placeholder" style="background: linear-gradient(135deg, #232526, #414345);"></div>
+                  <div>
+                    <p class="font-bold text-sm">Jérémy Bendayan</p>
+                    <p class="text-sm text-[var(--color-text-muted)]">Co-founder &amp; COO @Jaws Group</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-4 overflow-x-auto pb-4 image-row fade-up" style="scrollbar-width: none;">
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #0f0f0f, #3d3d3d);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #1e3a5f, #4a90d9);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #834d9b, #d04ed6);"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Service 02: Product -->
+        <article class="mb-24 sm:mb-32 service-block">
+          <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div class="lg:col-span-2">
+              <span class="service-number fade-up">(00)</span>
+            </div>
+            <div class="lg:col-span-10">
+              <h3 class="display-md fade-up mb-6">Product experiences users adopt &amp; keep using</h3>
+              <p class="text-[var(--color-text-muted)] text-lg leading-relaxed max-w-3xl fade-up mb-10">
+                We start from business goals, map the critical journeys, and prototype what actually moves the needle. Every sprint ships clear flows, a reusable UI library, and a dev-ready handoff. Expect time-to-value down, UX friction down, retention/NPS up.
+              </p>
+
+              <div class="testimonial-card mb-10 fade-up">
+                <blockquote class="mb-6 text-base">
+                  "A huge thank you to the entire Brand Appart team for your outstanding work on our rebranding! We're thrilled to have you as an integral part of the Incard team, and we can't wait to reveal what's coming next."
+                </blockquote>
+                <div class="flex items-center gap-4">
+                  <div class="avatar-placeholder" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);"></div>
+                  <div>
+                    <p class="font-bold text-sm">Théo Cesarini</p>
+                    <p class="text-sm text-[var(--color-text-muted)]">CEO &amp; Co-Founder @Incard &amp; @Fundree</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-4 overflow-x-auto pb-4 image-row fade-up">
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #2d1b69, #11998e);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #0c0c0c, #636363);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #f7971e, #ffd200);"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Service 03: Web Design -->
+        <article class="mb-24 sm:mb-32 service-block">
+          <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div class="lg:col-span-2">
+              <span class="service-number fade-up">(00)</span>
+            </div>
+            <div class="lg:col-span-10">
+              <h3 class="display-md fade-up mb-6">Web Design for growing teams &amp; business.</h3>
+              <p class="text-[var(--color-text-muted)] text-lg leading-relaxed max-w-3xl fade-up mb-10">
+                We align messaging, page architecture, and UI. You get clear structure, purposeful sections. The site loads fast, tells the right story, and pushes to action without dev firefighting. Your team gets a scalable base they can evolve without calling us for every change.
+              </p>
+
+              <div class="testimonial-card mb-10 fade-up">
+                <blockquote class="mb-6 text-base">
+                  "I've worked with Brand Appart on multiple projects — website development, landing pages for branding, and PowerPoint presentations. I love how flexible, fast, and professional the team is. That speed and agility are exactly what we needed at Ircam Amplify."
+                </blockquote>
+                <div class="flex items-center gap-4">
+                  <div class="avatar-placeholder" style="background: linear-gradient(135deg, #4a90d9, #1e3a5f);"></div>
+                  <div>
+                    <p class="font-bold text-sm">Alexis Botaya</p>
+                    <p class="text-sm text-[var(--color-text-muted)]">Managing director @Sound Experience</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-4 overflow-x-auto pb-4 image-row fade-up">
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #ff9a56, #ff6b95);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #232526, #414345);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #834d9b, #d04ed6);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #0f0f0f, #2d2d2d);"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Service 04: Pitch Decks -->
+        <article class="mb-8 service-block">
+          <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div class="lg:col-span-2">
+              <span class="service-number fade-up">(00)</span>
+            </div>
+            <div class="lg:col-span-10">
+              <h3 class="display-md fade-up mb-6">Investor-proof decks that raise faster.</h3>
+              <p class="text-[var(--color-text-muted)] text-lg leading-relaxed max-w-3xl fade-up mb-10">
+                We craft the narrative that gets meetings and a precise ask. Design serves the story: readable numbers, rhythm across slides, and versions for teaser/one-pager. Your deck can be pitched in 5 minutes, read solo, and generates faster responses.
+              </p>
+
+              <div class="flex gap-4 overflow-x-auto pb-4 image-row fade-up">
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #1a1a2e, #16213e); aspect-ratio: 16/10; width: clamp(240px, 30vw, 400px);"></div>
+                <div class="image-row-item placeholder-img" style="background: linear-gradient(135deg, #667eea, #764ba2); aspect-ratio: 16/10; width: clamp(240px, 30vw, 400px);"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- TRUSTED BY -->
+    <section class="py-16 sm:py-24 bg-[var(--color-surface)] border-y border-[var(--color-border)]" id="trusted">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
+          <h2 class="display-lg fade-up">Trusted by<br />+40 founders</h2>
+          <a href="#" class="btn-outline fade-up self-start sm:self-auto">Contact Sales</a>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5" id="testimonials-grid">
+
+          <div class="testimonial-card fade-up trust-card">
+            <blockquote class="mb-6">
+              "We worked to revamp our brand identity and web experience and the result was beyond expectations. What stood out most was their ability to combine bold creative direction with a deep understanding of our business goals."
+            </blockquote>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="avatar-placeholder" style="background: linear-gradient(135deg, #f7971e, #ffd200);"></div>
+                <div>
+                  <p class="font-bold text-sm">Thomas Lemaitre</p>
+                  <p class="text-sm text-[var(--color-text-muted)]">Head of Marketing @Jalao</p>
+                </div>
+              </div>
+              <a href="#" class="text-xs font-semibold underline">Contact Sales</a>
+            </div>
+          </div>
+
+          <div class="testimonial-card fade-up trust-card">
+            <blockquote class="mb-6">
+              "Working with Brand Appart means having a true partner, attentive, responsive, and creative. I especially appreciated their ability to grasp the essence of the project from the very first conversations."
+            </blockquote>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="avatar-placeholder" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+                <div>
+                  <p class="font-bold text-sm">David Haiun</p>
+                  <p class="text-sm text-[var(--color-text-muted)]">Founder @Olea &amp; @Thermobat</p>
+                </div>
+              </div>
+              <a href="#" class="text-xs font-semibold underline">Contact Sales</a>
+            </div>
+          </div>
+
+          <div class="testimonial-card fade-up trust-card md:col-span-2">
+            <blockquote class="mb-6">
+              "We didn't want to look like anyone else in the energy market. Brand Appart understood that from day one. They worked with us to define the real DNA of the brand — not just a visual identity, but a consistent thread across every touchpoint. The result is a warm, distinctive identity that our customers feel immediately."
+            </blockquote>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="avatar-placeholder" style="background: linear-gradient(135deg, #ff6b6b, #feca57);"></div>
+                <div>
+                  <p class="font-bold text-sm">Jeremy Assayang</p>
+                  <p class="text-sm text-[var(--color-text-muted)]">CEO &amp; Co-Founder @Sobry</p>
+                </div>
+              </div>
+              <a href="#" class="text-xs font-semibold underline">Contact Sales</a>
+            </div>
+          </div>
+
+          <div class="testimonial-card fade-up trust-card">
+            <blockquote class="mb-6">
+              "A huge thank you to the entire Brand Appart team for your outstanding work on our rebranding! We're thrilled to have you as an integral part of the Incard team."
+            </blockquote>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="avatar-placeholder" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);"></div>
+                <div>
+                  <p class="font-bold text-sm">Théo Cesarini</p>
+                  <p class="text-sm text-[var(--color-text-muted)]">CEO &amp; Co-Founder @Incard</p>
+                </div>
+              </div>
+              <a href="#" class="text-xs font-semibold underline">Contact Sales</a>
+            </div>
+          </div>
+
+          <div class="testimonial-card fade-up trust-card">
+            <blockquote class="mb-6">
+              "I love how flexible, fast, and professional the team is. That speed and agility are exactly what we needed at Ircam Amplify."
+            </blockquote>
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="avatar-placeholder" style="background: linear-gradient(135deg, #4a90d9, #1e3a5f);"></div>
+                <div>
+                  <p class="font-bold text-sm">Alexis Botaya</p>
+                  <p class="text-sm text-[var(--color-text-muted)]">Managing director @Sound Experience</p>
+                </div>
+              </div>
+              <a href="#" class="text-xs font-semibold underline">Contact Sales</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="py-16 sm:py-24" id="team">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <h2 class="display-lg fade-up mb-12 sm:mb-16">
+          Small team,<br />big results
+        </h2>
+
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 sm:gap-4" id="team-grid">
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #ff6b6b, #feca57);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #834d9b, #d04ed6);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #0c0c0c, #434343);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #4a90d9, #1e3a5f);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #ff9a56, #ff6b95);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #2d1b69, #11998e);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #f7971e, #ffd200);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #232526, #414345);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #0f0f0f, #3d3d3d);"></div>
+          <div class="team-cell fade-up team-member placeholder-img" style="background: linear-gradient(135deg, #e96443, #904e95);"></div>
+        </div>
+
+        <div class="mt-12 text-center fade-up">
+          <a href="#" class="btn-outline">know more about us</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-12 sm:py-16 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-600 flex items-center justify-center text-white text-xs font-bold mb-4">BA</div>
+            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed">
+              Design studio for bold startups.<br />Paris, France.
+            </p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-4">Work</p>
+            <ul class="space-y-2 text-sm font-medium">
+              <li><a href="#" class="hover:underline">Case studies</a></li>
+              <li><a href="#" class="hover:underline">Branding</a></li>
+              <li><a href="#" class="hover:underline">Product</a></li>
+              <li><a href="#" class="hover:underline">Web Design</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-4">Studio</p>
+            <ul class="space-y-2 text-sm font-medium">
+              <li><a href="#" class="hover:underline">About</a></li>
+              <li><a href="#" class="hover:underline">Contact</a></li>
+              <li><a href="#" class="hover:underline">Start a project</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-4">Connect</p>
+            <ul class="space-y-2 text-sm font-medium">
+              <li><a href="#" class="hover:underline">LinkedIn</a></li>
+              <li><a href="#" class="hover:underline">Instagram</a></li>
+              <li><a href="#" class="hover:underline">Dribbble</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-[var(--color-border)]">
+          <p class="text-xs text-[var(--color-text-muted)]">© 2026 Brand Appart. All rights reserved.</p>
+          <a href="#contact" class="btn-primary text-sm">book a call now</a>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- TRADE-OFFS NOTE -->
+  <aside class="tradeoffs px-6 py-10">
+    <div class="max-w-[1400px] mx-auto">
+      <p class="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-4">Recreation trade-offs — Grok Composer 2.5</p>
+      <ul class="space-y-2 max-w-4xl">
+        <li><strong class="text-neutral-300">Imagery:</strong> All photos, case-study screenshots, and team portraits replaced with CSS gradient placeholders — no external brand assets loaded.</li>
+        <li><strong class="text-neutral-300">Hero transitions:</strong> Original uses rapid Webflow/AVIF image cycling; approximated with GSAP crossfade on gradient slides rather than pixel-perfect video frames.</li>
+        <li><strong class="text-neutral-300">Typography:</strong> Inter substitutes the site's custom grotesk; weight and scale tuned to match editorial boldness but exact kerning differs.</li>
+        <li><strong class="text-neutral-300">Interactions:</strong> Scroll-linked parallax, cursor effects, and CMS-driven case-study pages omitted for single-file portability.</li>
+        <li><strong class="text-neutral-300">Service counters:</strong> Original shows incrementing (00)→(01)→(02)→(03); static (00) labels used here with section order conveying sequence.</li>
+        <li><strong class="text-neutral-300">Localization:</strong> FR toggle is presentational only; no bilingual content swap implemented.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Header scroll state
+    const header = document.getElementById('header');
+    ScrollTrigger.create({
+      start: 'top -80',
+      onUpdate: (self) => {
+        header.classList.toggle('nav-scrolled', self.scroll() > 80);
+      }
+    });
+
+    // Hero entrance
+    gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .to('.hero-loc', { opacity: 1, y: 0, duration: 0.8, delay: 0.2 })
+      .to('.hero-title', { opacity: 1, y: 0, duration: 1 }, '-=0.5')
+      .to('.hero-sub', { opacity: 1, y: 0, duration: 0.8 }, '-=0.6')
+      .to('.hero-visual', { opacity: 1, y: 0, duration: 1 }, '-=0.5');
+
+    // Hero image carousel
+    const slides = gsap.utils.toArray('.hero-slide');
+    if (slides.length) {
+      gsap.set(slides[0], { opacity: 1 });
+      const heroTl = gsap.timeline({ repeat: -1 });
+      slides.forEach((slide, i) => {
+        if (i === 0) return;
+        heroTl
+          .to(slides[i - 1], { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '+=1.2')
+          .to(slides[i], { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, '<');
+      });
+      heroTl
+        .to(slides[slides.length - 1], { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, '+=1.2')
+        .to(slides[0], { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, '<');
+    }
+
+    // Scroll-triggered fade-ups
+    gsap.utils.toArray('.fade-up').forEach((el) => {
+      if (el.classList.contains('hero-loc') || el.classList.contains('hero-title') ||
+          el.classList.contains('hero-sub') || el.classList.contains('hero-visual')) return;
+
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 88%',
+          toggleActions: 'play none none none'
+        },
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: 'power3.out'
+      });
+    });
+
+    // Staggered work grid
+    gsap.to('.work-item', {
+      scrollTrigger: {
+        trigger: '#work-grid',
+        start: 'top 80%'
+      },
+      opacity: 1,
+      y: 0,
+      duration: 0.7,
+      stagger: 0.08,
+      ease: 'power3.out'
+    });
+
+    // Work marquee
+    const marquee = document.querySelector('#work-marquee .marquee-track');
+    if (marquee) {
+      const clone = marquee.cloneNode(true);
+      marquee.parentElement.appendChild(clone);
+      gsap.to([marquee, clone], {
+        xPercent: -100,
+        duration: 30,
+        ease: 'none',
+        repeat: -1
+      });
+    }
+
+    // Service blocks parallax on image rows
+    gsap.utils.toArray('.image-row').forEach((row) => {
+      gsap.to(row, {
+        scrollTrigger: {
+          trigger: row,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 1
+        },
+        x: -40,
+        ease: 'none'
+      });
+    });
+
+    // Team grid stagger
+    gsap.to('.team-member', {
+      scrollTrigger: {
+        trigger: '#team-grid',
+        start: 'top 85%'
+      },
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      stagger: { amount: 0.6, grid: 'auto', from: 'start' },
+      ease: 'power2.out'
+    });
+
+    // Trust cards stagger
+    gsap.to('.trust-card', {
+      scrollTrigger: {
+        trigger: '#testimonials-grid',
+        start: 'top 85%'
+      },
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      stagger: 0.12,
+      ease: 'power3.out'
+    });
+
+    // Service number scale on scroll
+    gsap.utils.toArray('.service-number').forEach((num) => {
+      gsap.from(num, {
+        scrollTrigger: {
+          trigger: num,
+          start: 'top 90%',
+          toggleActions: 'play none none none'
+        },
+        scale: 0.8,
+        opacity: 0,
+        duration: 1,
+        ease: 'power3.out'
+      });
+    });
+  </script>
+</body>
+</html>

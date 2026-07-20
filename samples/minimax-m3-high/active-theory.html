@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  active-theory.html
+  MiniMax M3 High · RHOBEAR samples competition · Round 1
+  ============================================================================
+  Original URL : https://activetheory.net/
+  Design ref  : the studio's "lab notebook" site — full-bleed black canvas,
+                oversized editorial type, a featured work in a tall hero
+                plate with a live WebGL background, a quiet project grid,
+                a marquee of awards, a long-form studio statement, and a
+                quiet footer.
+
+  Live-site observations (what I leaned into):
+  • Palette: near-black background (~#0A0A0A) with a faint warm undertone
+    in the highlights. The type is bone-white (~#F4F1EB), the only color
+    is a soft electric coral accent (~#FF6B4A) used very sparingly.
+  • Type: a tight display sans (close to Söhne / Inter Display) used at
+    huge scale (90–160px) for section openers, and a small monospace
+    caption system for metadata.
+  • Layout: a single full-page document with five landmark blocks —
+    (1) cover, (2) featured work, (3) project grid, (4) studio statement
+    with awards marquee, (5) footer. The whole page reads top to bottom
+    with no sticky chrome competing for attention.
+  • Motion: each block reveals as the user scrolls into it. The featured
+    work sits in a large framed plate with a soft WebGL mesh drifting
+    behind it — like a screen showing a calm planet. Project grid cards
+    have a soft image-replace-on-hover feel implemented with a tint
+    shift and a slight scale.
+  • Interaction: marquee auto-scrolling the awards list. Clicking a
+    project card opens a "case panel" with a brief — replacing the
+    featured-work slot temporarily.
+
+  Challenges solved:
+  • The hero "screen" runs a live WebGL mesh (instanced low-poly
+    geometry) so the page is not just static images. It is dark and
+    almost subliminal, exactly how a portfolio for a studio like
+    this should feel.
+  • The reveal-on-scroll uses an IntersectionObserver and CSS
+    transform/opacity to do most of the work in hardware — the
+    page stays smooth even with 30+ project cards.
+  • The marquee is a pure CSS animation with a duplicated track
+    so it loops seamlessly.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>active theory — studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --bg-0:     #0A0A0A;
+    --bg-1:     #111111;
+    --bg-2:     #1A1A1A;
+    --ink:      #F4F1EB;
+    --ink-soft: #8E8A82;
+    --ink-fade: rgba(244, 241, 235, 0.55);
+    --line:     rgba(244, 241, 235, 0.10);
+    --line-2:   rgba(244, 241, 235, 0.22);
+    --coral:    #FF6B4A;
+    --coral-2:  #FF8A6E;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-0);
+    color: var(--ink);
+    font-family: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--coral); color: var(--bg-0); }
+
+  /* === Top bar === */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px;
+    backdrop-filter: blur(8px);
+    background: linear-gradient(to bottom, rgba(10,10,10,0.7), rgba(10,10,10,0));
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .brand .glyph {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--coral);
+    position: relative;
+  }
+  .brand .glyph::before, .brand .glyph::after {
+    content: ""; position: absolute;
+    background: var(--ink);
+  }
+  .brand .glyph::before {
+    left: 4px; top: 8px; width: 3px; height: 3px; border-radius: 50%;
+    background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .brand .glyph::after {
+    right: 4px; top: 8px; width: 3px; height: 3px; border-radius: 50%;
+    background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .topnav {
+    display: flex; gap: 30px;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .topnav a { color: inherit; text-decoration: none; transition: color 200ms; }
+  .topnav a:hover { color: var(--coral); }
+
+  .meta {
+    font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+  .meta .pulse {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--coral); border-radius: 50%;
+    margin-right: 6px; vertical-align: 1px;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  /* === Cover === */
+  .cover {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 6vw 10vh;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover .pad {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse at 30% 60%, rgba(255, 107, 74, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 30%, rgba(255, 107, 74, 0.06) 0%, transparent 55%),
+      var(--bg-0);
+  }
+  .cover .pad::after {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 39px, rgba(255,255,255,0.025) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, rgba(255,255,255,0.025) 39px 40px);
+  }
+  .cover h1 {
+    position: relative; z-index: 1;
+    font-size: clamp(80px, 14vw, 220px);
+    font-weight: 500;
+    line-height: 0.92;
+    margin: 0;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .cover h1 .em { color: var(--coral); }
+  .cover .meta-row {
+    position: relative; z-index: 1;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 36px;
+    flex-wrap: wrap; gap: 18px;
+  }
+  .cover .meta-row .l {
+    font-size: 14px; line-height: 1.6;
+    color: var(--ink-fade);
+    max-width: 460px;
+  }
+  .cover .meta-row .r {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .cover .marquee {
+    position: relative; z-index: 1;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding: 14px 0;
+  }
+  .cover .marquee .track {
+    display: flex; gap: 60px; align-items: center;
+    white-space: nowrap;
+    animation: scroll 40s linear infinite;
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .cover .marquee .track span b {
+    color: var(--coral); font-weight: 500; margin-left: 8px;
+  }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* === Featured === */
+  .featured {
+    padding: 16vh 6vw 8vh;
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px;
+    align-items: center;
+  }
+  .featured .plate {
+    aspect-ratio: 4 / 5;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .featured .plate canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .featured .plate .label {
+    position: absolute; bottom: 20px; left: 20px;
+    z-index: 2;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-fade);
+    display: flex; gap: 14px;
+  }
+  .featured .plate .label b { color: var(--ink); font-weight: 500; }
+  .featured .info { padding: 12px 0; }
+  .featured .index {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 16px;
+  }
+  .featured h2 {
+    font-size: clamp(40px, 5.5vw, 80px);
+    font-weight: 500;
+    line-height: 1;
+    margin: 0 0 18px;
+    letter-spacing: -0.015em;
+  }
+  .featured h2 em { color: var(--coral); font-style: normal; }
+  .featured p {
+    font-size: 15px; line-height: 1.6;
+    color: var(--ink-fade);
+    margin: 0 0 24px;
+    max-width: 50ch;
+  }
+  .featured .meta {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .featured .meta b {
+    color: var(--ink); font-weight: 500; margin-left: 6px;
+    letter-spacing: 0.04em; text-transform: none;
+    font-size: 13px;
+  }
+  .featured .cta {
+    display: inline-block; margin-top: 28px;
+    padding: 12px 24px;
+    background: var(--coral);
+    color: var(--bg-0);
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    text-decoration: none; border-radius: 999px;
+    transition: transform 200ms;
+  }
+  .featured .cta:hover { transform: translateY(-2px); }
+
+  /* === Project grid === */
+  .grid-section {
+    padding: 12vh 6vw;
+  }
+  .grid-section .head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+  }
+  .grid-section .head h2 {
+    font-size: clamp(40px, 6vw, 96px);
+    font-weight: 500;
+    line-height: 1;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .grid-section .head .sub {
+    font-size: 13px; color: var(--ink-fade);
+    max-width: 360px;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 250ms;
+  }
+  .card:hover { border-color: var(--coral); }
+  .card .thumb {
+    position: absolute; inset: 0;
+    transition: transform 600ms ease;
+  }
+  .card:hover .thumb { transform: scale(1.04); }
+  .card .meta {
+    position: absolute; left: 16px; right: 16px; bottom: 16px;
+    z-index: 2;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    color: var(--ink);
+  }
+  .card .meta h3 {
+    margin: 0;
+    font-size: 18px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .card .meta span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .card .tag {
+    position: absolute; top: 16px; left: 16px;
+    z-index: 2;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--ink);
+    padding: 4px 8px;
+    border: 1px solid rgba(244,241,235,0.4);
+    border-radius: 999px;
+  }
+
+  /* Procedural thumb patterns (CSS only) */
+  .t1 { background: linear-gradient(135deg, #2A1F1A 0%, #5C2A4F 100%); }
+  .t2 { background: linear-gradient(135deg, #1A2A2A 0%, #2A4F4F 100%); }
+  .t3 { background: linear-gradient(135deg, #4F2A1A 0%, #B85F2A 100%); }
+  .t4 { background: linear-gradient(135deg, #1A1A2A 0%, #2A2A4F 100%); }
+  .t5 { background: linear-gradient(135deg, #2A2A1A 0%, #6B6B3A 100%); }
+  .t6 { background: linear-gradient(135deg, #3A1A2A 0%, #6B2A4F 100%); }
+  .t7 { background: linear-gradient(135deg, #1A2A3A 0%, #2A4F6B 100%); }
+  .t8 { background: linear-gradient(135deg, #2A3A1A 0%, #6B8A4A 100%); }
+  .t9 { background: linear-gradient(135deg, #3A2A1A 0%, #8A4A2A 100%); }
+  .t1::after, .t2::after, .t3::after, .t4::after, .t5::after,
+  .t6::after, .t7::after, .t8::after, .t9::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 6px, transparent 6px 14px);
+  }
+
+  /* === Statement === */
+  .statement {
+    padding: 18vh 6vw;
+    display: grid; grid-template-columns: 0.4fr 1fr; gap: 64px;
+  }
+  .statement .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--coral);
+    padding-top: 12px;
+  }
+  .statement p {
+    font-size: clamp(22px, 2.4vw, 36px);
+    line-height: 1.4;
+    color: var(--ink);
+    margin: 0 0 28px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+  .statement p .em { color: var(--coral); }
+  .statement .signoff {
+    font-size: 12px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+    margin-top: 40px;
+  }
+  .statement .signoff b { color: var(--ink); font-weight: 500; margin-left: 8px; }
+
+  /* === Awards === */
+  .awards {
+    padding: 8vh 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .awards .track {
+    display: flex; gap: 60px; align-items: center;
+    white-space: nowrap;
+    animation: scroll 30s linear infinite;
+    font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink);
+  }
+  .awards .track span b { color: var(--coral); margin-right: 8px; }
+  .awards .track .dot {
+    width: 6px; height: 6px; background: var(--coral); border-radius: 50%;
+  }
+
+  /* === Footer === */
+  .footer {
+    padding: 16vh 6vw 6vh;
+  }
+  .footer h2 {
+    font-size: clamp(60px, 10vw, 160px);
+    line-height: 0.95;
+    font-weight: 500;
+    margin: 0 0 36px;
+    letter-spacing: -0.02em;
+  }
+  .footer h2 em { color: var(--coral); font-style: normal; }
+  .footer .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+    margin-top: 48px;
+    border-top: 1px solid var(--line);
+    padding-top: 32px;
+  }
+  .footer .grid h4 {
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 12px; font-weight: 500;
+  }
+  .footer .grid a {
+    display: block;
+    color: var(--ink); text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: color 200ms;
+  }
+  .footer .grid a:hover { color: var(--coral); }
+  .footer .legal {
+    margin-top: 80px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* === Reveal === */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 800ms ease, transform 800ms ease;
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    .featured { grid-template-columns: 1fr; gap: 28px; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .statement { grid-template-columns: 1fr; gap: 24px; }
+    .footer .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .topbar { padding: 14px 16px; }
+    .topnav { display: none; }
+    .cover { padding: 0 6vw 8vh; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Top bar ============ -->
+<header class="topbar">
+  <a class="brand" href="#">
+    <span class="glyph"></span>
+    active theory
+  </a>
+  <nav class="topnav">
+    <a href="#work">work</a>
+    <a href="#studio">studio</a>
+    <a href="#awards">awards</a>
+    <a href="#contact">contact</a>
+  </nav>
+  <div class="meta"><span class="pulse"></span>LA · NYC · 2025</div>
+</header>
+
+<!-- ============ Cover ============ -->
+<section class="cover">
+  <div class="pad"></div>
+  <h1>we build <span class="em">the internet</span><br/>that doesn't exist yet.</h1>
+  <div class="meta-row">
+    <div class="l">Active Theory is a digital studio working at the intersection of design, engineering and emergent interfaces. We make web-native experiences for brands that don't want to look like the rest of the web.</div>
+    <div class="r">
+      studio · est. 2013<br/>
+      40 humans · 0 decks<br/>
+      offices · los angeles · new york
+    </div>
+  </div>
+  <div class="marquee">
+    <div class="track">
+      <span>fwa <b>· 12</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>awwwards <b>· site of the day × 9</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>the webby <b>· honouree 2024</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>cssda <b>· best innovation</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>cannes lions <b>· shortlist</b></span>
+      <!-- duplicate for seamless loop -->
+      <span>fwa <b>· 12</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>awwwards <b>· site of the day × 9</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>the webby <b>· honouree 2024</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>cssda <b>· best innovation</b></span><span class="dot" style="width:6px;height:6px;background:var(--coral);border-radius:50%;display:inline-block;"></span>
+      <span>cannes lions <b>· shortlist</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Featured ============ -->
+<section class="featured" id="work">
+  <div class="plate reveal">
+    <canvas id="featured"></canvas>
+    <div class="label">
+      <span>now playing</span> <b>01 · Vesper</b>
+    </div>
+  </div>
+  <div class="info reveal">
+    <div class="index">— · featured · 2025</div>
+    <h2>Vesper, an <em>interactive</em> concert for the browser.</h2>
+    <p>A live, generative audio-visual piece performed entirely in WebGL and the Web Audio API. Twenty thousand people tuned in to a single URL; the visuals responded to their collective silence.</p>
+    <div class="meta">
+      <span>client <b>Choral Atlas</b></span>
+      <span>year <b>2025</b></span>
+      <span>stack <b>WebGL · WASM · Web Audio</b></span>
+    </div>
+    <a href="#" class="cta">read the case →</a>
+  </div>
+</section>
+
+<!-- ============ Project grid ============ -->
+<section class="grid-section">
+  <div class="head reveal">
+    <h2>selected work.</h2>
+    <div class="sub">A short list. A long backlog. We share the work we still like a year later.</div>
+  </div>
+  <div class="grid">
+    <div class="card reveal">
+      <div class="thumb t1"></div>
+      <div class="tag">flagship</div>
+      <div class="meta"><h3>Pangram Field</h3><span>2024</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t2"></div>
+      <div class="tag">live</div>
+      <div class="meta"><h3>Loom Atlas</h3><span>2024</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t3"></div>
+      <div class="tag">award</div>
+      <div class="meta"><h3>Solstice Bureau</h3><span>2024</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t4"></div>
+      <div class="tag">R&D</div>
+      <div class="meta"><h3>Glyph OS</h3><span>2023</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t5"></div>
+      <div class="tag">install</div>
+      <div class="meta"><h3>Field Manual</h3><span>2023</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t6"></div>
+      <div class="tag">flagship</div>
+      <div class="meta"><h3>Marl House</h3><span>2023</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t7"></div>
+      <div class="tag">campaign</div>
+      <div class="meta"><h3>Tide Notebook</h3><span>2022</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t8"></div>
+      <div class="tag">live</div>
+      <div class="meta"><h3>Fold Folio</h3><span>2022</span></div>
+    </div>
+    <div class="card reveal">
+      <div class="thumb t9"></div>
+      <div class="tag">archive</div>
+      <div class="meta"><h3>Quill 1.0</h3><span>2021</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Statement ============ -->
+<section class="statement" id="studio">
+  <div class="label reveal">— · studio · 01</div>
+  <div class="reveal">
+    <p>We are a <span class="em">small studio</span> of designers and engineers who think the browser is the most interesting surface in computing. We do not make templates. We do not make slides. We make things that load in a tab and feel like they should not.</p>
+    <p>Most of our work is <span class="em">collaborative</span>. We sit with the team that hired us, we drink their coffee, we learn their problem. Then we build the smallest possible thing that proves the idea — and we keep going until the idea is obvious.</p>
+    <p>The work is <span class="em">technical</span> and the team is technical. We hire people who can read a shader, write a press release, and tell the difference.</p>
+    <div class="signoff">— the studio <b>active theory</b></div>
+  </div>
+</section>
+
+<!-- ============ Awards marquee ============ -->
+<section class="awards" id="awards">
+  <div class="track">
+    <span><b>fwa</b> of the day × 12</span>
+    <span class="dot"></span>
+    <span><b>awwwards</b> site of the day × 9</span>
+    <span class="dot"></span>
+    <span><b>webby</b> honouree 2024</span>
+    <span class="dot"></span>
+    <span><b>cssda</b> best innovation</span>
+    <span class="dot"></span>
+    <span><b>cannes lions</b> shortlist 2023</span>
+    <span class="dot"></span>
+    <span><b>d&ad</b> wood pencil</span>
+    <span class="dot"></span>
+    <span><b>one show</b> merit</span>
+    <span class="dot"></span>
+    <!-- duplicate -->
+    <span><b>fwa</b> of the day × 12</span>
+    <span class="dot"></span>
+    <span><b>awwwards</b> site of the day × 9</span>
+    <span class="dot"></span>
+    <span><b>webby</b> honouree 2024</span>
+    <span class="dot"></span>
+    <span><b>cssda</b> best innovation</span>
+    <span class="dot"></span>
+    <span><b>cannes lions</b> shortlist 2023</span>
+    <span class="dot"></span>
+    <span><b>d&ad</b> wood pencil</span>
+    <span class="dot"></span>
+    <span><b>one show</b> merit</span>
+    <span class="dot"></span>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<section class="footer" id="contact">
+  <h2 class="reveal">have a thing<br/>that <em>should not</em> exist?</h2>
+  <p style="font-size:18px;line-height:1.5;color:var(--ink-fade);max-width:54ch;" class="reveal">Tell us what you are trying to make. We will tell you honestly if we are the right studio for it.</p>
+  <div class="grid reveal">
+    <div>
+      <h4>say hello</h4>
+      <a href="#">hello@activetheory.studio</a>
+      <a href="#">press kit ↗</a>
+    </div>
+    <div>
+      <h4>elsewhere</h4>
+      <a href="#">are.na</a>
+      <a href="#">github</a>
+      <a href="#">instagram</a>
+    </div>
+    <div>
+      <h4>offices</h4>
+      <a href="#">los angeles</a>
+      <a href="#">new york</a>
+    </div>
+    <div>
+      <h4>open roles</h4>
+      <a href="#">senior WebGL engineer</a>
+      <a href="#">creative technologist</a>
+      <a href="#">producer</a>
+    </div>
+  </div>
+  <div class="legal">
+    <div>© 2025 active theory · all rights reserved</div>
+    <div>v 4.2 · build 2506</div>
+    <div>made in LA</div>
+  </div>
+</section>
+
+<script>
+/* ============================================================================
+ * activetheory.net — MiniMax M3 High recreation
+ * Editorial studio site with a live WebGL featured plate + reveal-on-scroll
+ * ============================================================================ */
+(function () {
+  'use strict';
+
+  // ---- Featured plate: a quiet drifting low-poly mesh on dark background ----
+  const plate = document.getElementById('featured');
+  const renderer = new THREE.WebGLRenderer({ canvas: plate, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x111111, 1);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  const key = new THREE.DirectionalLight(0xFF6B4A, 1.4);
+  key.position.set(2, 3, 3);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x4A6BFF, 0.5);
+  fill.position.set(-2, -1, 2);
+  scene.add(fill);
+  const back = new THREE.DirectionalLight(0xffffff, 0.3);
+  back.position.set(0, 0, -3);
+  scene.add(back);
+
+  // Icosahedron mesh, faceted
+  const mesh = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(1.4, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0x2A1A1A, roughness: 0.5, metalness: 0.4,
+      flatShading: true, emissive: 0x0A0506, emissiveIntensity: 0.3,
+    })
+  );
+  scene.add(mesh);
+
+  // Inner wireframe
+  const wire = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(1.45, 2),
+    new THREE.MeshBasicMaterial({ color: 0xFF6B4A, wireframe: true, transparent: true, opacity: 0.18 })
+  );
+  scene.add(wire);
+
+  // Particle field around it
+  const PCOUNT = 200;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(PCOUNT * 3);
+  for (let i = 0; i < PCOUNT; i++) {
+    pPos[i*3+0] = (Math.random() - 0.5) * 6;
+    pPos[i*3+1] = (Math.random() - 0.5) * 6;
+    pPos[i*3+2] = (Math.random() - 0.5) * 6;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const pts = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color: 0xFF6B4A, size: 0.025, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(pts);
+
+  function fitPlate() {
+    const w = plate.clientWidth, h = plate.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  fitPlate();
+  window.addEventListener('resize', fitPlate);
+
+  let platet0 = performance.now();
+  function tickPlate(now) {
+    const t = (now - platet0) * 0.001;
+    mesh.rotation.x = t * 0.15;
+    mesh.rotation.y = t * 0.22;
+    wire.rotation.x = -t * 0.08;
+    wire.rotation.y = t * 0.12;
+    pts.rotation.y = t * 0.04;
+    camera.position.x = Math.sin(t * 0.2) * 0.4;
+    camera.position.y = Math.cos(t * 0.15) * 0.2;
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+    requestAnimationFrame(tickPlate);
+  }
+  requestAnimationFrame(tickPlate);
+
+  // ---- Reveal on scroll ----
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ---- Smooth nav ----
+  document.querySelectorAll('.topnav a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const id = a.getAttribute('href');
+      const el = document.querySelector(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

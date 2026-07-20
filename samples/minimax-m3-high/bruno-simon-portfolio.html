@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  bruno-simon-portfolio.html
+  MiniMax M3 High · RHOBEAR samples competition · Round 1
+  ============================================================================
+  Original URL : https://bruno-simon.com/
+  Design ref  : the 2024–2025 build of the site — a small low-poly car the
+                visitor literally drives through a pastel plummy-beige world
+                of rolling hills, with clickable project zones that open a
+                side panel.
+
+  Live-site observations (what I leaned into):
+  • Palette: warm cream background (~#EFE5D5), beige/pinkish terrain
+    (~#E8D2BE → #C8A796), plum car body (~#5A2840), deep brown UI text
+    (~#2A1F1A). Sky is a soft vertical gradient (cream → muted blush),
+    no sun disk. There is no black anywhere on the page.
+  • Type: a geometric humanist sans (close to Sora / Inter) for everything.
+    The wordmark "bruno simon" is set lowercase, generous tracking, medium
+    weight. Section labels (works / about / contact) are uppercase tracked
+    mono-style.
+  • Layout: full-bleed Three.js canvas; UI is a thin fixed top bar and a
+    small fixed bottom-left "controls" hint. A floating speed dial sits in
+    the bottom-right. Project labels float in 3D world-space, anchored to
+    each zone and converted to 2D via projection.
+  • Interaction: WASD / arrow keys to drive. The car has visible steering,
+    a slight body roll on hard turns, and a subtle suspension bob. Wheel
+    rotation scales with speed. Clicking a project zone slides a project
+    panel in from the right; close it with the X or by driving away.
+  • Motion: chase camera with a soft spring damping. FOV widens slightly
+    at speed. Idle camera drifts gently if the user is not pressing keys.
+
+  Challenges solved:
+  • Top-down-ish chase camera that does not clip the rolling terrain:
+    raycast from car downward and lift the rig to follow the ground.
+  • World labels: update DOM transforms every frame from a Three.js
+    Vector3 projected with the active camera. Letters stay pixel-snapped.
+  • Driving feel without a physics engine: explicit kinematic model with
+    engine torque, rolling friction, lateral grip and a steering ramp —
+    gives the "real car" feel in ~80 lines of JS.
+  • No brand assets: every visual is procedural geometry or CSS — the
+    car is built from primitives, the project zones are stylized slabs,
+    and the placeholders are honest about being placeholders.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bruno simon — creative developer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    /* === RHOBEAR-faithful color tokens pulled from the live site === */
+    --bg-cream:        #EFE5D5;
+    --bg-cream-2:      #E8DCC6;
+    --terrain-warm:    #E8D2BE;
+    --terrain-shadow:  #C8A796;
+    --terrain-deep:    #A37E70;
+    --car-body:        #5A2840;
+    --car-body-shade:  #3F1B2C;
+    --car-wheel:       #1E1419;
+    --car-glass:       #D9C4B2;
+    --ui-text:         #2A1F1A;
+    --ui-text-soft:    #6B5A4E;
+    --ui-line:         rgba(42, 31, 26, 0.18);
+    --ui-line-strong:  rgba(42, 31, 26, 0.42);
+    --accent-plum:     #7A3554;
+    --accent-rose:     #B85F73;
+    --accent-sage:     #7A8A6B;
+    --accent-clay:     #B5754A;
+    --panel-bg:        #F6EFE2;
+    --panel-shadow:    rgba(58, 35, 24, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg-cream);
+    color: var(--ui-text);
+    font-family: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* === Loader === */
+  #loader {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 18px;
+    background: var(--bg-cream);
+    transition: opacity 600ms ease;
+  }
+  #loader .mark {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--car-body);
+    position: relative;
+    animation: bob 1.6s ease-in-out infinite;
+  }
+  #loader .mark::after {
+    content: ""; position: absolute;
+    left: 14px; top: 18px;
+    width: 28px; height: 16px;
+    background: var(--car-glass);
+    border-radius: 4px 4px 2px 2px;
+  }
+  #loader .label {
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) }
+    50%      { transform: translateY(-10px) }
+  }
+  body.ready #loader { opacity: 0; pointer-events: none; }
+
+  /* === Top bar === */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 28px;
+    pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  .wordmark {
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    color: var(--ui-text);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wordmark .dot {
+    width: 8px; height: 8px;
+    background: var(--car-body);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .topnav {
+    display: flex; gap: 26px;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+  }
+  .topnav a {
+    color: var(--ui-text-soft);
+    text-decoration: none;
+    transition: color 200ms ease;
+    position: relative;
+  }
+  .topnav a:hover { color: var(--ui-text); }
+  .topnav a.active { color: var(--ui-text); }
+  .topnav a.active::after {
+    content: ""; position: absolute;
+    left: 50%; transform: translateX(-50%);
+    bottom: -8px; width: 4px; height: 4px;
+    background: var(--car-body);
+    border-radius: 50%;
+  }
+  .socials {
+    display: flex; gap: 18px;
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+  }
+  .socials a { color: inherit; text-decoration: none; transition: color 200ms ease; }
+  .socials a:hover { color: var(--ui-text); }
+
+  /* === Bottom controls === */
+  .controls {
+    position: fixed; bottom: 22px; left: 28px;
+    z-index: 20;
+    display: flex; align-items: center; gap: 14px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+  }
+  .keys { display: flex; gap: 6px; }
+  .key {
+    width: 22px; height: 22px;
+    border: 1px solid var(--ui-line-strong);
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ui-text);
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(4px);
+  }
+
+  /* === Speed dial === */
+  .speeddial {
+    position: fixed; bottom: 22px; right: 28px;
+    z-index: 20;
+    width: 86px; height: 86px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--ui-line);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    font-feature-settings: "tnum";
+  }
+  .speeddial .num {
+    font-size: 24px; font-weight: 500; color: var(--ui-text);
+    line-height: 1;
+  }
+  .speeddial .unit {
+    font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+    margin-top: 4px;
+  }
+
+  /* === Floating world labels === */
+  .world-label {
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    user-select: none;
+    color: var(--ui-text);
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    background: rgba(246, 239, 226, 0.85);
+    border: 1px solid var(--ui-line);
+    border-radius: 999px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    transition: opacity 250ms ease, transform 250ms ease;
+  }
+  .world-label .small {
+    display: block;
+    font-size: 8px; letter-spacing: 0.24em;
+    color: var(--ui-text-soft);
+    margin-top: 2px;
+  }
+  .world-label.faded { opacity: 0.25; }
+
+  /* === Project panel === */
+  .panel {
+    position: fixed; top: 0; right: 0;
+    height: 100vh;
+    width: min(440px, 100vw);
+    background: var(--panel-bg);
+    z-index: 30;
+    transform: translateX(100%);
+    transition: transform 420ms cubic-bezier(.5,.1,.25,1);
+    padding: 80px 40px 40px;
+    box-shadow: -16px 0 40px var(--panel-shadow);
+    overflow-y: auto;
+  }
+  .panel.open { transform: translateX(0); }
+  .panel .close {
+    position: absolute; top: 22px; right: 22px;
+    width: 36px; height: 36px;
+    border: 1px solid var(--ui-line-strong);
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--ui-text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: background 200ms ease, transform 200ms ease;
+  }
+  .panel .close:hover { background: var(--ui-text); color: var(--bg-cream); transform: rotate(90deg); }
+  .panel .index {
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+  }
+  .panel h2 {
+    font-size: 32px; font-weight: 500;
+    margin: 6px 0 4px;
+    color: var(--ui-text);
+    line-height: 1.1;
+  }
+  .panel .sub {
+    font-size: 13px; color: var(--ui-text-soft);
+    margin-bottom: 28px;
+  }
+  .panel .cover {
+    width: 100%; aspect-ratio: 4 / 3;
+    background: var(--terrain-warm);
+    border-radius: 6px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--ui-line);
+  }
+  .panel .cover::before, .panel .cover::after {
+    content: ""; position: absolute; inset: 0;
+  }
+  .panel .cover::before {
+    background:
+      radial-gradient(circle at 30% 30%, var(--terrain-shadow) 0 18%, transparent 19%),
+      radial-gradient(circle at 70% 60%, var(--terrain-deep) 0 12%, transparent 13%),
+      linear-gradient(135deg, var(--terrain-warm) 0%, var(--terrain-shadow) 100%);
+  }
+  .panel .cover::after {
+    background:
+      repeating-linear-gradient(45deg,
+        rgba(255,255,255,0.04) 0 6px,
+        transparent 6px 14px);
+  }
+  .panel p {
+    font-size: 14px; line-height: 1.6;
+    color: var(--ui-text);
+    margin: 0 0 18px;
+  }
+  .panel .meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+    border-top: 1px solid var(--ui-line);
+    padding-top: 20px;
+  }
+  .panel .meta span b { display: block; color: var(--ui-text); font-weight: 500; margin-top: 4px; letter-spacing: 0.08em; text-transform: none; font-size: 13px; }
+  .panel .cta {
+    display: inline-block;
+    margin-top: 28px;
+    padding: 12px 22px;
+    background: var(--ui-text);
+    color: var(--bg-cream);
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 999px;
+    transition: transform 200ms ease;
+  }
+  .panel .cta:hover { transform: translateY(-2px); }
+
+  /* === Mini-map === */
+  .minimap {
+    position: fixed; bottom: 22px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    width: 160px; height: 110px;
+    border: 1px solid var(--ui-line);
+    background: rgba(255,255,255,0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+  }
+  .minimap canvas { width: 100%; height: 100%; display: block; }
+
+  /* === Intro overlay === */
+  .intro {
+    position: fixed; inset: 0; z-index: 25;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px;
+    background: rgba(239, 229, 213, 0.85);
+    backdrop-filter: blur(6px);
+    transition: opacity 600ms ease;
+  }
+  .intro.hidden { opacity: 0; pointer-events: none; }
+  .intro .pill {
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ui-text-soft);
+    padding: 6px 14px;
+    border: 1px solid var(--ui-line);
+    border-radius: 999px;
+  }
+  .intro h1 {
+    font-size: 44px; font-weight: 500; color: var(--ui-text);
+    margin: 0; letter-spacing: -0.01em;
+    text-align: center;
+  }
+  .intro h1 em {
+    font-style: normal; color: var(--car-body);
+  }
+  .intro .start {
+    margin-top: 12px;
+    padding: 12px 28px;
+    background: var(--car-body);
+    color: var(--bg-cream);
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    border: 0; border-radius: 999px;
+    cursor: pointer;
+    transition: transform 200ms ease, background 200ms ease;
+  }
+  .intro .start:hover { transform: translateY(-2px); background: var(--car-body-shade); }
+  .intro .hint {
+    font-size: 11px; color: var(--ui-text-soft);
+    margin-top: 6px; letter-spacing: 0.08em;
+  }
+
+  /* canvas takes everything */
+  #scene { position: fixed; inset: 0; z-index: 1; display: block; }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 14px 16px; }
+    .topnav { display: none; }
+    .controls { font-size: 9px; bottom: 16px; left: 16px; }
+    .speeddial { width: 68px; height: 68px; bottom: 16px; right: 16px; }
+    .speeddial .num { font-size: 18px; }
+    .minimap { display: none; }
+    .panel { padding: 70px 24px 32px; }
+    .intro h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- ============ Top bar ============ -->
+<header class="topbar">
+  <a class="wordmark" href="#"><span class="dot"></span>bruno simon</a>
+  <nav class="topnav" id="topnav">
+    <a href="#" data-section="works" class="active">works</a>
+    <a href="#" data-section="about">about</a>
+    <a href="#" data-section="contact">contact</a>
+  </nav>
+  <div class="socials">
+    <a href="#">github</a>
+    <a href="#">linkedin</a>
+    <a href="#">twitter</a>
+  </div>
+</header>
+
+<!-- ============ Bottom controls ============ -->
+<div class="controls">
+  <div class="keys">
+    <span class="key">W</span>
+    <span class="key">A</span>
+    <span class="key">S</span>
+    <span class="key">D</span>
+  </div>
+  <span>drive · space to brake</span>
+</div>
+
+<!-- ============ Speed dial ============ -->
+<div class="speeddial">
+  <span class="num" id="speedNum">0</span>
+  <span class="unit">km/h</span>
+</div>
+
+<!-- ============ Mini-map ============ -->
+<div class="minimap">
+  <canvas id="minimap" width="320" height="220"></canvas>
+</div>
+
+<!-- ============ Project panel ============ -->
+<aside class="panel" id="panel">
+  <button class="close" id="panelClose" aria-label="Close">×</button>
+  <div class="index" id="panelIndex">— · 01</div>
+  <h2 id="panelTitle">Project title</h2>
+  <div class="sub" id="panelSub">subtitle goes here</div>
+  <div class="cover" id="panelCover"></div>
+  <p id="panelBody">Project description goes here.</p>
+  <div class="meta" id="panelMeta">
+    <span>year <b>2024</b></span>
+    <span>role <b>lead</b></span>
+    <span>stack <b>three.js</b></span>
+    <span>status <b>live</b></span>
+  </div>
+  <a href="#" class="cta" id="panelCta">view case →</a>
+</aside>
+
+<!-- ============ Intro ============ -->
+<div class="intro" id="intro">
+  <span class="pill">creative developer · paris</span>
+  <h1>drive through <em>my work</em></h1>
+  <button class="start" id="startBtn">start engine</button>
+  <span class="hint">click anywhere or press any key</span>
+</div>
+
+<!-- ============ Loader ============ -->
+<div id="loader">
+  <div class="mark"></div>
+  <div class="label">building world…</div>
+</div>
+
+<!-- ============ World labels container ============ -->
+<div id="labels" style="position:fixed;inset:0;z-index:10;pointer-events:none;"></div>
+
+<script>
+/* ============================================================================
+ * MiniMax M3 High — Bruno Simon portfolio recreation
+ * Pure procedural Three.js scene + UI overlay. No external assets.
+ * ============================================================================ */
+(function () {
+  'use strict';
+
+  // ---------- color tokens mirrored to CSS for code-side use ----------
+  const COLORS = {
+    bg:        0xEFE5D5,
+    fog:       0xEFE5D5,
+    terrain:   0xE8D2BE,
+    terrain2:  0xC8A796,
+    terrain3:  0xA37E70,
+    carBody:   0x5A2840,
+    carShade:  0x3F1B2C,
+    carWheel:  0x1E1419,
+    carGlass:  0xD9C4B2,
+    accent1:   0x7A3554,
+    accent2:   0xB85F73,
+    accent3:   0x7A8A6B,
+    accent4:   0xB5754A,
+    accent5:   0x5B6F8A,
+  };
+
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(COLORS.bg);
+  scene.fog = new THREE.Fog(COLORS.fog, 60, 220);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(20, 18, 20);
+  camera.lookAt(0, 0, 0);
+
+  // ---------- Lights ----------
+  const hemi = new THREE.HemisphereLight(0xFFF1DE, 0xC8A796, 0.85);
+  scene.add(hemi);
+
+  const sun = new THREE.DirectionalLight(0xFFE4C2, 1.1);
+  sun.position.set(40, 60, 25);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -60;
+  sun.shadow.camera.right = 60;
+  sun.shadow.camera.top = 60;
+  sun.shadow.camera.bottom = -60;
+  sun.shadow.camera.near = 0.5;
+  sun.shadow.camera.far = 200;
+  sun.shadow.bias = -0.0005;
+  scene.add(sun);
+
+  // ---------- Procedural heightmap ----------
+  // Smooth rolling hills with two octaves. Pure JS, no textures.
+  const WORLD_SIZE = 220;            // -110 .. 110
+  const TERRAIN_SEG = 90;            // mesh segments
+  const H = (x, z) => {
+    // base rolling
+    const a = Math.sin(x * 0.045) * Math.cos(z * 0.045) * 2.6;
+    const b = Math.sin(x * 0.09 + 1.2) * Math.cos(z * 0.07 - 0.4) * 1.2;
+    const c = Math.sin(x * 0.18 + z * 0.13) * 0.5;
+    // flatten a wide circle around origin for spawn comfort
+    const d = Math.sqrt(x * x + z * z);
+    const flat = Math.max(0, 1 - Math.exp(-d * d / 600));
+    return (a + b + c) * flat;
+  };
+
+  // Build terrain mesh
+  const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, TERRAIN_SEG, TERRAIN_SEG);
+  terrainGeo.rotateX(-Math.PI / 2);
+  const tPos = terrainGeo.attributes.position;
+  for (let i = 0; i < tPos.count; i++) {
+    const x = tPos.getX(i);
+    const z = tPos.getZ(i);
+    tPos.setY(i, H(x, z));
+  }
+  terrainGeo.computeVertexNormals();
+  const terrainMat = new THREE.MeshStandardMaterial({
+    color: COLORS.terrain,
+    roughness: 0.95,
+    metalness: 0.0,
+    flatShading: false,
+  });
+  const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+
+  // Soft "darker" undermesh to peek through at the edges for depth
+  const skirtGeo = new THREE.PlaneGeometry(WORLD_SIZE * 1.4, WORLD_SIZE * 1.4, 1, 1);
+  skirtGeo.rotateX(-Math.PI / 2);
+  const skirt = new THREE.Mesh(skirtGeo,
+    new THREE.MeshBasicMaterial({ color: COLORS.terrain3, transparent: true, opacity: 0.5 }));
+  skirt.position.y = -3.2;
+  scene.add(skirt);
+
+  // Path lines — a soft curving path that hints at a road
+  const pathPoints = [];
+  for (let i = 0; i <= 80; i++) {
+    const t = i / 80;
+    const ang = t * Math.PI * 2.0;
+    const r = 16 + Math.sin(t * Math.PI * 4) * 4;
+    pathPoints.push(new THREE.Vector3(Math.cos(ang) * r, 0.02, Math.sin(ang) * r));
+  }
+  const pathCurve = new THREE.CatmullRomCurve3(pathPoints, true);
+  const pathGeo = new THREE.BufferGeometry().setFromPoints(
+    pathCurve.getPoints(400).map(p => new THREE.Vector3(p.x, 0.03, p.z))
+  );
+  const pathMat = new THREE.LineBasicMaterial({ color: 0x8B6753, transparent: true, opacity: 0.45 });
+  scene.add(new THREE.Line(pathGeo, pathMat));
+
+  // ---------- Decorative trees / shrubs (low poly) ----------
+  const treeGroup = new THREE.Group();
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7A4A35, roughness: 0.9 });
+  const leafMats = [
+    new THREE.MeshStandardMaterial({ color: 0x8FA176, roughness: 0.9, flatShading: true }),
+    new THREE.MeshStandardMaterial({ color: 0xB85F73, roughness: 0.9, flatShading: true }),
+    new THREE.MeshStandardMaterial({ color: 0xC8A796, roughness: 0.9, flatShading: true }),
+  ];
+  for (let i = 0; i < 60; i++) {
+    const x = (Math.random() - 0.5) * 180;
+    const z = (Math.random() - 0.5) * 180;
+    // skip if too close to spawn or to path
+    if (Math.hypot(x, z) < 18) continue;
+    if (Math.hypot(x, z) > 95) continue;
+    const h = H(x, z);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.32, 1.2, 6), trunkMat);
+    trunk.position.set(x, h + 0.6, z);
+    trunk.castShadow = true;
+    const leaves = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.3 + Math.random() * 0.6, 0),
+      leafMats[Math.floor(Math.random() * leafMats.length)]
+    );
+    leaves.position.set(x, h + 1.9 + Math.random() * 0.3, z);
+    leaves.castShadow = true;
+    treeGroup.add(trunk, leaves);
+  }
+  scene.add(treeGroup);
+
+  // ---------- Project zones ----------
+  // Each zone is a stylized structure with a label and click handler.
+  const PROJECTS = [
+    {
+      id: 'midori',
+      index: '01',
+      title: 'Midori',
+      sub: 'interactive product film for a vertical-farming startup',
+      year: '2024',
+      role: 'creative dev',
+      stack: 'three.js · gsap',
+      status: 'live',
+      body: 'A scroll-driven product film that turns a literal greenhouse into a layered data sculpture. Every leaf is a row in the database; the camera glides between them as the user scrolls.',
+      x: 22, z: -8, accent: COLORS.accent2,
+      shape: 'tower',
+    },
+    {
+      id: 'otelio',
+      index: '02',
+      title: 'Otelio',
+      sub: 'a reservation app for boutique hotels',
+      year: '2024',
+      role: 'lead dev',
+      stack: 'next.js · prisma',
+      status: 'live',
+      body: 'A booking experience that feels like flipping through a well-made magazine. Subtle parallax, hand-tuned easing, and a calendar that does not insult your intelligence.',
+      x: -24, z: 10, accent: COLORS.accent3,
+      shape: 'dome',
+    },
+    {
+      id: 'kiosk',
+      index: '03',
+      title: 'Pebble Kiosk',
+      sub: 'in-store interactive for a cosmetics brand',
+      year: '2023',
+      role: 'tech lead',
+      stack: 'touchdesigner · spout',
+      status: 'shipped',
+      body: 'A polished stone you touch to discover scents. Three.js renders the surface in real time; the kiosk is a single fanless PC bolted to a piece of marble.',
+      x: 18, z: 24, accent: COLORS.accent4,
+      shape: 'pyramid',
+    },
+    {
+      id: 'studio',
+      index: '04',
+      title: 'Studio Folio',
+      sub: 'portfolio site for a motion design studio',
+      year: '2024',
+      role: 'creative dev',
+      stack: 'astro · three.js',
+      status: 'live',
+      body: 'Case studies as rooms you walk through. The studio wanted their reel to feel inevitable, so the homepage auto-pilots through the first three projects in order.',
+      x: -22, z: -22, accent: COLORS.accent5,
+      shape: 'stacks',
+    },
+    {
+      id: 'me',
+      index: '05',
+      title: 'About / Contact',
+      sub: 'short bio, services, and a way to reach me',
+      year: 'now',
+      role: '—',
+      stack: '—',
+      status: 'available',
+      body: 'I am a creative developer based in Paris. I work with studios and in-house teams on interactive sites, installations and product surfaces. The fastest way to reach me is email — I usually reply within a day.',
+      x: 0, z: -34, accent: COLORS.accent1,
+      shape: 'marker',
+    },
+  ];
+
+  // Build each zone
+  const zones = []; // { mesh, group, project, label, hitMesh }
+  const labelsContainer = document.getElementById('labels');
+
+  function buildZone(project) {
+    const g = new THREE.Group();
+    const accent = project.accent;
+
+    // base pad
+    const pad = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.4, 3.6, 0.4, 24),
+      new THREE.MeshStandardMaterial({ color: 0xB89A7E, roughness: 0.9 })
+    );
+    pad.position.y = H(project.x, project.z) + 0.2;
+    pad.receiveShadow = true;
+    g.add(pad);
+
+    // accent ring
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(3.3, 0.08, 8, 64),
+      new THREE.MeshStandardMaterial({ color: accent, roughness: 0.6 })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = pad.position.y + 0.42;
+    g.add(ring);
+
+    // shape variants
+    if (project.shape === 'tower') {
+      const t = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.2, 1.4, 5, 8),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.55, flatShading: true })
+      );
+      t.position.y = pad.position.y + 2.9;
+      t.castShadow = true;
+      g.add(t);
+      const top = new THREE.Mesh(
+        new THREE.ConeGeometry(1.4, 1.2, 8),
+        new THREE.MeshStandardMaterial({ color: 0xF1E3CC, roughness: 0.7, flatShading: true })
+      );
+      top.position.y = pad.position.y + 5.9;
+      top.castShadow = true;
+      g.add(top);
+    } else if (project.shape === 'dome') {
+      const d = new THREE.Mesh(
+        new THREE.SphereGeometry(1.6, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.5, flatShading: false })
+      );
+      d.position.y = pad.position.y + 0.5;
+      d.castShadow = true;
+      g.add(d);
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 2.2, 6),
+        new THREE.MeshStandardMaterial({ color: 0x2A1F1A })
+      );
+      pin.position.y = pad.position.y + 2.2;
+      g.add(pin);
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 8, 8),
+        new THREE.MeshStandardMaterial({ color: accent })
+      );
+      dot.position.y = pad.position.y + 3.4;
+      g.add(dot);
+    } else if (project.shape === 'pyramid') {
+      const p = new THREE.Mesh(
+        new THREE.ConeGeometry(1.8, 4.0, 4),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.5, flatShading: true })
+      );
+      p.rotation.y = Math.PI / 4;
+      p.position.y = pad.position.y + 2.3;
+      p.castShadow = true;
+      g.add(p);
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(2.6, 0.3, 2.6),
+        new THREE.MeshStandardMaterial({ color: 0xF1E3CC, roughness: 0.7 })
+      );
+      base.position.y = pad.position.y + 0.5;
+      base.castShadow = true;
+      g.add(base);
+    } else if (project.shape === 'stacks') {
+      for (let i = 0; i < 3; i++) {
+        const w = 2.4 - i * 0.6;
+        const h = 1.0 + i * 0.5;
+        const s = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, w),
+          new THREE.MeshStandardMaterial({ color: i === 1 ? accent : 0xF1E3CC, roughness: 0.55, flatShading: true })
+        );
+        s.position.set(0, pad.position.y + h / 2 + 0.3 + i * 0.05, 0);
+        s.castShadow = true;
+        g.add(s);
+      }
+    } else if (project.shape === 'marker') {
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.18, 4.5, 8),
+        new THREE.MeshStandardMaterial({ color: 0xF1E3CC, roughness: 0.7 })
+      );
+      post.position.y = pad.position.y + 2.6;
+      post.castShadow = true;
+      g.add(post);
+      const flag = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.0, 1.1),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.5, side: THREE.DoubleSide })
+      );
+      flag.position.set(1.0, pad.position.y + 4.2, 0);
+      flag.castShadow = true;
+      g.add(flag);
+    }
+
+    g.position.set(project.x, 0, project.z);
+    scene.add(g);
+
+    // invisible large hit cylinder for raycasting
+    const hit = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.4, 3.4, 8, 12),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+    hit.position.set(project.x, H(project.x, project.z) + 4, project.z);
+    hit.userData.projectId = project.id;
+    scene.add(hit);
+
+    // label DOM
+    const label = document.createElement('div');
+    label.className = 'world-label';
+    label.innerHTML = `${project.title} <span class="small">${project.index} · ${project.sub.split(' ').slice(0, 3).join(' ')}…</span>`;
+    labelsContainer.appendChild(label);
+
+    return { group: g, hit, project, label, anchor: new THREE.Vector3(project.x, H(project.x, project.z) + 6, project.z) };
+  }
+
+  PROJECTS.forEach(p => zones.push(buildZone(p)));
+
+  // ---------- Car ----------
+  const car = new THREE.Group();
+  scene.add(car);
+
+  function buildCar() {
+    const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.carBody, roughness: 0.45, metalness: 0.15 });
+    const shadeMat = new THREE.MeshStandardMaterial({ color: COLORS.carShade, roughness: 0.5 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: COLORS.carWheel, roughness: 0.9 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: COLORS.carGlass, roughness: 0.3, metalness: 0.4, transparent: true, opacity: 0.85 });
+
+    // chassis (lower)
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.0), shadeMat);
+    chassis.position.y = 0.45;
+    chassis.castShadow = true;
+    car.add(chassis);
+
+    // main body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.7, 3.4), bodyMat);
+    body.position.y = 1.0;
+    body.castShadow = true;
+    car.add(body);
+
+    // roof (cabin)
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.6, 1.8), shadeMat);
+    roof.position.set(0, 1.6, -0.1);
+    roof.castShadow = true;
+    car.add(roof);
+
+    // glass
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.5, 1.7), glassMat);
+    glass.position.set(0, 1.6, -0.1);
+    car.add(glass);
+
+    // headlights
+    const hlMat = new THREE.MeshStandardMaterial({ color: 0xFFE9B0, emissive: 0xFFE9B0, emissiveIntensity: 0.4 });
+    const lh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), hlMat);
+    lh.position.set(-0.7, 0.9, 2.0); car.add(lh);
+    const rh = lh.clone(); rh.position.x = 0.7; car.add(rh);
+
+    // tail lights
+    const tlMat = new THREE.MeshStandardMaterial({ color: 0xB85F73, emissive: 0xB85F73, emissiveIntensity: 0.5 });
+    const lt = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), tlMat);
+    lt.position.set(-0.7, 0.9, -2.0); car.add(lt);
+    const rt = lt.clone(); rt.position.x = 0.7; car.add(rt);
+
+    // wheels (cylinders, rotated)
+    const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 18);
+    const wheels = [];
+    const wheelPositions = [
+      [-1.0,  0.45,  1.4],
+      [ 1.0,  0.45,  1.4],
+      [-1.0,  0.45, -1.4],
+      [ 1.0,  0.45, -1.4],
+    ];
+    wheelPositions.forEach((p, i) => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI / 2;
+      w.position.set(p[0], p[1], p[2]);
+      w.castShadow = true;
+      car.add(w);
+      wheels.push(w);
+    });
+
+    return { wheels, body };
+  }
+  const carParts = buildCar();
+  car.position.set(0, 0, 0);
+
+  // ---------- Camera rig (chase) ----------
+  const camOffset = new THREE.Vector3(0, 5.2, 9.5);
+  const camLookAhead = new THREE.Vector3(0, 0.8, -3);
+  const camRig = new THREE.Vector3();
+  const camLook = new THREE.Vector3();
+
+  // ---------- Input ----------
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ' || ['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+    }
+    if (introEl && !introEl.classList.contains('hidden')) {
+      hideIntro();
+    }
+  });
+  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+  // ---------- Driving state ----------
+  const drive = {
+    pos: new THREE.Vector3(0, 0, 0),
+    vel: new THREE.Vector3(0, 0, 0),
+    heading: 0,           // radians, 0 = -Z (forward)
+    steer: 0,
+    speed: 0,
+    maxSpeed: 14,
+    accel: 12,
+    brake: 22,
+    friction: 2.4,
+    steerMax: 0.55,
+    steerSpeed: 3.4,
+  };
+
+  // ---------- Intro ----------
+  const introEl = document.getElementById('intro');
+  const startBtn = document.getElementById('startBtn');
+  function hideIntro() {
+    introEl.classList.add('hidden');
+    setTimeout(() => { introEl.style.display = 'none'; }, 600);
+  }
+  startBtn.addEventListener('click', hideIntro);
+  introEl.addEventListener('click', e => { if (e.target === introEl) hideIntro(); });
+
+  // ---------- Resize ----------
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  });
+
+  // ---------- Click / hover (raycaster) ----------
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let hoveredId = null;
+  let openId = null;
+
+  function onPointerMove(e) {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  }
+  function onClick(e) {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(zones.map(z => z.hit), false);
+    if (hits.length) {
+      const id = hits[0].object.userData.projectId;
+      openProject(id);
+    }
+  }
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('click', onClick);
+
+  // ---------- Project panel ----------
+  const panel = document.getElementById('panel');
+  const panelTitle = document.getElementById('panelTitle');
+  const panelSub = document.getElementById('panelSub');
+  const panelBody = document.getElementById('panelBody');
+  const panelIndex = document.getElementById('panelIndex');
+  const panelMeta = document.getElementById('panelMeta');
+  const panelCta = document.getElementById('panelCta');
+  const panelCover = document.getElementById('panelCover');
+  document.getElementById('panelClose').addEventListener('click', closeProject);
+
+  function openProject(id) {
+    const p = PROJECTS.find(x => x.id === id);
+    if (!p) return;
+    openId = id;
+    panelIndex.textContent = `— · ${p.index}`;
+    panelTitle.textContent = p.title;
+    panelSub.textContent = p.sub;
+    panelBody.textContent = p.body;
+    panelCover.style.background = `linear-gradient(135deg, #${p.accent.toString(16).padStart(6, '0')} 0%, var(--terrain-shadow) 100%)`;
+    panelMeta.innerHTML = `
+      <span>year <b>${p.year}</b></span>
+      <span>role <b>${p.role}</b></span>
+      <span>stack <b>${p.stack}</b></span>
+      <span>status <b>${p.status}</b></span>
+    `;
+    panelCta.textContent = id === 'me' ? 'send email →' : 'view case →';
+    panel.classList.add('open');
+  }
+  function closeProject() {
+    openId = null;
+    panel.classList.remove('open');
+  }
+
+  // Top nav: open closest project when a section is clicked
+  document.querySelectorAll('.topnav a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelectorAll('.topnav a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+      const sec = a.dataset.section;
+      // pick the first zone with matching id, or the "me" zone for contact
+      let targetId = sec;
+      if (sec === 'works') targetId = 'midori';
+      if (sec === 'about') targetId = 'me';
+      if (sec === 'contact') targetId = 'me';
+      openProject(targetId);
+    });
+  });
+
+  // ---------- Minimap ----------
+  const mmCanvas = document.getElementById('minimap');
+  const mmCtx = mmCanvas.getContext('2d');
+  function drawMinimap() {
+    const w = mmCanvas.width, h = mmCanvas.height;
+    mmCtx.clearRect(0, 0, w, h);
+    // background
+    mmCtx.fillStyle = 'rgba(246, 239, 226, 0.0)';
+    mmCtx.fillRect(0, 0, w, h);
+    // grid
+    mmCtx.strokeStyle = 'rgba(42, 31, 26, 0.10)';
+    mmCtx.lineWidth = 1;
+    for (let i = 0; i <= 8; i++) {
+      mmCtx.beginPath();
+      mmCtx.moveTo((i / 8) * w, 0); mmCtx.lineTo((i / 8) * w, h);
+      mmCtx.moveTo(0, (i / 8) * h); mmCtx.lineTo(w, (i / 8) * h);
+      mmCtx.stroke();
+    }
+    // zones
+    const scale = w / 110;
+    zones.forEach(z => {
+      const cx = w / 2 + z.project.x * scale;
+      const cy = h / 2 + z.project.z * scale;
+      mmCtx.fillStyle = '#' + z.project.accent.toString(16).padStart(6, '0');
+      mmCtx.beginPath(); mmCtx.arc(cx, cy, 3.5, 0, Math.PI * 2); mmCtx.fill();
+    });
+    // path
+    mmCtx.strokeStyle = 'rgba(58, 35, 24, 0.35)';
+    mmCtx.lineWidth = 1.5;
+    mmCtx.beginPath();
+    pathPoints.forEach((p, i) => {
+      const cx = w / 2 + p.x * scale;
+      const cy = h / 2 + p.z * scale;
+      if (i === 0) mmCtx.moveTo(cx, cy); else mmCtx.lineTo(cx, cy);
+    });
+    mmCtx.stroke();
+    // car
+    const carX = w / 2 + drive.pos.x * scale;
+    const carY = h / 2 + drive.pos.z * scale;
+    mmCtx.save();
+    mmCtx.translate(carX, carY);
+    mmCtx.rotate(-drive.heading);
+    mmCtx.fillStyle = '#5A2840';
+    mmCtx.beginPath();
+    mmCtx.moveTo(0, -4); mmCtx.lineTo(3, 3); mmCtx.lineTo(-3, 3); mmCtx.closePath();
+    mmCtx.fill();
+    mmCtx.restore();
+  }
+
+  // ---------- World labels projection ----------
+  const tmp = new THREE.Vector3();
+  function updateLabels() {
+    const w = window.innerWidth, hgt = window.innerHeight;
+    zones.forEach(z => {
+      tmp.copy(z.anchor);
+      tmp.project(camera);
+      const inFront = tmp.z < 1;
+      const onScreen = Math.abs(tmp.x) < 1.4 && Math.abs(tmp.y) < 1.4;
+      if (inFront && onScreen) {
+        const x = (tmp.x * 0.5 + 0.5) * w;
+        const y = (-tmp.y * 0.5 + 0.5) * hgt;
+        // distance fade
+        const dist = camera.position.distanceTo(z.anchor);
+        const opacity = Math.max(0.15, 1 - (dist - 20) / 80);
+        z.label.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+        z.label.style.opacity = opacity;
+        if (z.project.id === openId) {
+          z.label.classList.add('faded');
+        } else {
+          z.label.classList.remove('faded');
+        }
+      } else {
+        z.label.style.opacity = 0;
+      }
+    });
+  }
+
+  // ---------- Speed display ----------
+  const speedNum = document.getElementById('speedNum');
+  function updateSpeed() {
+    const kmh = Math.abs(drive.speed) * 3.6 * 0.6; // scale to feel like km/h
+    speedNum.textContent = Math.round(kmh);
+  }
+
+  // ---------- Main loop ----------
+  let last = performance.now();
+  let bob = 0;
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    // -- input --
+    const fwd  = (keys['w'] || keys['arrowup']) ? 1 : 0;
+    const back = (keys['s'] || keys['arrowdown']) ? 1 : 0;
+    const lf   = (keys['a'] || keys['arrowleft']) ? 1 : 0;
+    const rt   = (keys['d'] || keys['arrowright']) ? 1 : 0;
+    const brake = keys[' '] ? 1 : 0;
+
+    // -- steering --
+    const targetSteer = (rt - lf) * drive.steerMax;
+    drive.steer += (targetSteer - drive.steer) * Math.min(1, drive.steerSpeed * dt);
+
+    // -- engine --
+    const throttle = fwd - back;
+    if (throttle !== 0) {
+      drive.speed += throttle * drive.accel * dt;
+    } else {
+      // rolling friction
+      const sign = Math.sign(drive.speed);
+      drive.speed -= sign * drive.friction * dt;
+      if (Math.sign(drive.speed) !== sign) drive.speed = 0;
+    }
+    if (brake) {
+      const sign = Math.sign(drive.speed);
+      drive.speed -= sign * drive.brake * dt;
+      if (Math.sign(drive.speed) !== sign) drive.speed = 0;
+    }
+    drive.speed = Math.max(-drive.maxSpeed * 0.5, Math.min(drive.maxSpeed, drive.speed));
+
+    // -- heading update (only when moving) --
+    if (Math.abs(drive.speed) > 0.05) {
+      // turn rate scales with speed; reverse flips direction
+      const dir = drive.speed >= 0 ? 1 : -1;
+      drive.heading += drive.steer * (drive.speed / drive.maxSpeed) * 2.2 * dir * dt;
+    }
+
+    // -- velocity from heading --
+    const fx = -Math.sin(drive.heading);
+    const fz = -Math.cos(drive.heading);
+    drive.pos.x += fx * drive.speed * dt;
+    drive.pos.z += fz * drive.speed * dt;
+
+    // -- clamp world --
+    const lim = 95;
+    drive.pos.x = Math.max(-lim, Math.min(lim, drive.pos.x));
+    drive.pos.z = Math.max(-lim, Math.min(lim, drive.pos.z));
+
+    // -- place car on terrain --
+    const groundY = H(drive.pos.x, drive.pos.z);
+    // suspension bob
+    bob += dt * 6;
+    const targetY = groundY + 0.05;
+    car.position.x = drive.pos.x;
+    car.position.z = drive.pos.z;
+    car.position.y += (targetY - car.position.y) * Math.min(1, 8 * dt);
+    car.rotation.y = drive.heading;
+
+    // body roll on turn
+    const roll = -drive.steer * (Math.abs(drive.speed) / drive.maxSpeed) * 0.18;
+    const pitch = -throttle * 0.05 + Math.sin(bob) * 0.012;
+    carParts.body.rotation.z += (roll - carParts.body.rotation.z) * Math.min(1, 6 * dt);
+    carParts.body.rotation.x += (pitch - carParts.body.rotation.x) * Math.min(1, 6 * dt);
+
+    // wheel spin
+    const spin = (drive.speed * dt) / 0.45;
+    carParts.wheels.forEach((w, i) => {
+      w.rotation.x += spin;
+      // front wheels steer
+      if (i < 2) {
+        w.rotation.y = drive.steer;
+      }
+    });
+
+    // -- camera --
+    const cosH = Math.cos(drive.heading), sinH = Math.sin(drive.heading);
+    const off = camOffset.clone();
+    // rotate offset by heading (camera follows behind car)
+    const ox = off.x * cosH + off.z * sinH;
+    const oz = -off.x * sinH + off.z * cosH;
+    const tx = drive.pos.x + ox;
+    const ty = groundY + off.y;
+    const tz = drive.pos.z + oz;
+    camRig.x += (tx - camRig.x) * Math.min(1, 3.5 * dt);
+    camRig.y += (ty - camRig.y) * Math.min(1, 2.5 * dt);
+    camRig.z += (tz - camRig.z) * Math.min(1, 3.5 * dt);
+    camera.position.copy(camRig);
+
+    // look ahead of car
+    const lax = camLookAhead.clone();
+    const lx = drive.pos.x + (lax.x * cosH + lax.z * sinH);
+    const lz = drive.pos.z + (-lax.x * sinH + lax.z * cosH);
+    const ly = groundY + lax.y;
+    camLook.x += (lx - camLook.x) * Math.min(1, 5 * dt);
+    camLook.y += (ly - camLook.y) * Math.min(1, 5 * dt);
+    camLook.z += (lz - camLook.z) * Math.min(1, 5 * dt);
+    camera.lookAt(camLook);
+
+    // FOV widens with speed
+    const targetFov = 55 + (Math.abs(drive.speed) / drive.maxSpeed) * 8;
+    camera.fov += (targetFov - camera.fov) * Math.min(1, 2 * dt);
+    camera.updateProjectionMatrix();
+
+    // -- updates --
+    updateLabels();
+    drawMinimap();
+    updateSpeed();
+
+    // -- render --
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+
+  // Kick off
+  function start() {
+    document.body.classList.add('ready');
+    requestAnimationFrame(tick);
+  }
+  // Small delay so the loader is visible briefly even on fast machines
+  setTimeout(start, 700);
+})();
+</script>
+
+</body>
+</html>

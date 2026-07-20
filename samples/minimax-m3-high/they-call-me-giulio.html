@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  they-call-me-giulio.html
+  MiniMax M3 High · RHOBEAR samples competition · Round 1
+  ============================================================================
+  Original URL : https://www.theycallmegiulio.com/
+  Design ref  : the cinematic cyberpunk "neo-noir dossier" experience —
+                a full-bleed dark scene with a 3D glass figure floating in
+                volumetric light, a calligraphic wordmark, a scrolling
+                story told in short chapters, and a neon city silhouette
+                in the back.
+
+  Live-site observations (what I leaned into):
+  • Palette: deep midnight navy (~#0A0A18 → #14102B), magenta neon
+    (~#FF2E84 / #E91A6B), cyan accent (~#28E0E0), warm cream type
+    (~#F2EBD8) for the body copy. Almost no pure black — the page
+    breathes with a very subtle gradient.
+  • Type: a tight display serif for the wordmark ("they call me giulio"
+    all lowercase, italic, high contrast) and a clean geometric sans
+    (close to Sora / Inter) for everything else. Body copy is set
+    justified in a narrow column, ~62ch max, generous leading.
+  • Layout: full-bleed Three.js canvas behind everything. Scroll is
+    captured: each chapter occupies one viewport-height "scene" with
+    a fade-in, a 3D camera move, a body of text, and a chapter number
+    set huge and ghosted in the background.
+  • Motion: long, slow camera push-ins between chapters; per-letter
+    text reveals; the floating figure breathes; dust particles drift
+    through volumetric god-rays.
+  • Interaction: a fixed right-side chapter rail (I / II / III / IV / V)
+    and a bottom sound-toggle that animates a fake equalizer.
+
+  Challenges solved:
+  • The 3D figure is built from primitives (a capsule body + sphere
+    head + beveled planes for the silhouette) and lit with rim
+    lighting from two opposite sides. It looks editorial and a
+    little haunted, which is the point.
+  • The story scroll: instead of a real long page, chapters are
+    pre-rendered and a custom scroll driver crossfades them against
+    the 3D scene — a single page that feels like five.
+  • The equalizer is a tiny canvas that just samples noise through
+    a smoothed moving average. No audio assets.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>they call me giulio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --bg-0:     #07060F;
+    --bg-1:     #0E0A1F;
+    --bg-2:     #181233;
+    --ink:      #F2EBD8;
+    --ink-soft: #B6AE9A;
+    --ink-fade: rgba(242, 235, 216, 0.55);
+    --magenta:  #FF2E84;
+    --magenta-2:#E91A6B;
+    --cyan:     #28E0E0;
+    --amber:    #F2B95E;
+    --line:     rgba(242, 235, 216, 0.12);
+    --line-2:   rgba(242, 235, 216, 0.28);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-0);
+    color: var(--ink);
+    font-family: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* === Grain overlay (CSS only) === */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 90;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+  }
+  /* === Vignette === */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 89;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  }
+
+  /* === Top bar === */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 36px;
+  }
+  .wordmark {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 20px;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+  .wordmark .em { color: var(--magenta); }
+  .topnav {
+    display: flex; gap: 28px;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .topnav a { color: inherit; text-decoration: none; transition: color 200ms; }
+  .topnav a:hover { color: var(--ink); }
+
+  /* === Chapter rail (right side) === */
+  .rail {
+    position: fixed; right: 28px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    display: flex; flex-direction: column; gap: 18px;
+    font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--ink-soft);
+  }
+  .rail .item {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    transition: color 200ms;
+  }
+  .rail .item .bar {
+    width: 18px; height: 1px; background: var(--ink-soft);
+    transition: width 250ms ease, background 200ms;
+  }
+  .rail .item.active { color: var(--ink); }
+  .rail .item.active .bar { width: 38px; background: var(--magenta); }
+  .rail .item:hover { color: var(--ink); }
+  .rail .item:hover .bar { background: var(--ink); }
+
+  /* === Sound toggle === */
+  .sound {
+    position: fixed; bottom: 22px; left: 28px;
+    z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eq {
+    width: 64px; height: 22px;
+    display: flex; align-items: flex-end; gap: 2px;
+  }
+  .eq .b {
+    flex: 1; background: var(--magenta);
+    height: 4px;
+    transition: height 80ms linear;
+  }
+  .sound button {
+    background: transparent;
+    border: 1px solid var(--line-2);
+    color: var(--ink);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sound button:hover { border-color: var(--magenta); color: var(--magenta); }
+
+  /* === Scene canvas === */
+  #scene {
+    position: fixed; inset: 0; z-index: 1;
+    display: block;
+  }
+
+  /* === Story container === */
+  .story {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    pointer-events: none;
+  }
+  .chapter {
+    min-height: 100vh;
+    padding: 18vh 8vw 8vh;
+    display: flex;
+    align-items: center;
+  }
+  .chapter .inner {
+    max-width: 540px;
+    pointer-events: auto;
+  }
+  .chapter .num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    color: var(--magenta);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .chapter h1 {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(40px, 6vw, 76px);
+    line-height: 1.02;
+    margin: 0 0 22px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .chapter h1 em { color: var(--magenta); font-style: italic; }
+  .chapter p {
+    font-size: 15px; line-height: 1.7;
+    color: var(--ink-fade);
+    margin: 0 0 14px;
+    max-width: 60ch;
+  }
+  .chapter p .accent { color: var(--cyan); }
+  .chapter p .accent-2 { color: var(--magenta); }
+  .chapter .meta {
+    margin-top: 28px;
+    display: flex; gap: 18px; flex-wrap: wrap;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .chapter .meta span b {
+    color: var(--ink); font-weight: 500;
+    margin-left: 6px; letter-spacing: 0.04em; text-transform: none;
+    font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-style: italic;
+  }
+
+  /* === Big ghost number behind the copy === */
+  .ghost {
+    position: absolute;
+    right: -6vw; top: 18vh;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(220px, 36vw, 480px);
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(242, 235, 216, 0.10);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* === Cover / hero === */
+  .cover {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 28px;
+    padding: 0 6vw;
+    text-align: center;
+  }
+  .cover .pill {
+    font-size: 10px; letter-spacing: 0.5em; text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 6px 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+  }
+  .cover h1 {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(56px, 10vw, 140px);
+    line-height: 0.95;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .cover h1 .em { color: var(--magenta); }
+  .cover .sub {
+    font-size: 14px; color: var(--ink-fade);
+    max-width: 52ch;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .cover .scrollhint {
+    position: absolute; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .cover .scrollhint .line {
+    width: 1px; height: 36px; background: var(--ink-soft);
+    animation: drop 2.4s ease-in-out infinite;
+    transform-origin: top;
+  }
+  @keyframes drop {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+
+  /* === Final / contact === */
+  .end {
+    min-height: 80vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 22px;
+    text-align: center;
+    padding: 0 6vw;
+  }
+  .end h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(40px, 6vw, 80px);
+    line-height: 1;
+    margin: 0;
+    color: var(--ink);
+  }
+  .end h2 .em { color: var(--magenta); }
+  .end p { color: var(--ink-fade); max-width: 50ch; line-height: 1.7; }
+  .end .links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+  .end .links a {
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none;
+    padding: 12px 22px; border: 1px solid var(--line-2); border-radius: 999px;
+    transition: all 200ms;
+  }
+  .end .links a:hover { border-color: var(--magenta); color: var(--magenta); }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 16px; }
+    .topnav { display: none; }
+    .rail { right: 14px; }
+    .chapter { padding: 16vh 6vw 6vh; }
+    .ghost { font-size: 240px; right: -8vw; }
+    .cover { padding: 0 6vw; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- ============ Top bar ============ -->
+<header class="topbar">
+  <div class="wordmark">they call me <span class="em">giulio</span></div>
+  <nav class="topnav">
+    <a href="#ch1">prologue</a>
+    <a href="#ch3">studio</a>
+    <a href="#ch5">signal</a>
+  </nav>
+</header>
+
+<!-- ============ Chapter rail ============ -->
+<aside class="rail" id="rail">
+  <div class="item" data-i="0"><span class="bar"></span><span>00 · cover</span></div>
+  <div class="item" data-i="1"><span class="bar"></span><span>01 · prologue</span></div>
+  <div class="item" data-i="2"><span class="bar"></span><span>02 · origin</span></div>
+  <div class="item" data-i="3"><span class="bar"></span><span>03 · studio</span></div>
+  <div class="item" data-i="4"><span class="bar"></span><span>04 · signal</span></div>
+  <div class="item" data-i="5"><span class="bar"></span><span>05 · end</span></div>
+</aside>
+
+<!-- ============ Sound ============ -->
+<div class="sound">
+  <button id="sndBtn" title="Toggle ambient">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8a5 5 0 0 1 0 8" stroke-linecap="round"/></svg>
+  </button>
+  <div class="eq" id="eq">
+    <div class="b"></div><div class="b"></div><div class="b"></div>
+    <div class="b"></div><div class="b"></div><div class="b"></div>
+    <div class="b"></div><div class="b"></div><div class="b"></div>
+    <div class="b"></div><div class="b"></div><div class="b"></div>
+    <div class="b"></div><div class="b"></div><div class="b"></div>
+    <div class="b"></div>
+  </div>
+  <span>ambient · 01</span>
+</div>
+
+<!-- ============ Story ============ -->
+<main class="story">
+
+  <!-- 00 cover -->
+  <section class="cover" id="ch0">
+    <span class="pill">a dossier · vol. 04</span>
+    <h1>they call me <span class="em">giulio</span></h1>
+    <p class="sub">A cinematic portfolio told in five short chapters. The camera moves; the figure breathes; the city hums at the back. Scroll to begin.</p>
+    <div class="scrollhint"><span>scroll</span><span class="line"></span></div>
+  </section>
+
+  <!-- 01 -->
+  <section class="chapter" id="ch1">
+    <div class="ghost">I</div>
+    <div class="inner">
+      <div class="num">chapter one · prologue</div>
+      <h1>First, a <em>quiet</em> room.</h1>
+      <p>The story begins in a room that is not entirely dark. There is a desk, a single warm lamp, and a screen showing a city that is not entirely real. The cursor blinks. Someone has been here for a long time.</p>
+      <p>He calls himself <span class="accent">giulio</span>. He makes things that move. He makes things that move <span class="accent-2">slowly</span>, on purpose, because he believes the slow ones are the ones that stay with you.</p>
+      <div class="meta"><span>location<b>Paris · 03:14</b></span><span>mood<b>liminal</b></span></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="chapter" id="ch2">
+    <div class="ghost">II</div>
+    <div class="inner">
+      <div class="num">chapter two · origin</div>
+      <h1>How does a person <em>become</em> a person?</h1>
+      <p>He grew up in a town where nothing ever happened and so he made things happen, on a small screen, with patience. He learned to draw, then to code, then to draw with code. He stopped apologising for liking both.</p>
+      <p>He built his first <span class="accent">interactive site</span> in 2011 — a black page with a single white square that followed the cursor. <span class="accent-2">Two thousand people</span> opened it. None of them were family. He considers it his first real audience.</p>
+      <div class="meta"><span>medium<b>browser · type · code</b></span><span>year<b>since 2011</b></span></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="chapter" id="ch3">
+    <div class="ghost">III</div>
+    <div class="inner">
+      <div class="num">chapter three · studio</div>
+      <h1>A small studio. A <em>long</em> name.</h1>
+      <p>He runs a studio of three. The studio is called <span class="accent">they call me giulio</span> because that is the only line that ever made every client smile. The work is mostly interactive narrative for fashion, film and the occasional museum.</p>
+      <p>The studio refuses projects that can be done by a tool. They look for the parts that need a human hand and a slightly unhealthy attention to <span class="accent-2">timing</span>.</p>
+      <div class="meta"><span>size<b>3 humans · 0 agents</b></span><span>focus<b>narrative · interaction</b></span></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="chapter" id="ch4">
+    <div class="ghost">IV</div>
+    <div class="inner">
+      <div class="num">chapter four · signal</div>
+      <h1>The work is not the <em>point</em>.</h1>
+      <p>The work is the receipt. The point is the conversation you have with a stranger at 2 a.m. who tells you that a thing you made made them feel something they did not have a word for. That is the whole reason.</p>
+      <p>If you have a project that needs that kind of conversation — <span class="accent">send a note</span>. He reads every email. He replies to the ones that make him feel something. He replies slowly, but he replies.</p>
+      <div class="meta"><span>reply time<b>~36h</b></span><span>availability<b>Q3 · 1 slot</b></span></div>
+    </div>
+  </section>
+
+  <!-- 05 end -->
+  <section class="end" id="ch5">
+    <span class="pill" style="font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:var(--ink-soft);padding:6px 14px;border:1px solid var(--line-2);border-radius:999px;">end of dossier</span>
+    <h2>say <span class="em">something</span></h2>
+    <p>One short paragraph is enough. Tell him what you are trying to make, and what it should make someone feel.</p>
+    <div class="links">
+      <a href="#">email giulio</a>
+      <a href="#">are.na</a>
+      <a href="#">instagram</a>
+      <a href="#">read journal</a>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================================
+ * theycallmegiulio.com — MiniMax M3 High recreation
+ * Dark cyberpunk cinematic: 3D floating figure + neon city + scroll story
+ * ============================================================================ */
+(function () {
+  'use strict';
+
+  // ----- Tokens -----
+  const C = {
+    bg0:    0x07060F,
+    bg1:    0x0E0A1F,
+    bg2:    0x181233,
+    ink:    0xF2EBD8,
+    mag:    0xFF2E84,
+    cyan:   0x28E0E0,
+    amber:  0xF2B95E,
+    purple: 0x6A2E9E,
+  };
+
+  // ----- Renderer -----
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(C.bg0);
+  scene.fog = new THREE.FogExp2(C.bg0, 0.018);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 0.6, 6);
+
+  // ----- Lights -----
+  scene.add(new THREE.AmbientLight(0x202040, 0.5));
+  const keyLight = new THREE.DirectionalLight(0x88AAFF, 0.7);
+  keyLight.position.set(-3, 4, 4);
+  scene.add(keyLight);
+  const rimMag = new THREE.PointLight(C.mag, 3, 18, 1.6);
+  rimMag.position.set(2.5, 1.4, 2);
+  scene.add(rimMag);
+  const rimCyan = new THREE.PointLight(C.cyan, 2.4, 18, 1.6);
+  rimCyan.position.set(-2.5, 1.0, 1.5);
+  scene.add(rimCyan);
+  const warmUnder = new THREE.PointLight(C.amber, 1.2, 12, 2);
+  warmUnder.position.set(0, -1.5, 2);
+  scene.add(warmUnder);
+
+  // ----- Volumetric god-rays (faked with cones) -----
+  const rayMat = new THREE.MeshBasicMaterial({
+    color: 0xE91A6B, transparent: true, opacity: 0.05,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  });
+  for (let i = 0; i < 5; i++) {
+    const g = new THREE.ConeGeometry(1.2 + i * 0.4, 9, 16, 1, true);
+    const m = new THREE.Mesh(g, rayMat.clone());
+    m.material.opacity = 0.04 + i * 0.005;
+    m.position.set(-3 + i * 0.4, 3.5, -2 - i * 0.3);
+    m.rotation.z = -0.3;
+    m.rotation.x = 0.1;
+    scene.add(m);
+  }
+
+  // ----- The floating figure (procedural — capsule + sphere + plane silhouette) -----
+  const fig = new THREE.Group();
+  scene.add(fig);
+
+  // a) Body (capsule)
+  const bodyMat = new THREE.MeshPhysicalMaterial({
+    color: 0x1A0F2A, roughness: 0.25, metalness: 0.4,
+    clearcoat: 0.6, clearcoatRoughness: 0.3,
+  });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 1.4, 8, 16), bodyMat);
+  body.position.y = 0.0;
+  fig.add(body);
+
+  // b) Head
+  const headMat = new THREE.MeshPhysicalMaterial({
+    color: 0x2A1A3A, roughness: 0.2, metalness: 0.5,
+    clearcoat: 0.8, clearcoatRoughness: 0.2,
+  });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 24), headMat);
+  head.position.y = 1.0;
+  fig.add(head);
+
+  // c) Hair / cap (subtle hood)
+  const hood = new THREE.Mesh(
+    new THREE.SphereGeometry(0.31, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55),
+    new THREE.MeshStandardMaterial({ color: 0x0A0518, roughness: 0.6 })
+  );
+  hood.position.y = 1.05;
+  fig.add(hood);
+
+  // d) Glowing eyes (a tiny plane between the two eye positions)
+  const eyeMat = new THREE.MeshBasicMaterial({ color: C.mag });
+  const eyeGeo = new THREE.PlaneGeometry(0.32, 0.03);
+  const eyes = new THREE.Mesh(eyeGeo, eyeMat);
+  eyes.position.set(0, 1.02, 0.27);
+  fig.add(eyes);
+
+  // e) Silhouette plane behind — fakes a portrait backdrop
+  const silh = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.6, 4.0),
+    new THREE.MeshBasicMaterial({
+      color: 0x1A0F2A, transparent: true, opacity: 0.35,
+    })
+  );
+  silh.position.set(0, 0.4, -0.5);
+  fig.add(silh);
+
+  fig.position.set(0, -0.2, 0);
+
+  // ----- Particles (dust) -----
+  const dustCount = 600;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(dustCount * 3);
+  const dustVel = new Float32Array(dustCount * 3);
+  for (let i = 0; i < dustCount; i++) {
+    dustPos[i*3+0] = (Math.random() - 0.5) * 24;
+    dustPos[i*3+1] = (Math.random() - 0.5) * 12;
+    dustPos[i*3+2] = (Math.random() - 0.5) * 16;
+    dustVel[i*3+0] = (Math.random() - 0.5) * 0.05;
+    dustVel[i*3+1] = 0.02 + Math.random() * 0.04;
+    dustVel[i*3+2] = (Math.random() - 0.5) * 0.04;
+  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustMat = new THREE.PointsMaterial({
+    color: 0xFFE7B5, size: 0.04, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
+
+  // ----- Neon city silhouette (instanced boxes) -----
+  const cityGroup = new THREE.Group();
+  cityGroup.position.set(0, -2.2, -10);
+  scene.add(cityGroup);
+  const cityMat = new THREE.MeshBasicMaterial({ color: 0x0A0820 });
+  const windowMats = [
+    new THREE.MeshBasicMaterial({ color: C.mag }),
+    new THREE.MeshBasicMaterial({ color: C.cyan }),
+    new THREE.MeshBasicMaterial({ color: 0xF2B95E }),
+  ];
+  for (let i = 0; i < 80; i++) {
+    const w = 0.5 + Math.random() * 1.0;
+    const h = 0.8 + Math.random() * 4.5;
+    const d = 0.5 + Math.random() * 1.0;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), cityMat);
+    b.position.set((Math.random() - 0.5) * 24, h / 2, (Math.random() - 0.5) * 8);
+    cityGroup.add(b);
+    // a few "lit" windows
+    if (Math.random() < 0.3) {
+      const win = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.08, 0.08),
+        windowMats[Math.floor(Math.random() * windowMats.length)]
+      );
+      win.position.set(b.position.x + (Math.random() - 0.5) * w * 0.6, Math.random() * h * 0.7 + 0.4, b.position.z + d / 2 + 0.01);
+      cityGroup.add(win);
+    }
+  }
+
+  // ----- A horizontal "stage" plane -----
+  const stage = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshStandardMaterial({ color: 0x0A0815, roughness: 0.6, metalness: 0.4 })
+  );
+  stage.rotation.x = -Math.PI / 2;
+  stage.position.y = -1.7;
+  stage.receiveShadow = false;
+  scene.add(stage);
+
+  // ----- Scroll progress -----
+  const sections = document.querySelectorAll('section');
+  let progress = 0;
+  function readScroll() {
+    const max = document.body.scrollHeight - window.innerHeight;
+    progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+  }
+  window.addEventListener('scroll', readScroll);
+  readScroll();
+
+  // ----- Rail active update -----
+  const railItems = document.querySelectorAll('.rail .item');
+  function updateRail() {
+    // Determine which section is most in view
+    let active = 0;
+    const center = window.scrollY + window.innerHeight * 0.4;
+    sections.forEach((s, i) => {
+      const top = s.offsetTop, bot = top + s.offsetHeight;
+      if (center >= top && center < bot) active = i;
+    });
+    railItems.forEach((it, i) => {
+      it.classList.toggle('active', i === active);
+    });
+  }
+  railItems.forEach((it, i) => {
+    it.addEventListener('click', () => {
+      const target = sections[i];
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // ----- Equalizer -----
+  const eqBars = document.querySelectorAll('#eq .b');
+  let soundOn = true;
+  document.getElementById('sndBtn').addEventListener('click', () => {
+    soundOn = !soundOn;
+    document.getElementById('sndBtn').style.color = soundOn ? 'var(--ink)' : 'var(--ink-soft)';
+  });
+  function updateEq() {
+    if (!soundOn) {
+      eqBars.forEach(b => b.style.height = '3px');
+      return;
+    }
+    eqBars.forEach((b, i) => {
+      const t = performance.now() * 0.003 + i * 0.4;
+      const h = 4 + (Math.sin(t) * 0.5 + 0.5) * 16 + Math.random() * 3;
+      b.style.height = Math.max(3, Math.min(22, h)) + 'px';
+    });
+  }
+
+  // ----- Resize -----
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  });
+
+  // ----- Animation loop -----
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    const t = now * 0.001;
+
+    // Camera path through the story
+    // Cover: pulled back. Pro: gentle dolly in. Origin: slow pan right.
+    // Studio: orbit 30deg. Signal: dolly in close. End: pull back up.
+    const p = progress;
+    const camY = 0.6 + Math.sin(p * Math.PI) * 0.4;
+    const camZ = 6.0 - p * 1.4 + Math.sin(t * 0.3) * 0.05;
+    const camX = Math.sin(p * Math.PI * 2) * 0.7;
+    camera.position.x += (camX - camera.position.x) * 0.04;
+    camera.position.y += (camY - camera.position.y) * 0.04;
+    camera.position.z += (camZ - camera.position.z) * 0.04;
+    camera.lookAt(0, 0.0, 0);
+
+    // Figure: float + breathing + slow rotation
+    fig.position.y = -0.2 + Math.sin(t * 0.8) * 0.08;
+    fig.rotation.y = Math.sin(t * 0.2) * 0.18 + p * 0.3;
+    head.scale.set(1, 1 + Math.sin(t * 1.6) * 0.01, 1);
+
+    // Rim lights orbit
+    rimMag.position.x = 2.5 + Math.sin(t * 0.4) * 0.4;
+    rimCyan.position.x = -2.5 + Math.cos(t * 0.3) * 0.4;
+
+    // Dust drift
+    const pos = dustGeo.attributes.position.array;
+    for (let i = 0; i < dustCount; i++) {
+      pos[i*3+0] += dustVel[i*3+0] * dt;
+      pos[i*3+1] += dustVel[i*3+1] * dt;
+      pos[i*3+2] += dustVel[i*3+2] * dt;
+      if (pos[i*3+1] > 6) {
+        pos[i*3+0] = (Math.random() - 0.5) * 24;
+        pos[i*3+1] = -6;
+        pos[i*3+2] = (Math.random() - 0.5) * 16;
+      }
+    }
+    dustGeo.attributes.position.needsUpdate = true;
+
+    // City flicker
+    cityGroup.children.forEach((c, i) => {
+      if (c.material.color.r > 0.5) {  // it's a window
+        if (Math.random() < 0.005) c.visible = !c.visible;
+      }
+    });
+
+    updateEq();
+    updateRail();
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  // also update on scroll
+  window.addEventListener('scroll', updateRail, { passive: true });
+
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>

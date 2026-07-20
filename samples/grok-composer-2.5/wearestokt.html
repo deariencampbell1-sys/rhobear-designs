@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  wearestokt.html — High-fidelity recreation of wearestokt.com
+  Model: Grok Composer 2.5
+  Stack: Tailwind CSS (CDN), GSAP + ScrollTrigger, Three.js (hero)
+  Theme: Dark motion-driven creative studio aesthetic
+  Note: No brand assets — gradient placeholders only
+-->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stōkt — Creative & Motion Design Studio</title>
+  <meta name="description" content="Stōkt is a creative studio crafting motion-led brand experiences, digital products, and award-winning websites for ambitious brands." />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            stokt: {
+              bg: 'var(--bg)',
+              text: 'var(--text)',
+              muted: 'var(--text-muted)',
+              accent: 'var(--accent)',
+              surface: 'var(--surface)',
+              border: 'var(--border)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --text: #f2f0eb;
+      --text-muted: #8a8a8a;
+      --accent: #c8ff00;
+      --accent-dim: rgba(200, 255, 0, 0.15);
+      --surface: #161616;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    /* Custom cursor dot on desktop */
+    @media (hover: hover) {
+      .cursor-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        transform: translate(-50%, -50%);
+        transition: transform 0.15s ease;
+      }
+    }
+
+    /* Grain overlay */
+    .grain::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Hero Three.js canvas */
+    #hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* Marquee */
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Work card hover */
+    .work-card {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .work-card:hover {
+      transform: translateY(-6px);
+    }
+    .work-card:hover .work-img {
+      transform: scale(1.04);
+    }
+    .work-img {
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Gradient placeholders */
+    .grad-1 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .grad-2 { background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%); }
+    .grad-3 { background: linear-gradient(135deg, #0c0c0c 0%, #434343 100%); }
+    .grad-4 { background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%); }
+    .grad-5 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .grad-6 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .grad-7 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+    /* Counter */
+    .counter-display {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
+    }
+
+    /* Testimonial carousel */
+    .testimonial-slide {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      position: absolute;
+      inset: 0;
+    }
+    .testimonial-slide.active {
+      opacity: 1;
+      transform: translateY(0);
+      position: relative;
+    }
+
+    /* Scroll indicator */
+    .scroll-line {
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* Nav blur */
+    .nav-blur {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Section label */
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Reveal helper */
+    .reveal { opacity: 0; transform: translateY(40px); }
+    .reveal-left { opacity: 0; transform: translateX(-40px); }
+    .reveal-right { opacity: 0; transform: translateX(40px); }
+
+    /* Award card */
+    .award-card {
+      border: 1px solid var(--border);
+      transition: border-color 0.3s ease, background 0.3s ease;
+    }
+    .award-card:hover {
+      border-color: rgba(200, 255, 0, 0.3);
+      background: var(--accent-dim);
+    }
+
+    /* Service card */
+    .service-card {
+      border-top: 1px solid var(--border);
+      transition: padding-left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .service-card:hover {
+      padding-left: 1.5rem;
+    }
+    .service-card:hover .service-num {
+      color: var(--accent);
+    }
+
+    /* Footer CTA */
+    .footer-cta {
+      font-size: clamp(3rem, 12vw, 10rem);
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+    }
+
+    /* Trade-offs note */
+    .tradeoffs {
+      border-top: 1px dashed rgba(255,255,255,0.15);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Horizontal scroll work on mobile */
+    @media (max-width: 768px) {
+      .work-scroll {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 1rem;
+        padding-bottom: 1rem;
+      }
+      .work-scroll .work-card {
+        min-width: 85vw;
+        scroll-snap-align: start;
+      }
+    }
+
+    /* Magnetic button */
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 40px rgba(200, 255, 0, 0.35);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--border);
+      transition: border-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Stat number */
+    .stat-num {
+      font-size: clamp(3rem, 8vw, 6rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    /* Mobile menu */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+  </style>
+</head>
+
+<body class="grain">
+
+  <!-- Cursor dot -->
+  <div class="cursor-dot hidden md:block" id="cursor-dot"></div>
+
+  <!-- ═══════════════════ NAVIGATION ═══════════════════ -->
+  <header class="fixed top-0 left-0 right-0 z-50 nav-blur bg-stokt-bg/70 border-b border-stokt-border">
+    <nav class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" class="text-lg font-bold tracking-tight hover:text-stokt-accent transition-colors">
+        STŌKT
+      </a>
+
+      <ul class="hidden md:flex items-center gap-8 text-sm text-stokt-muted">
+        <li><a href="#work" class="hover:text-stokt-text transition-colors">Work</a></li>
+        <li><a href="#services" class="hover:text-stokt-text transition-colors">Services</a></li>
+        <li><a href="#about" class="hover:text-stokt-text transition-colors">About Us</a></li>
+        <li><a href="#" class="hover:text-stokt-text transition-colors">Motion Index</a></li>
+        <li><a href="#" class="hover:text-stokt-text transition-colors">Store</a></li>
+      </ul>
+
+      <div class="hidden md:flex items-center gap-4">
+        <a href="#contact" class="btn-primary px-5 py-2.5 rounded-full text-sm font-semibold">
+          Get a quote
+        </a>
+      </div>
+
+      <button id="menu-toggle" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Open menu">
+        <span class="w-6 h-0.5 bg-stokt-text"></span>
+        <span class="w-6 h-0.5 bg-stokt-text"></span>
+        <span class="w-4 h-0.5 bg-stokt-text"></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Mobile menu overlay -->
+  <div id="mobile-menu" class="mobile-menu fixed inset-0 z-[60] bg-stokt-bg flex flex-col justify-center items-center gap-8 md:hidden">
+    <button id="menu-close" class="absolute top-6 right-6 text-2xl text-stokt-muted" aria-label="Close menu">&times;</button>
+    <a href="#work" class="text-3xl font-bold mobile-link">Work</a>
+    <a href="#services" class="text-3xl font-bold mobile-link">Services</a>
+    <a href="#about" class="text-3xl font-bold mobile-link">About Us</a>
+    <a href="#" class="text-3xl font-bold mobile-link">Motion Index</a>
+    <a href="#" class="text-3xl font-bold mobile-link">Store</a>
+    <a href="#contact" class="btn-primary px-8 py-3 rounded-full text-lg font-semibold mt-4">Get a quote</a>
+  </div>
+
+  <main>
+
+    <!-- ═══════════════════ HERO ═══════════════════ -->
+    <section id="hero" class="relative min-h-screen flex flex-col justify-end overflow-hidden">
+      <canvas id="hero-canvas"></canvas>
+
+      <!-- Top meta bar -->
+      <div class="absolute top-24 left-0 right-0 z-10 px-6">
+        <div class="max-w-7xl mx-auto flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <span id="counter" class="counter-display text-6xl md:text-8xl font-black text-stokt-text leading-none">0</span>
+            <span class="section-label reveal">est. in 2019</span>
+          </div>
+          <span class="section-label reveal hidden sm:block">( WE ARE STŌKT )</span>
+        </div>
+      </div>
+
+      <!-- Hero content -->
+      <div class="relative z-10 max-w-7xl mx-auto px-6 pb-16 md:pb-24 w-full">
+        <p class="section-label mb-6 reveal sm:hidden">( WE ARE STŌKT )</p>
+
+        <h1 class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] mb-8 reveal">
+          MOVING<br />BRANDS<br /><span class="text-stokt-accent">FORWARD</span>
+        </h1>
+
+        <p class="max-w-xl text-stokt-muted text-base md:text-lg leading-relaxed mb-10 reveal">
+          Stōkt builds motion-driven brand systems, unifying branding, web, and motion into a single evolving execution.
+        </p>
+
+        <div class="flex flex-wrap gap-4 reveal">
+          <a href="#work" class="btn-primary px-8 py-3.5 rounded-full font-semibold text-sm">
+            View Projects
+          </a>
+          <a href="#contact" class="btn-outline px-8 py-3.5 rounded-full font-semibold text-sm">
+            Get a quote
+          </a>
+        </div>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="absolute bottom-8 right-6 md:right-12 z-10 flex flex-col items-center gap-3 reveal">
+        <span class="section-label [writing-mode:vertical-lr] rotate-180">Scroll for more</span>
+        <div class="w-px h-16 bg-stokt-border relative overflow-hidden">
+          <div class="scroll-line absolute inset-0 bg-stokt-accent origin-top"></div>
+        </div>
+      </div>
+
+      <!-- Marquee strip -->
+      <div class="relative z-10 border-t border-stokt-border py-4 overflow-hidden bg-stokt-bg/80 backdrop-blur-sm">
+        <div class="marquee-track">
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">Est. in 2019</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">( Moving Forward )</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">Est. in 2019</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">( Moving Forward )</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">Est. in 2019</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+          <span class="px-8 text-sm text-stokt-muted whitespace-nowrap">( Moving Forward )</span>
+          <span class="px-8 text-sm text-stokt-accent whitespace-nowrap">●</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ FEATURED WORK ═══════════════════ -->
+    <section id="work" class="py-24 md:py-32">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <div>
+            <p class="section-label mb-4 reveal">Featured Work</p>
+            <h2 class="text-4xl md:text-6xl font-black tracking-tight reveal">
+              Selected<br />Projects
+            </h2>
+          </div>
+          <a href="#" class="btn-outline px-6 py-2.5 rounded-full text-sm font-medium reveal self-start md:self-auto">
+            All Work →
+          </a>
+        </div>
+
+        <div class="work-scroll grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <!-- Broadway Venture Partners -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-1 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">Broadway Venture Partners</h3>
+            <p class="text-sm text-stokt-muted">Web Design & Development</p>
+          </article>
+
+          <!-- We Scale It -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-2 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">We Scale It</h3>
+            <p class="text-sm text-stokt-muted">Brand Identity · Web Design & Development</p>
+          </article>
+
+          <!-- Major Media Agency -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-3 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">Major Media Agency</h3>
+            <p class="text-sm text-stokt-muted">Web Design & Development</p>
+          </article>
+
+          <!-- Enzo Drew -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-4 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">Enzo Drew — Creative Company</h3>
+            <p class="text-sm text-stokt-muted">Web Design & Development</p>
+          </article>
+
+          <!-- 7 Phases of Madness -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-5 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">7 Phases of Madness</h3>
+            <p class="text-sm text-stokt-muted">Brand Identity · Motion & 3D</p>
+          </article>
+
+          <!-- Kastle AI -->
+          <article class="work-card reveal group cursor-pointer">
+            <div class="work-img grad-7 aspect-[4/3] rounded-2xl overflow-hidden mb-5 relative">
+              <div class="absolute inset-0 bg-gradient-to-t from-stokt-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <span class="text-sm font-medium">View Case Study →</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold mb-1">Kastle AI</h3>
+            <p class="text-sm text-stokt-muted">Motion & 3D · Web Design & Development</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ SERVICES ═══════════════════ -->
+    <section id="services" class="py-24 md:py-32 border-t border-stokt-border">
+      <div class="max-w-7xl mx-auto px-6">
+        <p class="section-label mb-4 reveal">( Services & Expertise )</p>
+        <h2 class="text-4xl md:text-6xl font-black tracking-tight mb-6 reveal">
+          Digital Design<br />Powerhouse
+        </h2>
+        <p class="max-w-2xl text-stokt-muted text-base md:text-lg leading-relaxed mb-16 reveal">
+          Over the last decade, we've refined a wide range of skills in digital design, offering services mastered to perfection and always driven by the purpose of motion.
+        </p>
+
+        <div class="space-y-0">
+          <div class="service-card py-8 md:py-12 reveal flex items-center justify-between group cursor-pointer">
+            <div class="flex items-baseline gap-6 md:gap-12">
+              <span class="service-num text-sm text-stokt-muted transition-colors">01</span>
+              <h3 class="text-3xl md:text-5xl font-bold tracking-tight">Brand Identity</h3>
+            </div>
+            <span class="text-stokt-muted group-hover:text-stokt-accent transition-colors text-2xl hidden md:block">→</span>
+          </div>
+
+          <div class="service-card py-8 md:py-12 reveal flex items-center justify-between group cursor-pointer">
+            <div class="flex items-baseline gap-6 md:gap-12">
+              <span class="service-num text-sm text-stokt-muted transition-colors">02</span>
+              <h3 class="text-3xl md:text-5xl font-bold tracking-tight">Web Design & Dev</h3>
+            </div>
+            <span class="text-stokt-muted group-hover:text-stokt-accent transition-colors text-2xl hidden md:block">→</span>
+          </div>
+
+          <div class="service-card py-8 md:py-12 reveal flex items-center justify-between group cursor-pointer border-b border-stokt-border">
+            <div class="flex items-baseline gap-6 md:gap-12">
+              <span class="service-num text-sm text-stokt-muted transition-colors">03</span>
+              <h3 class="text-3xl md:text-5xl font-bold tracking-tight">Motion Systems</h3>
+            </div>
+            <span class="text-stokt-muted group-hover:text-stokt-accent transition-colors text-2xl hidden md:block">→</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ ABOUT / STATS ═══════════════════ -->
+    <section id="about" class="py-24 md:py-32 border-t border-stokt-border">
+      <div class="max-w-7xl mx-auto px-6">
+        <p class="section-label mb-4 reveal">( About us )</p>
+
+        <div class="grid md:grid-cols-3 gap-12 md:gap-8 mb-24">
+          <div class="reveal">
+            <span class="stat-num font-black text-stokt-accent block mb-2" data-count="13">0</span>
+            <span class="text-stokt-muted text-sm">Years of Experience</span>
+          </div>
+          <div class="reveal">
+            <span class="stat-num font-black text-stokt-accent block mb-2" data-count="35">0</span>
+            <span class="text-stokt-muted text-sm">Awards & Recognition</span>
+          </div>
+          <div class="reveal">
+            <span class="stat-num font-black text-stokt-accent block mb-2" data-count="100">0</span>
+            <span class="text-stokt-muted text-sm">Satisfied Clients</span>
+          </div>
+        </div>
+
+        <!-- Badges -->
+        <div class="flex flex-wrap gap-4 mb-24 reveal">
+          <span class="px-5 py-2.5 rounded-full border border-stokt-border text-sm text-stokt-muted hover:border-stokt-accent hover:text-stokt-accent transition-colors cursor-pointer">
+            Framer Pro Expert & Partner
+          </span>
+          <span class="px-5 py-2.5 rounded-full border border-stokt-border text-sm text-stokt-muted hover:border-stokt-accent hover:text-stokt-accent transition-colors cursor-pointer">
+            Based in Quebec, Canada — AVAILABLE WORLDWIDE
+          </span>
+        </div>
+
+        <!-- Founder -->
+        <div class="grid md:grid-cols-2 gap-12 md:gap-20 items-start">
+          <div class="reveal-left">
+            <div class="grad-6 aspect-square max-w-md rounded-2xl mb-8"></div>
+            <h3 class="text-2xl font-bold mb-1">Jay Nadeau</h3>
+            <p class="text-stokt-muted text-sm mb-6">Founder & Creative Director of Stōkt</p>
+            <a href="#contact" class="btn-primary px-6 py-2.5 rounded-full text-sm font-semibold inline-block">
+              Work with Jay
+            </a>
+          </div>
+
+          <div class="reveal-right">
+            <p class="section-label mb-4">The Founder</p>
+            <div class="space-y-5 text-stokt-muted leading-relaxed">
+              <p>Jay founded Stōkt in 2019 after spending the early part of his career in agencies. His ambition has always been to bring movement into traditionally static brand systems, a vision now fully aligned with today's digital landscape.</p>
+              <p>His work blends art direction, motion, and web development, with a focus on cohesive, motion-driven brand systems. Working from concept to execution, Jay designs experiences guided by clarity, intent, and precision, believing aesthetics only matter when they serve a clear purpose.</p>
+              <p>From small to large-scale projects, Jay leads independently or assembles tailored teams as needed. Through Stōkt, he partners closely with brands seeking meaningful growth, remaining deeply involved to ensure every decision is intentional and built to last.</p>
+            </div>
+
+            <div class="mt-8 flex flex-wrap gap-4">
+              <span class="px-5 py-2.5 rounded-full border border-stokt-border text-sm text-stokt-muted">
+                Unicorn Studio Expert
+              </span>
+              <span class="px-5 py-2.5 rounded-full border border-stokt-border text-sm text-stokt-muted">
+                Everyday's Toolbox — Mastered for every project.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ TESTIMONIALS ═══════════════════ -->
+    <section id="testimonials" class="py-24 md:py-32 border-t border-stokt-border overflow-hidden">
+      <div class="max-w-7xl mx-auto px-6">
+        <p class="section-label mb-4 reveal">( TESTIMONIALS )</p>
+        <h2 class="text-4xl md:text-6xl font-black tracking-tight mb-2 reveal">
+          Don't take our word for it<span class="text-stokt-accent">*</span>
+        </h2>
+        <p class="text-stokt-muted mb-16 reveal">*Take theirs</p>
+
+        <div class="relative min-h-[280px] md:min-h-[200px] reveal" id="testimonial-container">
+          <div class="testimonial-slide active" data-index="0">
+            <blockquote class="text-2xl md:text-4xl font-medium leading-snug tracking-tight max-w-4xl">
+              "Everyone at this level has technical competence, but Jay's actual superpowers are the care he takes to understand the goal, collaborate on solutions, communicate, and, yes, bring the vision to life. He was worth every penny and then some."
+            </blockquote>
+            <footer class="mt-8 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full grad-3"></div>
+              <div>
+                <p class="font-semibold text-sm">LZ Granderson</p>
+                <p class="text-stokt-muted text-sm">Creative Producer</p>
+              </div>
+            </footer>
+          </div>
+
+          <div class="testimonial-slide" data-index="1">
+            <blockquote class="text-2xl md:text-4xl font-medium leading-snug tracking-tight max-w-4xl">
+              "Jay is a beast!! High quality work in a short timeframe. His motion and graphic work is truly gamechanging. Can't recommend him enough!"
+            </blockquote>
+            <footer class="mt-8 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full grad-7"></div>
+              <div>
+                <p class="font-semibold text-sm">Rishi Choudhary</p>
+                <p class="text-stokt-muted text-sm">CEO & Co-Founder, Kastle AI</p>
+              </div>
+            </footer>
+          </div>
+
+          <div class="testimonial-slide" data-index="2">
+            <blockquote class="text-2xl md:text-4xl font-medium leading-snug tracking-tight max-w-4xl">
+              "Jay's the real deal. Not only a Framer pro, but he truly cares—bringing ideas, polish, and extra miles we didn't even ask for. Creative, proactive, and lightning-fast with QA."
+            </blockquote>
+            <footer class="mt-8 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full grad-5"></div>
+              <div>
+                <p class="font-semibold text-sm">Dinesh Dave</p>
+                <p class="text-stokt-muted text-sm">Co-Founder & Creative Director, Proof Dept.</p>
+              </div>
+            </footer>
+          </div>
+
+          <div class="testimonial-slide" data-index="3">
+            <blockquote class="text-2xl md:text-4xl font-medium leading-snug tracking-tight max-w-4xl">
+              "Jay is truly in a league of his own. Not only is he incredibly talented and creative, but he's also easy and fun to work with. The final result is hands down the best agency website I've ever seen."
+            </blockquote>
+            <footer class="mt-8 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full grad-1"></div>
+              <div>
+                <p class="font-semibold text-sm">Max Gilberg</p>
+                <p class="text-stokt-muted text-sm">Founding Partner & Creative Director, Major Media Agency</p>
+              </div>
+            </footer>
+          </div>
+
+          <div class="testimonial-slide" data-index="4">
+            <blockquote class="text-2xl md:text-4xl font-medium leading-snug tracking-tight max-w-4xl">
+              "Working with Jay was an absolute pleasure. He has a masterful understanding of design and what it takes to create stunning visuals. He was able to reimagine our brand imagery and build a brand new website in record time."
+            </blockquote>
+            <footer class="mt-8 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full grad-2"></div>
+              <div>
+                <p class="font-semibold text-sm">Charles Lacasse</p>
+                <p class="text-stokt-muted text-sm">Founder, We Scale It</p>
+              </div>
+            </footer>
+          </div>
+        </div>
+
+        <!-- Carousel controls -->
+        <div class="flex items-center gap-6 mt-12 reveal">
+          <button id="prev-testimonial" class="w-12 h-12 rounded-full border border-stokt-border flex items-center justify-center hover:border-stokt-accent hover:text-stokt-accent transition-colors" aria-label="Previous testimonial">
+            ←
+          </button>
+          <div class="flex gap-2" id="testimonial-dots"></div>
+          <button id="next-testimonial" class="w-12 h-12 rounded-full border border-stokt-border flex items-center justify-center hover:border-stokt-accent hover:text-stokt-accent transition-colors" aria-label="Next testimonial">
+            →
+          </button>
+          <span class="text-sm text-stokt-muted ml-4" id="testimonial-counter">01 / 05</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ AWARDS ═══════════════════ -->
+    <section id="awards" class="py-24 md:py-32 border-t border-stokt-border">
+      <div class="max-w-7xl mx-auto px-6">
+        <p class="section-label mb-4 reveal">( AWARDS & RECOGNITIONS )</p>
+        <h2 class="text-4xl md:text-6xl font-black tracking-tight mb-2 reveal">
+          We Don't Chase Awards.<span class="text-stokt-accent">*</span>
+        </h2>
+        <p class="text-stokt-muted mb-16 reveal">*They find us</p>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">Site of the Month</p>
+            <p class="text-xs text-stokt-muted mt-2">Orpetron — Web Design Awards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">Honorable Mention</p>
+            <p class="text-xs text-stokt-muted mt-2">Awwwards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">WD of the Day</p>
+            <p class="text-xs text-stokt-muted mt-2">WD Awards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">FWA of the Day</p>
+            <p class="text-xs text-stokt-muted mt-2">FWA / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">UX, UI & Innovation Awards</p>
+            <p class="text-xs text-stokt-muted mt-2">CSS Design Awards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Major Media Agency</p>
+            <p class="text-sm text-stokt-muted">Special Kudos</p>
+            <p class="text-xs text-stokt-muted mt-2">CSS Design Awards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Stōkt Creative Co.</p>
+            <p class="text-sm text-stokt-muted">Site of the Month</p>
+            <p class="text-xs text-stokt-muted mt-2">Orpetron — Web Design Awards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Stōkt Creative Co.</p>
+            <p class="text-sm text-stokt-muted">Honorable Mention</p>
+            <p class="text-xs text-stokt-muted mt-2">Awwwards / 2026</p>
+          </div>
+          <div class="award-card rounded-xl p-6 reveal">
+            <p class="font-bold mb-1">Stōkt Creative Co.</p>
+            <p class="text-sm text-stokt-muted">Site of the Day</p>
+            <p class="text-xs text-stokt-muted mt-2">CSS Design Awards / 2026</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ FOOTER / CTA ═══════════════════ -->
+    <section id="contact" class="py-24 md:py-32 border-t border-stokt-border">
+      <div class="max-w-7xl mx-auto px-6">
+        <p class="section-label mb-8 reveal">( SERIOUSLY )</p>
+
+        <h2 class="footer-cta font-black tracking-tighter mb-4 reveal">
+          LET'S CUT
+        </h2>
+        <h2 class="footer-cta font-black tracking-tighter mb-12 reveal">
+          THE BS.<span class="text-stokt-accent">💩</span>
+        </h2>
+
+        <a href="mailto:hello@wearestokt.com" class="btn-primary px-10 py-4 rounded-full text-base font-bold inline-block mb-16 reveal">
+          Get a custom Quote
+        </a>
+
+        <div class="grid md:grid-cols-3 gap-12 pt-12 border-t border-stokt-border reveal">
+          <div>
+            <p class="font-bold mb-2">Saint-Sauveur — Canada</p>
+            <a href="mailto:hello@wearestokt.com" class="text-stokt-muted hover:text-stokt-accent transition-colors text-sm">
+              hello@wearestokt.com
+            </a>
+          </div>
+
+          <div>
+            <p class="section-label mb-4">Index</p>
+            <ul class="space-y-2 text-sm">
+              <li><a href="#" class="text-stokt-muted hover:text-stokt-text transition-colors">Home</a></li>
+              <li><a href="#work" class="text-stokt-muted hover:text-stokt-text transition-colors">Work</a></li>
+              <li><a href="#services" class="text-stokt-muted hover:text-stokt-text transition-colors">Services</a></li>
+              <li><a href="#about" class="text-stokt-muted hover:text-stokt-text transition-colors">About Us</a></li>
+              <li><a href="#" class="text-stokt-muted hover:text-stokt-text transition-colors">Store</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <p class="section-label mb-4">Terms & Policies</p>
+            <ul class="space-y-2 text-sm">
+              <li><a href="#" class="text-stokt-muted hover:text-stokt-text transition-colors">License Agreement</a></li>
+              <li><a href="#" class="text-stokt-muted hover:text-stokt-text transition-colors">Privacy Policy</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="text-xs text-stokt-muted mt-16 reveal">
+          © 2026 Stōkt Creative Co. All rights reserved.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ TRADE-OFFS NOTE ═══════════════════ -->
+    <aside class="tradeoffs max-w-7xl mx-auto px-6 py-8">
+      <p class="mb-2 font-semibold text-stokt-text/60">Trade-offs &amp; fidelity notes — Grok Composer 2.5</p>
+      <ul class="space-y-1 list-disc list-inside leading-relaxed">
+        <li>Original uses custom WebGL/Unicorn Studio hero scenes — recreated with lightweight Three.js particle field for subtle parallax motion.</li>
+        <li>Brand logos, project thumbnails, and founder photography replaced with CSS gradient placeholders per spec.</li>
+        <li>Original Framer-hosted interactions (page transitions, magnetic cursor, custom scroll) approximated via GSAP ScrollTrigger + CSS transitions.</li>
+        <li>Testimonial carousel simplified to 5 of 12 quotes; full awards list truncated to 9 of 15+ entries for file size.</li>
+        <li>Typography approximated with Inter; original likely uses a bespoke grotesk display face.</li>
+        <li>Accent color (#c8ff00 lime) inferred from brand palette; exact hex may differ on production site.</li>
+        <li>No backend, CMS, or case-study routing — all links are anchor/hash placeholders.</li>
+      </ul>
+    </aside>
+
+  </main>
+
+  <script>
+    /* ─── GSAP Setup ─── */
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* Hero reveals on load */
+    gsap.to('.reveal', {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      stagger: 0.08,
+      ease: 'power3.out',
+      delay: 0.3
+    });
+
+    /* Scroll-triggered reveals */
+    gsap.utils.toArray('.reveal').forEach((el) => {
+      if (el.closest('#hero')) return;
+      gsap.fromTo(el,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
+        }
+      );
+    });
+
+    gsap.utils.toArray('.reveal-left').forEach((el) => {
+      gsap.fromTo(el,
+        { opacity: 0, x: -40 },
+        {
+          opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+        }
+      );
+    });
+
+    gsap.utils.toArray('.reveal-right').forEach((el) => {
+      gsap.fromTo(el,
+        { opacity: 0, x: 40 },
+        {
+          opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+        }
+      );
+    });
+
+    /* Hero counter animation — scrolls from 0 upward */
+    const counterEl = document.getElementById('counter');
+    const counterObj = { val: 0 };
+
+    gsap.to(counterObj, {
+      val: 7,
+      duration: 2.5,
+      ease: 'power2.out',
+      delay: 0.8,
+      onUpdate() {
+        counterEl.textContent = Math.round(counterObj.val);
+      },
+      onComplete() {
+        /* Loop subtle pulse after landing */
+        gsap.to(counterEl, { opacity: 0.5, duration: 1.5, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+      }
+    });
+
+    /* About stats counter */
+    document.querySelectorAll('[data-count]').forEach((el) => {
+      const target = parseInt(el.dataset.count, 10);
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: target,
+        duration: 2,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 85%' },
+        onUpdate() {
+          el.textContent = Math.round(obj.val) + '+';
+        }
+      });
+    });
+
+    /* Parallax on hero text */
+    gsap.to('#hero h1', {
+      y: -80,
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1 }
+    });
+
+    /* ─── Three.js Hero ─── */
+    (function initHero3D() {
+      const canvas = document.getElementById('hero-canvas');
+      if (!canvas || typeof THREE === 'undefined') return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.z = 5;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      /* Particle field */
+      const count = 1200;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 14;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const mat = new THREE.PointsMaterial({
+        color: 0xc8ff00,
+        size: 0.025,
+        transparent: true,
+        opacity: 0.5,
+        sizeAttenuation: true
+      });
+      const particles = new THREE.Points(geo, mat);
+      scene.add(particles);
+
+      /* Subtle torus knot */
+      const knotGeo = new THREE.TorusKnotGeometry(0.8, 0.22, 128, 16);
+      const knotMat = new THREE.MeshBasicMaterial({
+        color: 0xc8ff00,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.08
+      });
+      const knot = new THREE.Mesh(knotGeo, knotMat);
+      knot.position.set(2, 0.5, -2);
+      scene.add(knot);
+
+      let mouseX = 0, mouseY = 0;
+      document.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        particles.rotation.y += 0.0004;
+        particles.rotation.x += 0.0002;
+        knot.rotation.x += 0.003;
+        knot.rotation.y += 0.005;
+
+        camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.02;
+        camera.position.y += (-mouseY * 0.3 - camera.position.y) * 0.02;
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    /* ─── Testimonial Carousel ─── */
+    const slides = document.querySelectorAll('.testimonial-slide');
+    const dotsContainer = document.getElementById('testimonial-dots');
+    const counterDisplay = document.getElementById('testimonial-counter');
+    let currentSlide = 0;
+    let autoplayInterval;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-stokt-accent w-6' : 'bg-stokt-border'}`;
+      dot.setAttribute('aria-label', `Go to testimonial ${i + 1}`);
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = dotsContainer.querySelectorAll('button');
+
+    function goToSlide(index) {
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].className = 'w-2 h-2 rounded-full transition-all duration-300 bg-stokt-border';
+      currentSlide = (index + slides.length) % slides.length;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].className = 'w-2 h-2 rounded-full transition-all duration-300 bg-stokt-accent w-6';
+      counterDisplay.textContent = String(currentSlide + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    }
+
+    document.getElementById('prev-testimonial').addEventListener('click', () => goToSlide(currentSlide - 1));
+    document.getElementById('next-testimonial').addEventListener('click', () => goToSlide(currentSlide + 1));
+
+    function startAutoplay() {
+      autoplayInterval = setInterval(() => goToSlide(currentSlide + 1), 6000);
+    }
+    startAutoplay();
+
+    document.getElementById('testimonial-container').addEventListener('mouseenter', () => clearInterval(autoplayInterval));
+    document.getElementById('testimonial-container').addEventListener('mouseleave', startAutoplay);
+
+    /* ─── Custom Cursor ─── */
+    const cursorDot = document.getElementById('cursor-dot');
+    if (cursorDot && window.matchMedia('(hover: hover)').matches) {
+      document.addEventListener('mousemove', (e) => {
+        cursorDot.style.left = e.clientX + 'px';
+        cursorDot.style.top = e.clientY + 'px';
+      });
+      document.querySelectorAll('a, button, .work-card, .service-card, .award-card').forEach((el) => {
+        el.addEventListener('mouseenter', () => { cursorDot.style.transform = 'translate(-50%, -50%) scale(3)'; });
+        el.addEventListener('mouseleave', () => { cursorDot.style.transform = 'translate(-50%, -50%) scale(1)'; });
+      });
+    }
+
+    /* ─── Mobile Menu ─── */
+    const mobileMenu = document.getElementById('mobile-menu');
+    document.getElementById('menu-toggle').addEventListener('click', () => mobileMenu.classList.add('open'));
+    document.getElementById('menu-close').addEventListener('click', () => mobileMenu.classList.remove('open'));
+    document.querySelectorAll('.mobile-link').forEach((link) => {
+      link.addEventListener('click', () => mobileMenu.classList.remove('open'));
+    });
+
+    /* ─── Nav background on scroll ─── */
+    const header = document.querySelector('header');
+    ScrollTrigger.create({
+      start: 'top -80',
+      onUpdate(self) {
+        header.style.background = self.scroll() > 80 ? 'rgba(13,13,13,0.95)' : 'rgba(13,13,13,0.7)';
+      }
+    });
+  </script>
+</body>
+</html>

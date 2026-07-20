@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  resn.html
+  MiniMax M3 High · RHOBEAR samples competition · Round 1
+  ============================================================================
+  Original URL : https://resn.co.nz/
+  Design ref  : Resn's "playground" site — a joyful, illustrative New Zealand
+                studio page that reads like a children's book about a digital
+                workshop. Cream paper, hand-cut shapes, big serif display
+                type, a friendly mascot that follows the cursor, section
+                ribbons, project case cards, awards wall, and a generous
+                closing contact moment.
+
+  Live-site observations (what I leaned into):
+  • Palette: warm paper cream (~#F4EDDF) as the base, with playful colour
+    blocks: raspberry (~#E5446D), mustard (~#F2B548), mint (~#5DBF8F),
+    electric blue (~#2E5BFF), ink navy (~#1A1F3A), and a single warm
+    black for type. The page feels like a riso print, not a screen.
+  • Type: a chunky display serif (close to Fraunces or Recoleta) for big
+    moments and a clean humanist sans (close to Sora / Inter) for body
+    and labels. Display type is set at huge scale with tight tracking.
+  • Layout: a single very long page organised as "scenes" — each one a
+    full viewport with a different mood. A sticky left-side "scene"
+    indicator updates as you scroll. A central floating mascot (a
+    little character built from CSS shapes) drifts around and follows
+    the cursor with a soft spring.
+  • Motion: gentle bobbing on every illustration. Section transitions
+    use a soft "stamp" feel — the next scene slides up from below and
+    settles. Mouse parallax on decorative shapes.
+  • Interaction: clicking a project card opens a sheet with a longer
+    blurb, a "watch the film" CTA, and credits. Clicking the mascot
+    opens a small "Hi! I'm Pip" popover.
+
+  Challenges solved:
+  • All illustrations are pure CSS or inline SVG — no images. The
+    mascot is a stack of styled divs (head, body, arms, eyes) that
+    transforms together for the "follow cursor" spring.
+  • A mouse parallax layer uses CSS variables that update on
+    pointermove, then individual elements read them with
+    calc() + translate. Cheap and smooth.
+  • Each project card thumbnail is a hand-illustrated CSS scene
+    (mountains, sun, character on a chair) so the grid still feels
+    crafted without external images.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resn — interactive playground</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --paper:     #F4EDDF;
+    --paper-2:   #EAE0CC;
+    --ink:       #1A1F3A;
+    --ink-soft:  #555270;
+    --ink-fade:  rgba(26, 31, 58, 0.62);
+    --rasp:      #E5446D;
+    --must:      #F2B548;
+    --mint:      #5DBF8F;
+    --blue:      #2E5BFF;
+    --coral:     #FF7A5A;
+    --line:      rgba(26, 31, 58, 0.12);
+    --line-2:    rgba(26, 31, 58, 0.30);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--must); color: var(--ink); }
+
+  /* === Paper grain === */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 80;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.12  0 0 0 0 0.22  0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: 0.7;
+  }
+
+  /* === Top bar === */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 32px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+    font-style: italic; font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .brand .dot {
+    width: 14px; height: 14px;
+    background: var(--rasp);
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+  }
+  .topnav {
+    display: flex; gap: 24px;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .topnav a {
+    color: inherit; text-decoration: none;
+    padding: 8px 14px; border-radius: 999px;
+    transition: all 200ms;
+    border: 1px solid transparent;
+  }
+  .topnav a:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+    background: var(--must);
+  }
+  .pill-btn {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    text-decoration: none;
+    border: 0;
+    cursor: pointer;
+    transition: transform 200ms;
+  }
+  .pill-btn:hover { transform: translateY(-2px) rotate(-1deg); }
+
+  /* === Scene rail (left) === */
+  .rail {
+    position: fixed; left: 28px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    display: flex; flex-direction: column; gap: 12px;
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .rail .item {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .rail .item .n {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--ink-soft);
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 11px; font-weight: 600;
+    transition: all 250ms;
+  }
+  .rail .item.active .n {
+    background: var(--rasp);
+    border-color: var(--rasp);
+    color: var(--paper);
+  }
+  .rail .item:hover .n { border-color: var(--ink); color: var(--ink); }
+
+  /* === The mascot (Pip) — a friendly blob === */
+  .pip {
+    position: fixed;
+    width: 80px; height: 90px;
+    z-index: 40;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 120ms cubic-bezier(.2,.7,.2,1);
+    will-change: transform, left, top;
+  }
+  .pip .head {
+    position: absolute; left: 0; top: 0;
+    width: 60px; height: 60px;
+    background: var(--rasp);
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    border: 2.5px solid var(--ink);
+  }
+  .pip .body {
+    position: absolute; left: 12px; top: 50px;
+    width: 36px; height: 36px;
+    background: var(--rasp);
+    border-radius: 30% 30% 40% 40%;
+    border: 2.5px solid var(--ink);
+  }
+  .pip .eye {
+    position: absolute; top: 22px;
+    width: 8px; height: 8px;
+    background: var(--ink);
+    border-radius: 50%;
+  }
+  .pip .eye.l { left: 16px; }
+  .pip .eye.r { right: 16px; }
+  .pip .cheek {
+    position: absolute; top: 30px;
+    width: 8px; height: 4px;
+    background: var(--coral);
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  .pip .cheek.l { left: 8px; }
+  .pip .cheek.r { right: 8px; }
+  .pip .mouth {
+    position: absolute; top: 34px; left: 50%;
+    transform: translateX(-50%);
+    width: 10px; height: 4px;
+    border-bottom: 2px solid var(--ink);
+    border-radius: 0 0 50% 50%;
+  }
+  .pip .arm {
+    position: absolute; top: 56px;
+    width: 10px; height: 22px;
+    background: var(--rasp);
+    border: 2.5px solid var(--ink);
+    border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  }
+  .pip .arm.l { left: 0; transform: rotate(15deg); }
+  .pip .arm.r { right: 0; transform: rotate(-15deg); }
+
+  /* === Sections / scenes === */
+  .scene {
+    min-height: 100vh;
+    padding: 14vh 8vw 8vh;
+    position: relative;
+    display: flex; align-items: center;
+  }
+  .scene .label {
+    position: absolute; top: 18vh; left: 8vw;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scene .label .num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 14px; font-weight: 600; color: var(--ink);
+  }
+
+  /* === Scene 1 — Cover === */
+  .cover h1 {
+    font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(64px, 11vw, 180px);
+    line-height: 0.92;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .cover h1 .em { color: var(--rasp); font-style: italic; }
+  .cover h1 .b { background: var(--must); padding: 0 8px; border-radius: 6px; }
+  .cover h1 .u { text-decoration: underline wavy var(--blue) 4px; text-underline-offset: 8px; }
+  .cover .sub {
+    margin-top: 28px;
+    font-size: 18px; line-height: 1.5;
+    color: var(--ink-fade);
+    max-width: 50ch;
+  }
+  .cover .decor {
+    position: absolute; right: 8vw; top: 18vh;
+    width: 280px; height: 280px;
+    pointer-events: none;
+  }
+
+  /* === Scene 2 — Manifesto === */
+  .manifesto {
+    background: var(--must);
+    margin: 0 -8vw;
+    padding: 18vh 8vw;
+    border-top: 3px solid var(--ink);
+    border-bottom: 3px solid var(--ink);
+  }
+  .manifesto h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(36px, 5.5vw, 84px);
+    line-height: 1.05;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .manifesto h2 em { color: var(--rasp); font-style: italic; }
+  .manifesto p {
+    margin-top: 24px;
+    font-size: 16px; line-height: 1.6;
+    color: var(--ink);
+    max-width: 56ch;
+  }
+  .manifesto .stamp {
+    position: absolute; right: 8vw; bottom: 12vh;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    border: 3px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 13px; font-weight: 600; line-height: 1.3;
+    transform: rotate(-12deg);
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  /* === Scene 3 — Work grid === */
+  .work .head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 48px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+  }
+  .work .head h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 96px);
+    line-height: 1;
+    margin: 0;
+  }
+  .work .head .sub {
+    font-size: 14px; color: var(--ink-fade);
+    max-width: 320px;
+    text-align: right;
+  }
+  .work .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+  }
+  .pcard {
+    cursor: pointer;
+    transition: transform 250ms;
+  }
+  .pcard:hover { transform: translateY(-6px) rotate(-0.6deg); }
+  .pcard .thumb {
+    aspect-ratio: 4 / 3;
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--ink);
+    transition: box-shadow 250ms;
+  }
+  .pcard:hover .thumb { box-shadow: 8px 8px 0 var(--ink); }
+  .pcard .meta {
+    margin-top: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .pcard .meta h3 {
+    margin: 0;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  .pcard .meta .year {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* === Hand-drawn CSS thumbnails === */
+  .thumb-i1 {
+    background: linear-gradient(180deg, #FFC8A8 0%, #FFC8A8 60%, #5DBF8F 60%, #5DBF8F 100%);
+  }
+  .thumb-i1::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 35%;
+    height: 4px; background: var(--ink);
+  }
+  .thumb-i1::after {
+    content: "☀"; position: absolute; right: 16px; top: 12px;
+    font-size: 32px; color: var(--must);
+    text-shadow: -1.5px -1.5px 0 var(--ink);
+  }
+  .thumb-i2 {
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 20% 70%, var(--rasp) 0 12%, transparent 13%),
+      radial-gradient(circle at 70% 40%, var(--must) 0 10%, transparent 11%),
+      radial-gradient(circle at 50% 80%, var(--blue) 0 8%, transparent 9%);
+  }
+  .thumb-i2::before {
+    content: ""; position: absolute; left: 10%; right: 10%; bottom: 10%;
+    height: 30%;
+    background: var(--ink);
+    border-radius: 50% 50% 0 0;
+  }
+  .thumb-i3 {
+    background: var(--blue);
+    background-image: radial-gradient(circle at 50% 40%, var(--must) 0 18%, transparent 19%);
+  }
+  .thumb-i3::before {
+    content: ""; position: absolute; left: 30%; right: 30%; bottom: 20%;
+    height: 40%;
+    background: var(--ink);
+    clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  }
+  .thumb-i3::after {
+    content: "✦"; position: absolute; left: 20%; top: 18%;
+    font-size: 22px; color: var(--paper);
+  }
+  .thumb-i4 {
+    background: var(--mint);
+    background-image: repeating-linear-gradient(45deg, transparent 0 14px, rgba(26,31,58,0.08) 14px 16px);
+  }
+  .thumb-i4::before {
+    content: ""; position: absolute; left: 25%; top: 30%; width: 50%; height: 40%;
+    background: var(--rasp);
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+  }
+  .thumb-i4::after {
+    content: "♪"; position: absolute; right: 14%; top: 14%;
+    font-size: 30px; color: var(--ink);
+  }
+  .thumb-i5 {
+    background: linear-gradient(180deg, var(--coral) 0 40%, var(--must) 40% 100%);
+  }
+  .thumb-i5::before {
+    content: ""; position: absolute; left: 15%; right: 15%; bottom: 25%; height: 35%;
+    background: var(--ink);
+    border-radius: 12px 12px 0 0;
+  }
+  .thumb-i5::after {
+    content: "★"; position: absolute; right: 18%; top: 12%;
+    font-size: 28px; color: var(--ink);
+  }
+  .thumb-i6 {
+    background: var(--paper-2);
+    background-image:
+      linear-gradient(transparent 70%, var(--ink) 70% 72%, transparent 72%),
+      linear-gradient(90deg, transparent 70%, var(--ink) 70% 72%, transparent 72%);
+  }
+  .thumb-i6::before {
+    content: "A"; position: absolute; left: 35%; top: 30%;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 80px; font-weight: 600; color: var(--rasp);
+  }
+
+  /* === Scene 4 — Studio === */
+  .studio {
+    background: var(--mint);
+    margin: 0 -8vw;
+    padding: 18vh 8vw;
+    border-top: 3px solid var(--ink);
+    border-bottom: 3px solid var(--ink);
+  }
+  .studio .inner {
+    display: grid; grid-template-columns: 0.6fr 1fr; gap: 56px;
+    align-items: center;
+  }
+  .studio h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 88px);
+    line-height: 1;
+    margin: 0;
+  }
+  .studio h2 em { color: var(--blue); font-style: italic; }
+  .studio .body p {
+    font-size: 16px; line-height: 1.6;
+    color: var(--ink);
+    margin: 0 0 16px;
+  }
+  .studio .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    margin-top: 24px;
+    border-top: 2px solid var(--ink);
+    padding-top: 18px;
+  }
+  .studio .stats div {
+    text-align: center;
+  }
+  .studio .stats div b {
+    display: block;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 36px; font-weight: 600;
+    color: var(--ink);
+  }
+  .studio .stats div span {
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* === Scene 5 — Awards === */
+  .awards {
+    flex-direction: column; justify-content: center;
+  }
+  .awards h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 88px);
+    line-height: 1;
+    margin: 0 0 32px;
+  }
+  .awards h2 em { font-style: italic; color: var(--rasp); }
+  .awards .ticker {
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 14px 24px;
+    background: var(--paper);
+    overflow: hidden;
+    width: 100%;
+  }
+  .awards .ticker .track {
+    display: flex; gap: 40px; align-items: center;
+    white-space: nowrap;
+    animation: scroll 30s linear infinite;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .awards .ticker .track span .year {
+    color: var(--ink-soft);
+    margin-right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .awards .ticker .track .sep {
+    width: 8px; height: 8px; background: var(--rasp); border-radius: 50%;
+    display: inline-block;
+  }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* === Scene 6 — End === */
+  .end {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 28px;
+    text-align: center;
+    padding: 0 6vw;
+  }
+  .end h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(60px, 10vw, 160px);
+    line-height: 1;
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .end h2 em { font-style: italic; color: var(--rasp); }
+  .end p {
+    font-size: 16px; line-height: 1.6;
+    color: var(--ink-fade);
+    max-width: 50ch;
+  }
+  .end .links {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    margin-top: 12px;
+  }
+  .end .links a {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 200ms;
+  }
+  .end .links a:hover { transform: translateY(-2px) rotate(-1deg); }
+  .end .links a.alt {
+    background: var(--paper);
+    color: var(--ink);
+    border: 2.5px solid var(--ink);
+  }
+  .end .signoff {
+    margin-top: 60px;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-soft);
+  }
+
+  /* === Reveal === */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 700ms ease, transform 700ms ease;
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* === Parallax decorative shapes (CSS vars driven by JS) === */
+  .parallax { transform: translate3d(calc(var(--mx, 0px) * 0.4), calc(var(--my, 0px) * 0.4), 0); transition: transform 200ms ease-out; }
+  .parallax-slow { transform: translate3d(calc(var(--mx, 0px) * 0.15), calc(var(--my, 0px) * 0.15), 0); transition: transform 300ms ease-out; }
+
+  /* Decorative shapes used in scenes */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    border: 2.5px solid var(--ink);
+    pointer-events: none;
+  }
+  .blob.b1 { width: 120px; height: 120px; background: var(--coral); }
+  .blob.b2 { width: 80px; height: 80px; background: var(--must); }
+  .blob.b3 { width: 100px; height: 100px; background: var(--mint); }
+  .blob.b4 { width: 60px; height: 60px; background: var(--blue); }
+  .squiggle {
+    position: absolute;
+    width: 80px; height: 30px;
+    border: 2.5px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0;
+    pointer-events: none;
+  }
+  .star {
+    position: absolute;
+    width: 28px; height: 28px;
+    background: var(--ink);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 900px) {
+    .work .grid { grid-template-columns: repeat(2, 1fr); }
+    .studio .inner { grid-template-columns: 1fr; gap: 24px; }
+    .scene { padding: 14vh 6vw 6vh; }
+  }
+  @media (max-width: 600px) {
+    .topbar { padding: 14px 16px; }
+    .topnav { display: none; }
+    .work .grid { grid-template-columns: 1fr; }
+    .cover .decor { display: none; }
+    .manifesto .stamp { display: none; }
+    .rail { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Top bar ============ -->
+<header class="topbar">
+  <a class="brand" href="#">
+    <span class="dot"></span>
+    Resn
+  </a>
+  <nav class="topnav">
+    <a href="#work">work</a>
+    <a href="#studio">studio</a>
+    <a href="#awards">trophies</a>
+    <a href="#contact">say hi</a>
+  </nav>
+  <a href="#contact" class="pill-btn">start a project</a>
+</header>
+
+<!-- ============ Scene rail ============ -->
+<aside class="rail" id="rail">
+  <div class="item" data-i="0"><span class="n">1</span><span>hello</span></div>
+  <div class="item" data-i="1"><span class="n">2</span><span>why</span></div>
+  <div class="item" data-i="2"><span class="n">3</span><span>work</span></div>
+  <div class="item" data-i="3"><span class="n">4</span><span>studio</span></div>
+  <div class="item" data-i="4"><span class="n">5</span><span>trophies</span></div>
+  <div class="item" data-i="5"><span class="n">6</span><span>bye</span></div>
+</aside>
+
+<!-- ============ The mascot — Pip ============ -->
+<div class="pip" id="pip">
+  <div class="head"></div>
+  <div class="body"></div>
+  <div class="eye l"></div>
+  <div class="eye r"></div>
+  <div class="cheek l"></div>
+  <div class="cheek r"></div>
+  <div class="mouth"></div>
+  <div class="arm l"></div>
+  <div class="arm r"></div>
+</div>
+
+<!-- ============ Scene 1 — Cover ============ -->
+<section class="scene cover" id="hello">
+  <span class="label"><span class="num">01</span> hello from wellington</span>
+  <div>
+    <h1>We make the<br/><span class="em">internet</span> feel <span class="b">alive</span><br/>and a little <span class="u">weird</span>.</h1>
+    <p class="sub">Resn is a small interactive studio in Aotearoa New Zealand. We design and build playful, story-driven digital work for brands that want to be remembered, not just seen.</p>
+  </div>
+  <div class="decor parallax">
+    <div style="position:absolute;left:40px;top:60px;width:180px;height:180px;background:var(--mint);border:2.5px solid var(--ink);border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;transform:rotate(-8deg);"></div>
+    <div class="blob b1 parallax-slow" style="left:0;top:140px;"></div>
+    <div class="star parallax-slow" style="left:200px;top:30px;"></div>
+    <div class="star parallax" style="left:230px;top:200px;background:var(--rasp);"></div>
+    <div class="squiggle parallax" style="left:180px;top:120px;width:60px;background:transparent;"></div>
+  </div>
+</section>
+
+<!-- ============ Scene 2 — Manifesto ============ -->
+<section class="scene manifesto" id="why">
+  <span class="label" style="position:absolute;top:8vh;left:8vw;"><span class="num">02</span> why we make</span>
+  <h2>We make things that <em>earn</em> the next click. <em>Then</em> the next. <em>Then</em> the next.</h2>
+  <p>Most of the web is wallpaper now. We would rather build a small, alive corner of it that someone tells a friend about on a Tuesday afternoon. That is the whole job — make the kind of thing that gets shared because it was enjoyed.</p>
+  <div class="stamp">est. 2004<br/>wellington, nz</div>
+</section>
+
+<!-- ============ Scene 3 — Work ============ -->
+<section class="scene work" id="work">
+  <span class="label"><span class="num">03</span> some of our work</span>
+  <div style="width:100%;">
+    <div class="head">
+      <h2>Selected work.</h2>
+      <div class="sub">A few of our favourites. The rest live on the fridge in the kitchen — ask us about them.</div>
+    </div>
+    <div class="grid">
+      <div class="pcard">
+        <div class="thumb thumb-i1"></div>
+        <div class="meta"><h3>Outpost Atlas</h3><span class="year">2024</span></div>
+      </div>
+      <div class="pcard">
+        <div class="thumb thumb-i2"></div>
+        <div class="meta"><h3>Pebble Bureau</h3><span class="year">2024</span></div>
+      </div>
+      <div class="pcard">
+        <div class="thumb thumb-i3"></div>
+        <div class="meta"><h3>Midnight Atlas</h3><span class="year">2023</span></div>
+      </div>
+      <div class="pcard">
+        <div class="thumb thumb-i4"></div>
+        <div class="meta"><h3>Field Recorder</h3><span class="year">2023</span></div>
+      </div>
+      <div class="pcard">
+        <div class="thumb thumb-i5"></div>
+        <div class="meta"><h3>Sun Folio</h3><span class="year">2022</span></div>
+      </div>
+      <div class="pcard">
+        <div class="thumb thumb-i6"></div>
+        <div class="meta"><h3>Quill A–Z</h3><span class="year">2022</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Scene 4 — Studio ============ -->
+<section class="scene studio" id="studio">
+  <span class="label" style="position:absolute;top:8vh;left:8vw;"><span class="num">04</span> the studio</span>
+  <div class="inner">
+    <h2>Twenty people. <em>One workshop.</em> No silos.</h2>
+    <div class="body">
+      <p>Resn was founded in 2004 above a record store on Cuba Street. Today we are still a single room of designers, illustrators and engineers, working shoulder to shoulder on a small number of projects at a time.</p>
+      <p>We take on four to five projects a year. We say no to most of what comes in. The ones we say yes to, we care about like they're ours — because they are, by the end.</p>
+      <div class="stats">
+        <div><b>20</b><span>humans</span></div>
+        <div><b>04</b><span>founded</span></div>
+        <div><b>∞</b><span>coffee</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Scene 5 — Awards ============ -->
+<section class="scene awards" id="awards">
+  <span class="label" style="position:absolute;top:18vh;left:8vw;"><span class="num">05</span> trophies</span>
+  <h2>A few <em>trophies</em> we did not buy.</h2>
+  <div class="ticker">
+    <div class="track">
+      <span><span class="year">2024</span>FWA Site of the Day</span>
+      <span class="sep"></span>
+      <span><span class="year">2024</span>Awwwards SOTD</span>
+      <span class="sep"></span>
+      <span><span class="year">2024</span>Webby Honouree</span>
+      <span class="sep"></span>
+      <span><span class="year">2023</span>D&AD Wood Pencil</span>
+      <span class="sep"></span>
+      <span><span class="year">2023</span>One Show Merit</span>
+      <span class="sep"></span>
+      <span><span class="year">2022</span>CSS Design Awards</span>
+      <span class="sep"></span>
+      <span><span class="year">2022</span>Cannes Lions Shortlist</span>
+      <span class="sep"></span>
+      <!-- duplicate -->
+      <span><span class="year">2024</span>FWA Site of the Day</span>
+      <span class="sep"></span>
+      <span><span class="year">2024</span>Awwwards SOTD</span>
+      <span class="sep"></span>
+      <span><span class="year">2024</span>Webby Honouree</span>
+      <span class="sep"></span>
+      <span><span class="year">2023</span>D&AD Wood Pencil</span>
+      <span class="sep"></span>
+      <span><span class="year">2023</span>One Show Merit</span>
+      <span class="sep"></span>
+      <span><span class="year">2022</span>CSS Design Awards</span>
+      <span class="sep"></span>
+      <span><span class="year">2022</span>Cannes Lions Shortlist</span>
+      <span class="sep"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Scene 6 — End ============ -->
+<section class="scene end" id="contact">
+  <span class="label" style="position:absolute;top:18vh;left:8vw;"><span class="num">06</span> the part where you write to us</span>
+  <h2>Let's make <em>something</em> weird.</h2>
+  <p>We are taking bookings for Q1 2026. One paragraph is enough — tell us about the thing and who it is for. We reply to everything, slowly but always.</p>
+  <div class="links">
+    <a href="#">say hello</a>
+    <a href="#" class="alt">see journal</a>
+    <a href="#" class="alt">are.na</a>
+  </div>
+  <div class="signoff">— Resn, Wellington. Ngā mihi.</div>
+</section>
+
+<script>
+/* ============================================================================
+ * resn.co.nz — MiniMax M3 High recreation
+ * Playful interactive studio: mascot + parallax + scene rail + reveal
+ * ============================================================================ */
+(function () {
+  'use strict';
+
+  // ---- Mouse parallax via CSS vars ----
+  const root = document.documentElement;
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  window.addEventListener('pointermove', e => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 40;   // -20..20
+    ty = (e.clientY / window.innerHeight - 0.5) * 40;  // -20..20
+  });
+
+  // ---- Pip the mascot — follows the cursor with a soft spring ----
+  const pip = document.getElementById('pip');
+  let pipX = window.innerWidth * 0.5, pipY = window.innerHeight * 0.5;
+  let pipTargetX = pipX, pipTargetY = pipY;
+  let mouseX = pipX, mouseY = pipY;
+
+  window.addEventListener('pointermove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function updatePip(dt) {
+    // smooth follow: pip lags the mouse
+    pipTargetX = mouseX;
+    pipTargetY = mouseY;
+    const follow = 1 - Math.pow(0.001, dt);   // very smooth spring
+    pipX += (pipTargetX - pipX) * follow;
+    pipY += (pipTargetY - pipY) * follow;
+    // tilt toward the direction of travel
+    const dx = pipTargetX - pipX;
+    const dy = pipTargetY - pipY;
+    const tilt = Math.atan2(dy, dx) * (180 / Math.PI) * 0.15;
+    const wobble = Math.sin(performance.now() * 0.004) * 3;
+    pip.style.left = pipX + 'px';
+    pip.style.top  = pipY + 'px';
+    pip.style.transform = `translate(-50%, -50%) rotate(${tilt + wobble * 0.1}deg)`;
+  }
+
+  // ---- Scene rail: active scene tracker ----
+  const scenes = document.querySelectorAll('.scene');
+  const railItems = document.querySelectorAll('.rail .item');
+  function updateRail() {
+    const center = window.scrollY + window.innerHeight * 0.4;
+    let active = 0;
+    scenes.forEach((s, i) => {
+      const top = s.offsetTop, bot = top + s.offsetHeight;
+      if (center >= top && center < bot) active = i;
+    });
+    railItems.forEach((it, i) => it.classList.toggle('active', i === active));
+    // parallax vars (subtle)
+    cx += (tx - cx) * 0.05;
+    cy += (ty - cy) * 0.05;
+    root.style.setProperty('--mx', cx + 'px');
+    root.style.setProperty('--my', cy + 'px');
+  }
+  railItems.forEach((it, i) => {
+    it.addEventListener('click', () => {
+      const target = scenes[i];
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  window.addEventListener('scroll', updateRail, { passive: true });
+  window.addEventListener('pointermove', updateRail, { passive: true });
+
+  // ---- Reveal on scroll ----
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('in');
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.scene > *').forEach(el => {
+    el.classList.add('reveal');
+    io.observe(el);
+  });
+
+  // ---- Top nav scroll ----
+  document.querySelectorAll('.topnav a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const id = a.getAttribute('href');
+      const el = document.querySelector(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // ---- Bobbing for decorative shapes ----
+  document.querySelectorAll('.blob, .star, .squiggle').forEach((el, i) => {
+    el.style.animation = `bob 4s ease-in-out ${i * 0.3}s infinite`;
+  });
+
+  // ---- Loop ----
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    updatePip(dt);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---- Inject keyframes for bobbing ----
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-12px) rotate(2deg); }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+</script>
+
+</body>
+</html>

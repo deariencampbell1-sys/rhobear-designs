@@ -1,0 +1,252 @@
+<!--
+  bychudy.com — high-fidelity recreation
+  Model: Grok Composer 2.5
+  Target: https://www.bychudy.com/
+  Stack: Tailwind CDN, vanilla JS parallax
+  Notes: Gradient placeholders replace brand photography;
+         Framer-style scattered canvas layout on 100dvh white field.
+-->
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bychudy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --canvas: rgb(255, 255, 255);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--canvas);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #canvas {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      background: var(--canvas);
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .project-card {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      will-change: transform;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: center center;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .project-card:hover {
+      transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg)) scale(1.06) !important;
+      z-index: 100 !important;
+    }
+
+    .thumb {
+      position: relative;
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.08);
+      flex-shrink: 0;
+    }
+
+    .thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 55%,
+        rgba(0, 0, 0, 0.12) 100%
+      );
+      pointer-events: none;
+    }
+
+    .project-title {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.5rem;
+      font-size: clamp(0.65rem, 1.1vw, 0.82rem);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+      color: #fff;
+      text-shadow:
+        0 0 12px rgba(0, 0, 0, 0.55),
+        0 1px 3px rgba(0, 0, 0, 0.7),
+        0 2px 8px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tradeoffs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      padding: 0.55rem 1rem 0.7rem;
+      background: linear-gradient(to top, rgba(255,255,255,0.97) 70%, rgba(255,255,255,0));
+      font-size: 0.68rem;
+      line-height: 1.35;
+      color: rgba(0, 0, 0, 0.42);
+      letter-spacing: 0.01em;
+      pointer-events: none;
+    }
+
+    .tradeoffs strong {
+      color: rgba(0, 0, 0, 0.58);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .project-card {
+        transform: scale(0.82);
+      }
+      .project-card:hover {
+        transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg)) scale(0.88) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="canvas" aria-label="bychudy portfolio canvas"></main>
+
+  <footer class="tradeoffs">
+    <strong>Trade-offs (Grok Composer 2.5):</strong>
+    Gradient placeholders stand in for licensed project imagery; exact Framer drag-and-drop physics,
+    per-project deep links, and pixel-perfect card coordinates from the live CMS are approximated.
+    Parallax depth and scatter positions are reconstructed from visual inspection, not exported Framer data.
+  </footer>
+
+  <script>
+    const projects = [
+      { title: "Newonce",                    w: 148, h: 98,  x: 4,   y: 6,   rot: -2.5, depth: 0.35, grad: "linear-gradient(135deg,#1a1a2e 0%,#e94560 100%)" },
+      { title: "Hotel Mafija Vinyl",         w: 132, h: 132, x: 18,  y: 3,   rot: 1.8,  depth: 0.55, grad: "linear-gradient(160deg,#0f0f0f 0%,#4a4a4a 50%,#c9a84c 100%)" },
+      { title: "Stage Visuals",              w: 168, h: 94,  x: 34,  y: 8,   rot: -1.2, depth: 0.42, grad: "linear-gradient(120deg,#ff006e 0%,#8338ec 55%,#3a86ff 100%)" },
+      { title: "Merch",                      w: 112, h: 112, x: 52,  y: 4,   rot: 3.5,  depth: 0.28, grad: "linear-gradient(145deg,#f72585 0%,#7209b7 100%)" },
+      { title: "Kacperczyk 2024",            w: 156, h: 104, x: 66,  y: 10,  rot: -3,   depth: 0.48, grad: "linear-gradient(180deg,#2d6a4f 0%,#95d5b2 100%)" },
+      { title: "Trasa Po Końcu Świata",      w: 140, h: 88,  x: 82,  y: 5,   rot: 2,    depth: 0.38, grad: "linear-gradient(135deg,#03045e 0%,#0077b6 50%,#90e0ef 100%)" },
+      { title: "Ryk",                        w: 96,  h: 96,  x: 2,   y: 22,  rot: 4,    depth: 0.22, grad: "linear-gradient(160deg,#d00000 0%,#ffba08 100%)" },
+      { title: "AlboAlbo",                   w: 124, h: 124, x: 12,  y: 28,  rot: -1.5, depth: 0.52, grad: "linear-gradient(140deg,#6a0572 0%,#ab83a1 100%)" },
+      { title: "Pierwszy Swag w Polsce",     w: 152, h: 96,  x: 28,  y: 24,  rot: 2.8,  depth: 0.44, grad: "linear-gradient(125deg,#ff9f1c 0%,#2ec4b6 100%)" },
+      { title: "wine bottlE Label",          w: 108, h: 140, x: 46,  y: 20,  rot: -4,   depth: 0.36, grad: "linear-gradient(180deg,#3c1518 0%,#69140e 45%,#a44200 100%)" },
+      { title: "Trasa Końca Świata",         w: 144, h: 90,  x: 60,  y: 26,  rot: 1,    depth: 0.4,  grad: "linear-gradient(135deg,#14213d 0%,#fca311 100%)" },
+      { title: "Love Song Sad",              w: 118, h: 118, x: 76,  y: 22,  rot: -2,   depth: 0.5,  grad: "linear-gradient(150deg,#264653 0%,#e76f51 100%)" },
+      { title: "Ramówka",                    w: 136, h: 86,  x: 90,  y: 28,  rot: 3.2,  depth: 0.3,  grad: "linear-gradient(120deg,#000000 0%,#434343 100%)" },
+      { title: "Chanel",                     w: 104, h: 104, x: 6,   y: 42,  rot: -1,   depth: 0.26, grad: "linear-gradient(145deg,#1c1c1c 0%,#d4af37 100%)" },
+      { title: "solar * Białas",             w: 160, h: 100, x: 20,  y: 46,  rot: 2.5,  depth: 0.46, grad: "linear-gradient(135deg,#f77f00 0%,#fcbf49 50%,#003049 100%)" },
+      { title: "SBM FF24",                   w: 120, h: 120, x: 38,  y: 40,  rot: -3.5, depth: 0.58, grad: "linear-gradient(160deg,#240046 0%,#9d4edd 100%)" },
+      { title: "Kajecik",                    w: 100, h: 100, x: 54,  y: 44,  rot: 1.5,  depth: 0.32, grad: "linear-gradient(140deg,#ff595e 0%,#ffca3a 100%)" },
+      { title: "To Nie Pop",                 w: 148, h: 92,  x: 68,  y: 48,  rot: -2.2, depth: 0.41, grad: "linear-gradient(125deg,#06d6a0 0%,#118ab2 100%)" },
+      { title: "Wszyscy Jesteśmy Kacperczyk",w: 154, h: 98,  x: 84,  y: 42,  rot: 1.8,  depth: 0.47, grad: "linear-gradient(135deg,#5f0f40 0%,#fb8b24 100%)" },
+      { title: "Ryk X Sexed",                w: 128, h: 128, x: 2,   y: 58,  rot: 3,    depth: 0.54, grad: "linear-gradient(150deg,#ef476f 0%,#ffd166 100%)" },
+      { title: "Fantasmagorie",              w: 142, h: 88,  x: 16,  y: 64,  rot: -1.8, depth: 0.37, grad: "linear-gradient(120deg,#10002b 0%,#7b2cbf 60%,#e0aaff 100%)" },
+      { title: "Szept",                      w: 106, h: 106, x: 32,  y: 60,  rot: 2,    depth: 0.29, grad: "linear-gradient(145deg,#212529 0%,#adb5bd 100%)" },
+      { title: "Huta",                       w: 150, h: 96,  x: 46,  y: 66,  rot: -2.8, depth: 0.43, grad: "linear-gradient(135deg,#495057 0%,#dee2e6 100%)" },
+      { title: "WTF",                        w: 88,  h: 88,  x: 62,  y: 62,  rot: 4.5,  depth: 0.2,  grad: "linear-gradient(160deg,#ff0000 0%,#ffff00 50%,#00ff00 100%)" },
+      { title: "Interludium",                w: 134, h: 84,  x: 72,  y: 68,  rot: -1,   depth: 0.34, grad: "linear-gradient(125deg,#023047 0%,#8ecae6 100%)" },
+      { title: "I Nie Puszczę",              w: 138, h: 90,  x: 86,  y: 64,  rot: 2.2,  depth: 0.39, grad: "linear-gradient(140deg,#370617 0%,#e5383b 100%)" },
+      { title: "efemmera",                   w: 116, h: 116, x: 42,  y: 78,  rot: -3.2, depth: 0.51, grad: "linear-gradient(150deg,#cad2c5 0%,#84a98c 50%,#52796f 100%)" },
+    ];
+
+    const canvas = document.getElementById("canvas");
+    const cards = [];
+
+    projects.forEach((p, i) => {
+      const card = document.createElement("article");
+      card.className = "project-card";
+      card.style.left = p.x + "%";
+      card.style.top = p.y + "%";
+      card.style.setProperty("--rot", p.rot + "deg");
+      card.style.zIndex = String(10 + (i % 20));
+      card.dataset.depth = p.depth;
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      thumb.style.width = p.w + "px";
+      thumb.style.height = p.h + "px";
+      thumb.style.background = p.grad;
+
+      const title = document.createElement("h2");
+      title.className = "project-title";
+      title.textContent = p.title;
+
+      thumb.appendChild(title);
+      card.appendChild(thumb);
+      canvas.appendChild(card);
+
+      cards.push({ el: card, depth: p.depth, rot: p.rot });
+    });
+
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let rafId = null;
+
+    function onMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const x = e.clientX - rect.left - cx;
+      const y = e.clientY - rect.top - cy;
+      targetX = x / cx;
+      targetY = y / cy;
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    function tick() {
+      mouseX += (targetX - mouseX) * 0.08;
+      mouseY += (targetY - mouseY) * 0.08;
+
+      cards.forEach(({ el, depth, rot }) => {
+        const dx = mouseX * depth * 28;
+        const dy = mouseY * depth * 22;
+        el.style.setProperty("--tx", dx + "px");
+        el.style.setProperty("--ty", dy + "px");
+        el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+      });
+
+      if (Math.abs(targetX - mouseX) > 0.001 || Math.abs(targetY - mouseY) > 0.001) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        rafId = null;
+      }
+    }
+
+    canvas.addEventListener("mousemove", onMouseMove);
+
+    canvas.addEventListener("mouseleave", () => {
+      targetX = 0;
+      targetY = 0;
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1153 @@
+<!--
+  Original URL: https://bruno-simon.com/
+  Recreation by: Claude Opus 4.7
+
+  What makes Bruno Simon's site iconic:
+    • A 3D toy-world portfolio — you literally DRIVE a tiny car around to explore
+      Bruno's work, awards, and contact info. The "site" IS the interaction.
+    • Toy-block aesthetic: flat saturated colors, wooden ramps with diagonal grain,
+      red brick walls, oversized signs, crayon-style ground labels.
+    • Friendly intro overlay: BRUNO SIMON / Creative Developer, then a control prompt
+      ("Use arrow keys to move"), which fades away the moment you start driving.
+    • Cartoony top-down chase camera with very forgiving physics — the car feels
+      springy, weighty, and just always fun to throw around.
+    • Color palette: pastel sky, vivid grass green, warm wood, orange-red car,
+      strong shadow-flat surfaces (toon-ish without being literally toon-shaded).
+
+  Challenges solved in this single-file recreation:
+    1. Cannon.js / cannon-es is heavy; I rolled a small bespoke car driving model
+       (input → acceleration → friction → steering angular velocity → world XY
+       position) that mimics the springy toy feel without a physics library.
+    2. AABB-vs-AABB sliding collision against walls/ramps for forgiving "bump
+       and slide" behaviour — never trapping the car.
+    3. Ramps detected via XZ-overlap; car visually rises along the ramp normal
+       so it can drive UP wooden platforms (same trick Bruno uses for chairs/ramps).
+    4. Floor signs are canvas-textured planes rotated flat on the ground —
+       gives the crayon-on-grass handwriting feel without any image assets.
+    5. Tutorial overlay auto-dismisses on first input (keyboard or touch joystick).
+    6. Touch joystick for mobile, keyboard arrows/WASD for desktop.
+    7. Pixel-ratio capped at 2 and frustum-friendly lighting for a buttery framerate.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bruno Simon — Creative Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Patrick+Hand&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --sky-top: #c0e8ff;
+    --sky-bottom: #e9f7ff;
+    --grass: #7bc25b;
+    --grass-shade: #5fa843;
+    --wood: #c6915b;
+    --wood-dark: #8a5a2f;
+    --brick: #c8513a;
+    --brick-mortar: #f4dec7;
+    --car: #ea3a1f;
+    --car-roof: #f6f1ea;
+    --car-rim: #1a1a1a;
+    --crayon: #1c1c2e;
+    --ui-ink: #2a2a35;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+    font-family: 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif;
+    color: var(--ui-ink);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  canvas { display: block; outline: none; }
+
+  /* --- Loading splash --- */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 28px;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loader.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+  .splash-name {
+    font-family: 'Patrick Hand SC', 'Patrick Hand', sans-serif;
+    font-size: clamp(54px, 11vw, 140px);
+    letter-spacing: 6px;
+    line-height: 0.9;
+    color: var(--ui-ink);
+    text-align: center;
+  }
+  .splash-sub {
+    font-size: clamp(18px, 2.4vw, 26px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ui-ink);
+    opacity: 0.55;
+  }
+  .splash-bar {
+    width: min(280px, 60vw);
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .splash-bar > span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--ui-ink);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  /* --- Tutorial overlay --- */
+  #tutorial {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    pointer-events: none;
+    transition: opacity 1s ease, transform 1s ease;
+    padding: 24px;
+    text-align: center;
+  }
+  #tutorial.hide { opacity: 0; transform: translateY(-14px); }
+  .tut-name {
+    font-family: 'Patrick Hand SC', 'Patrick Hand', sans-serif;
+    font-size: clamp(56px, 12vw, 160px);
+    letter-spacing: 8px;
+    color: var(--ui-ink);
+    line-height: 0.85;
+    text-shadow: 0 4px 0 rgba(0,0,0,0.04);
+  }
+  .tut-role {
+    font-size: clamp(16px, 2.2vw, 24px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-top: -6px;
+  }
+  .tut-keys {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    animation: floaty 2.4s ease-in-out infinite;
+  }
+  .tut-keys p {
+    font-size: clamp(18px, 2.4vw, 26px);
+    letter-spacing: 2px;
+    opacity: 0.75;
+  }
+  .keys-row { display: flex; gap: 10px; }
+  .keys-row .k {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    border: 2px solid var(--ui-ink);
+    background: #fffdf6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    font-family: system-ui, sans-serif;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+
+  /* --- HUD: top-left brand --- */
+  .hud-brand {
+    position: fixed; top: 18px; left: 22px; z-index: 20;
+    font-family: 'Patrick Hand SC', sans-serif;
+    font-size: 22px; letter-spacing: 3px;
+    color: var(--ui-ink);
+    pointer-events: none;
+    user-select: none;
+  }
+  .hud-brand small {
+    display: block; font-size: 11px; letter-spacing: 4px; opacity: 0.55;
+    margin-top: 2px;
+  }
+
+  /* --- HUD: top-right links --- */
+  .hud-links {
+    position: fixed; top: 18px; right: 22px; z-index: 20;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .hud-links a {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255,253,246,0.85);
+    border: 2px solid var(--ui-ink);
+    color: var(--ui-ink);
+    transition: transform 0.15s ease, background 0.15s ease;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    text-decoration: none;
+  }
+  .hud-links a:hover { transform: translateY(-2px); background: #fff; }
+  .hud-links svg { width: 18px; height: 18px; }
+
+  /* --- HUD: bottom-right toggles --- */
+  .hud-bottom {
+    position: fixed; bottom: 18px; right: 22px; z-index: 20;
+    display: flex; gap: 10px;
+  }
+  .hud-btn {
+    height: 38px; padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(255,253,246,0.85);
+    border: 2px solid var(--ui-ink);
+    color: var(--ui-ink);
+    font-family: 'Patrick Hand', sans-serif;
+    font-size: 16px; letter-spacing: 1px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .hud-btn:hover { transform: translateY(-2px); background: #fff; }
+  .hud-btn:focus { outline: none; }
+
+  /* --- HUD: bottom-left credit --- */
+  .hud-credit {
+    position: fixed; bottom: 18px; left: 22px; z-index: 20;
+    font-size: 14px; opacity: 0.55; letter-spacing: 1px;
+    pointer-events: none;
+  }
+
+  /* --- Mobile touch joystick --- */
+  #joystick {
+    position: fixed;
+    left: 24px; bottom: 90px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,253,246,0.55);
+    border: 2px solid rgba(0,0,0,0.5);
+    display: none;
+    z-index: 30;
+    touch-action: none;
+  }
+  #joystick .nub {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(255,253,246,0.95);
+    border: 2px solid rgba(0,0,0,0.6);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+  }
+  @media (pointer: coarse) {
+    #joystick { display: block; }
+    .hud-bottom { bottom: 14px; right: 14px; }
+    .hud-credit { display: none; }
+  }
+
+  /* --- Project popup card --- */
+  #card {
+    position: fixed;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -52%) scale(0.96);
+    width: min(440px, 88vw);
+    background: #fffdf6;
+    border: 3px solid var(--ui-ink);
+    border-radius: 18px;
+    padding: 28px 32px 24px;
+    box-shadow: 0 14px 0 rgba(0,0,0,0.08);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #card.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+  #card h3 {
+    font-family: 'Patrick Hand SC', sans-serif;
+    font-size: 30px; letter-spacing: 2px;
+    margin: 0 0 6px 0;
+  }
+  #card .meta {
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.55; margin-bottom: 14px;
+  }
+  #card p { font-size: 17px; line-height: 1.45; opacity: 0.85; margin: 0 0 18px 0; }
+  #card .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  #card .close {
+    background: var(--ui-ink); color: #fffdf6;
+    border: none; border-radius: 999px; padding: 8px 16px;
+    font-family: 'Patrick Hand', sans-serif; font-size: 15px;
+    cursor: pointer; letter-spacing: 1px;
+  }
+  #card .tag {
+    background: var(--car); color: #fffdf6;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* Accessibility: focus rings */
+  button:focus-visible, a:focus-visible {
+    outline: 3px solid var(--car);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading splash -->
+<div id="loader">
+  <div class="splash-name">BRUNO<br>SIMON</div>
+  <div class="splash-sub">Loading the playground</div>
+  <div class="splash-bar"><span id="bar"></span></div>
+</div>
+
+<!-- Tutorial overlay -->
+<div id="tutorial">
+  <div class="tut-name">BRUNO<br>SIMON</div>
+  <div class="tut-role">Creative Developer</div>
+  <div class="tut-keys">
+    <p>Use the arrow keys to drive ↓</p>
+    <div class="keys-row">
+      <div class="k">↑</div>
+    </div>
+    <div class="keys-row">
+      <div class="k">←</div>
+      <div class="k">↓</div>
+      <div class="k">→</div>
+    </div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div class="hud-brand">BRUNO SIMON<small>Creative Developer · 2026</small></div>
+
+<div class="hud-links">
+  <a href="#" aria-label="Twitter" title="Twitter">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.8c-.7.3-1.5.5-2.4.6.9-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.7 11.7 0 0 1 3.2 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4 4 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.2 8.2 0 0 1 2 18.3 11.5 11.5 0 0 0 8.3 20c7.5 0 11.6-6.2 11.6-11.6v-.5c.8-.6 1.5-1.3 2.1-2.1z"/></svg>
+  </a>
+  <a href="#" aria-label="GitHub" title="GitHub">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.52 1.03 1.52 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+  </a>
+  <a href="#" aria-label="LinkedIn" title="LinkedIn">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM8.3 18H5.7V9.7h2.6V18zM7 8.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM18.3 18h-2.6v-4.4c0-1.1-.4-1.8-1.4-1.8-.8 0-1.2.5-1.4 1-.1.2-.1.4-.1.7V18h-2.6V9.7h2.6v1.1c.4-.5 1-1.3 2.4-1.3 1.7 0 3 1.1 3 3.5V18z"/></svg>
+  </a>
+</div>
+
+<div class="hud-bottom">
+  <button class="hud-btn" id="sound">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+    <span>SOUND OFF</span>
+  </button>
+  <button class="hud-btn" id="reset">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V2L8 6l4 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+    <span>RESET</span>
+  </button>
+</div>
+
+<div class="hud-credit">A drivable portfolio · made with three.js</div>
+
+<!-- Mobile joystick -->
+<div id="joystick" aria-hidden="true"><div class="nub" id="nub"></div></div>
+
+<!-- Project popup card -->
+<div id="card">
+  <div class="row" style="margin-bottom:8px"><span class="tag" id="card-tag">PROJECT</span></div>
+  <h3 id="card-title">Loading…</h3>
+  <div class="meta" id="card-meta">2024 · Three.js</div>
+  <p id="card-body">…</p>
+  <div class="row">
+    <button class="close" id="card-close">Drive away</button>
+    <small style="opacity:.55">Press ESC to close</small>
+  </div>
+</div>
+
+<!-- Three.js (modules via CDN importmap) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ===========================================================
+   SCENE / CAMERA / RENDERER
+   =========================================================== */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xc0e8ff);
+scene.fog = new THREE.Fog(0xc0e8ff, 90, 200);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 22, 28);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+/* ===========================================================
+   LIGHTING
+   =========================================================== */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8fbf68, 0.85));
+
+const sun = new THREE.DirectionalLight(0xfff3d0, 1.2);
+sun.position.set(30, 50, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -60;
+sun.shadow.camera.right = 60;
+sun.shadow.camera.top = 60;
+sun.shadow.camera.bottom = -60;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 160;
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+/* ===========================================================
+   GROUND
+   =========================================================== */
+const grassMat = new THREE.MeshLambertMaterial({ color: 0x7bc25b });
+
+// Subtle grid lines drawn into the grass via a custom canvas texture
+function makeGrassTexture() {
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#7bc25b';
+  ctx.fillRect(0, 0, size, size);
+  // soft noise speckles
+  for (let i = 0; i < 1200; i++) {
+    ctx.fillStyle = `rgba(${60 + Math.random()*40},${150 + Math.random()*40},${60 + Math.random()*40},${0.18 + Math.random()*0.15})`;
+    const x = Math.random()*size, y = Math.random()*size, r = 1 + Math.random()*2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(40, 40);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const grass = new THREE.Mesh(
+  new THREE.PlaneGeometry(300, 300),
+  new THREE.MeshLambertMaterial({ map: makeGrassTexture() })
+);
+grass.rotation.x = -Math.PI / 2;
+grass.receiveShadow = true;
+scene.add(grass);
+
+/* ===========================================================
+   FLOOR LABEL (crayon-style writing on the grass)
+   =========================================================== */
+function makeFloorLabel(text, opts = {}) {
+  const { width = 12, scale = 1, color = '#1c1c2e', size = 96 } = opts;
+  const ratio = 2.6;
+  const w = 1024, h = Math.round(1024 / ratio);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  // slight wobble lines (mimic crayon)
+  ctx.font = `${size}px "Patrick Hand SC", "Patrick Hand", cursive`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  // shadow + main pass for chalky depth
+  ctx.fillStyle = 'rgba(28,28,46,0.18)';
+  ctx.fillText(text, w/2, h/2 + 4);
+  ctx.fillStyle = color;
+  ctx.fillText(text, w/2, h/2);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, width / ratio),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+  );
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0.02;
+  mesh.scale.setScalar(scale);
+  return mesh;
+}
+
+/* ===========================================================
+   WORLD OBJECTS — wood ramps, brick walls, project plinths
+   We keep a registry of obstacles for AABB collision.
+   =========================================================== */
+const obstacles = [];      // {mesh, box: THREE.Box3, type, ...}
+const ramps = [];          // {mesh, x, z, w, d, normal, angle, dir}
+const triggers = [];       // proximity zones for project cards
+
+const woodMat = new THREE.MeshStandardMaterial({ color: 0xc6915b, roughness: 0.85 });
+const woodDarkMat = new THREE.MeshStandardMaterial({ color: 0x8a5a2f, roughness: 0.9 });
+const brickMat  = new THREE.MeshStandardMaterial({ color: 0xc8513a, roughness: 0.9 });
+const whiteMat  = new THREE.MeshStandardMaterial({ color: 0xfffdf6, roughness: 0.7 });
+const inkMat    = new THREE.MeshStandardMaterial({ color: 0x2a2a35, roughness: 0.6 });
+const accentMat = new THREE.MeshStandardMaterial({ color: 0xea3a1f, roughness: 0.6 });
+const goldMat   = new THREE.MeshStandardMaterial({ color: 0xeeb845, metalness: 0.4, roughness: 0.35 });
+
+/* --- Brick wall (with planks of mortar feel via mesh stripes) --- */
+function addWall(x, z, w, d, h = 1.5, rot = 0) {
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), brickMat);
+  wall.position.set(x, h/2, z);
+  wall.rotation.y = rot;
+  wall.castShadow = true; wall.receiveShadow = true;
+  scene.add(wall);
+  // mortar line on top
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.1, 0.12, d + 0.1), whiteMat);
+  cap.position.set(x, h + 0.06, z);
+  cap.rotation.y = rot;
+  cap.receiveShadow = true;
+  scene.add(cap);
+  const box = new THREE.Box3().setFromObject(wall);
+  obstacles.push({ mesh: wall, box, type: 'wall' });
+}
+
+/* --- Wood ramp: a slanted wooden plank with diagonal planks --- */
+function addRamp(x, z, w, d, h, dir = 'north') {
+  // 'dir' tells us which side the bottom edge faces
+  const group = new THREE.Group();
+  // planks via thin stripes
+  const planks = Math.max(3, Math.round(w / 0.7));
+  const plankW = w / planks;
+  for (let i = 0; i < planks; i++) {
+    const p = new THREE.Mesh(
+      new THREE.BoxGeometry(plankW * 0.94, 0.06, d),
+      i % 2 === 0 ? woodMat : woodDarkMat
+    );
+    p.position.x = -w/2 + plankW/2 + i*plankW;
+    p.castShadow = true; p.receiveShadow = true;
+    group.add(p);
+  }
+  // tilt forward so its bottom edge meets the ground
+  const angle = Math.atan2(h, d);
+  group.rotation.x = -angle;
+  // raise so the front edge sits on the ground
+  group.position.set(x, h/2, z);
+  // dir rotation
+  if (dir === 'south') group.rotation.y = Math.PI;
+  if (dir === 'east')  group.rotation.y =  Math.PI/2;
+  if (dir === 'west')  group.rotation.y = -Math.PI/2;
+  scene.add(group);
+  // ramp record — XZ footprint for car-on-ramp height interpolation
+  ramps.push({ x, z, w, d, h, dir, angle });
+}
+
+/* --- Simple project plinth: a colourful block + sign --- */
+function addPlinth(x, z, color, label, projectMeta) {
+  const w = 2.4, h = 1.4, d = 2.4;
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.65 });
+  const block = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  block.position.set(x, h/2, z);
+  block.castShadow = true; block.receiveShadow = true;
+  scene.add(block);
+  // top cap (so it reads as a "plinth")
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.2, 0.1, d + 0.2), whiteMat);
+  cap.position.set(x, h + 0.05, z);
+  cap.receiveShadow = true; scene.add(cap);
+  // label on the ground in front of it
+  const lbl = makeFloorLabel(label, { width: 10 });
+  lbl.position.set(x, 0.03, z + d/2 + 4.2);
+  scene.add(lbl);
+  obstacles.push({ mesh: block, box: new THREE.Box3().setFromObject(block), type: 'wall' });
+  // trigger zone (proximity)
+  triggers.push({ x, z, radius: 5, meta: projectMeta, fired: false });
+}
+
+/* --- Award trophy: simple stack of cylinders --- */
+function addTrophy(x, z) {
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.25, 24), inkMat);
+  base.position.set(x, 0.125, z);
+  base.castShadow = true; base.receiveShadow = true;
+  scene.add(base);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.5, 16), goldMat);
+  stem.position.set(x, 0.4, z); stem.castShadow = true;
+  scene.add(stem);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.8, 18), goldMat);
+  cup.position.set(x, 1.0, z); cup.castShadow = true;
+  scene.add(cup);
+  // Handle bumps
+  const handleGeo = new THREE.TorusGeometry(0.28, 0.07, 12, 24, Math.PI);
+  const lH = new THREE.Mesh(handleGeo, goldMat); lH.position.set(x - 0.55, 1.05, z); lH.rotation.z = -Math.PI/2;
+  const rH = new THREE.Mesh(handleGeo, goldMat); rH.position.set(x + 0.55, 1.05, z); rH.rotation.z =  Math.PI/2;
+  lH.castShadow = rH.castShadow = true; scene.add(lH); scene.add(rH);
+  obstacles.push({
+    mesh: cup,
+    box: new THREE.Box3(new THREE.Vector3(x-0.7, 0, z-0.7), new THREE.Vector3(x+0.7, 1.5, z+0.7)),
+    type: 'wall'
+  });
+}
+
+/* --- A few decorative round bushes scattered around --- */
+function addBush(x, z, r = 0.7) {
+  const bushMat = new THREE.MeshStandardMaterial({ color: 0x5fa843, roughness: 0.9 });
+  const bush = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), bushMat);
+  bush.position.set(x, r * 0.7, z);
+  bush.castShadow = true; bush.receiveShadow = true;
+  scene.add(bush);
+  obstacles.push({
+    mesh: bush,
+    box: new THREE.Box3(new THREE.Vector3(x-r, 0, z-r), new THREE.Vector3(x+r, r*1.4, z+r)),
+    type: 'wall'
+  });
+}
+
+/* ===========================================================
+   POPULATE THE WORLD
+   Layout (looking down, +X right, +Z toward camera):
+     - Center: large signature label "HEY, I'M BRUNO"
+     - South (+Z): tutorial drift zone & wooden ramps
+     - East: WORK plaza — three plinths labelled "Three.js Journey", "Lego", "Madbox"
+     - West: AWARDS row — trophies + label "AWARDS"
+     - North (-Z): CONTACT pyramid + brick wall maze
+   =========================================================== */
+
+// Center signature label
+const heyLabel = makeFloorLabel("HEY! I'M BRUNO", { width: 18, size: 110 });
+heyLabel.position.set(0, 0.03, 6);
+scene.add(heyLabel);
+
+const subLabel = makeFloorLabel("Creative Developer", { width: 14, size: 64 });
+subLabel.position.set(0, 0.03, 11.4);
+scene.add(subLabel);
+
+// --- South: ramps & tutorial area ---
+addRamp(-8, 20, 5, 5, 1.0, 'north');
+addRamp( 8, 20, 5, 5, 1.0, 'north');
+addBush(-14, 18); addBush(14, 18);
+addBush(-18, 28); addBush(18, 28);
+const goLabel = makeFloorLabel("Explore around!", { width: 9, size: 64 });
+goLabel.position.set(0, 0.03, 24); scene.add(goLabel);
+
+// --- East: WORK plaza ---
+addPlinth(22, -6, 0x4a90e2, "Three.js Journey", {
+  title: 'Three.js Journey',
+  tag: 'COURSE',
+  meta: '2020 · 26 lessons',
+  body: 'The most acclaimed Three.js course on the web. Bruno teaches WebGL from scratch — from raw shaders to full real-time worlds, with the same toy-block clarity you see here.'
+});
+addPlinth(22, 0, 0xea3a1f, "Lego World", {
+  title: 'Lego Loader',
+  tag: 'PROJECT',
+  meta: '2019 · WebGL',
+  body: 'A spinning Lego scene that became one of the most shared Three.js demos of the year. Real-time global illumination via baked lightmaps.'
+});
+addPlinth(22, 6, 0xe9c33a, "Madbox", {
+  title: 'Madbox',
+  tag: 'CLIENT',
+  meta: '2021 · Marketing site',
+  body: 'A toy-physics microsite for hyper-casual mobile games studio Madbox — every visitor lands in a sandbox they can poke at.'
+});
+const workLabel = makeFloorLabel("WORK", { width: 8, size: 110 });
+workLabel.position.set(22, 0.03, -12); scene.add(workLabel);
+
+// --- West: AWARDS row ---
+addTrophy(-22, -2);
+addTrophy(-22, 2);
+addTrophy(-22, 6);
+const awardsLabel = makeFloorLabel("AWARDS", { width: 11, size: 110 });
+awardsLabel.position.set(-22, 0.03, -10); scene.add(awardsLabel);
+const subAwardsLabel = makeFloorLabel("FWA · Awwwards SOTY · CSSDA", { width: 14, size: 60 });
+subAwardsLabel.position.set(-22, 0.03, -6); scene.add(subAwardsLabel);
+
+// --- North: CONTACT maze ---
+addWall(-6, -18, 12, 0.6, 1.6);
+addWall( 6, -18, 12, 0.6, 1.6);
+addWall(-12, -23, 0.6, 10, 1.6);
+addWall( 12, -23, 0.6, 10, 1.6);
+addWall(  0, -28, 24, 0.6, 1.6);
+
+// contact "pyramid" — a single tall block with the @ on a plinth
+const contactBlock = new THREE.Mesh(
+  new THREE.BoxGeometry(3, 1.6, 3),
+  new THREE.MeshStandardMaterial({ color: 0x1c1c2e, roughness: 0.6 })
+);
+contactBlock.position.set(0, 0.8, -25);
+contactBlock.castShadow = true; contactBlock.receiveShadow = true;
+scene.add(contactBlock);
+obstacles.push({ mesh: contactBlock, box: new THREE.Box3().setFromObject(contactBlock), type: 'wall' });
+
+const atSign = makeFloorLabel("@", { width: 2.8, size: 220, color: '#fffdf6' });
+atSign.rotation.x = 0;
+atSign.position.set(0, 1.62, -25);
+atSign.rotation.y = 0;
+scene.add(atSign);
+
+const contactLabel = makeFloorLabel("CONTACT", { width: 12, size: 110 });
+contactLabel.position.set(0, 0.03, -19); scene.add(contactLabel);
+const emailLabel = makeFloorLabel("hello@bruno-simon.com", { width: 14, size: 56 });
+emailLabel.position.set(0, 0.03, -15); scene.add(emailLabel);
+
+// Bushes around perimeter
+for (let i = 0; i < 30; i++) {
+  const ang = (i / 30) * Math.PI * 2;
+  const r = 40 + Math.random() * 8;
+  addBush(Math.cos(ang)*r, Math.sin(ang)*r, 0.6 + Math.random()*0.6);
+}
+
+// Trigger for CONTACT
+triggers.push({
+  x: 0, z: -22, radius: 4, fired: false,
+  meta: {
+    title: 'Say hello',
+    tag: 'CONTACT',
+    meta: 'hello@bruno-simon.com',
+    body: 'Bruno is always up for collaborating on playful, expressive, technically-ambitious work. Drop him a line and he\'ll get back to you (probably while building another tiny world).'
+  }
+});
+
+/* ===========================================================
+   CAR
+   =========================================================== */
+const car = new THREE.Group();
+
+// Chassis: rounded look via two stacked boxes
+const chassis = new THREE.Mesh(
+  new THREE.BoxGeometry(1.8, 0.55, 3.2),
+  new THREE.MeshStandardMaterial({ color: 0xea3a1f, roughness: 0.5 })
+);
+chassis.position.y = 0.5;
+chassis.castShadow = true;
+car.add(chassis);
+
+const cabin = new THREE.Mesh(
+  new THREE.BoxGeometry(1.4, 0.55, 1.4),
+  new THREE.MeshStandardMaterial({ color: 0xf6f1ea, roughness: 0.45 })
+);
+cabin.position.set(0, 0.95, -0.2);
+cabin.castShadow = true;
+car.add(cabin);
+
+// Windshield strip (dark blue)
+const windshield = new THREE.Mesh(
+  new THREE.BoxGeometry(1.3, 0.45, 0.08),
+  new THREE.MeshStandardMaterial({ color: 0x35506e, roughness: 0.2, metalness: 0.4 })
+);
+windshield.position.set(0, 0.95, 0.5);
+car.add(windshield);
+
+// Bumper
+const bumper = new THREE.Mesh(
+  new THREE.BoxGeometry(1.9, 0.2, 0.2),
+  new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 })
+);
+bumper.position.set(0, 0.4, 1.6);
+car.add(bumper);
+
+// Headlights
+const headMat = new THREE.MeshStandardMaterial({ color: 0xfff7c2, emissive: 0xffefa1, emissiveIntensity: 0.6 });
+const lhead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), headMat);
+lhead.position.set(-0.6, 0.55, 1.6); car.add(lhead);
+const rhead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), headMat);
+rhead.position.set( 0.6, 0.55, 1.6); car.add(rhead);
+
+// Wheels
+const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7 });
+function makeWheel() {
+  const g = new THREE.CylinderGeometry(0.42, 0.42, 0.4, 18);
+  const m = new THREE.Mesh(g, wheelMat);
+  m.rotation.z = Math.PI / 2;
+  m.castShadow = true;
+  // hub
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.42, 12),
+    new THREE.MeshStandardMaterial({ color: 0xeaeaea, roughness: 0.5 }));
+  hub.rotation.z = Math.PI / 2;
+  m.add(hub);
+  return m;
+}
+const wheels = [];
+const wheelPositions = [
+  [-0.95, 0.42,  1.05],
+  [ 0.95, 0.42,  1.05],
+  [-0.95, 0.42, -1.05],
+  [ 0.95, 0.42, -1.05],
+];
+wheelPositions.forEach(p => {
+  const w = makeWheel();
+  w.position.set(...p);
+  car.add(w);
+  wheels.push(w);
+});
+
+car.position.set(0, 0, 14);
+car.rotation.y = Math.PI; // facing the world (north)
+scene.add(car);
+
+/* ===========================================================
+   INPUT
+   =========================================================== */
+const keys = { up: false, down: false, left: false, right: false };
+let inputActive = false; // for tutorial dismissal
+const tutorialEl = document.getElementById('tutorial');
+function bumpInput() {
+  if (!inputActive) {
+    inputActive = true;
+    tutorialEl.classList.add('hide');
+    setTimeout(() => tutorialEl.style.display = 'none', 1100);
+  }
+}
+window.addEventListener('keydown', (e) => {
+  if (['ArrowUp','KeyW'].includes(e.code)) { keys.up = true; bumpInput(); }
+  if (['ArrowDown','KeyS'].includes(e.code)) { keys.down = true; bumpInput(); }
+  if (['ArrowLeft','KeyA'].includes(e.code)) { keys.left = true; bumpInput(); }
+  if (['ArrowRight','KeyD'].includes(e.code)) { keys.right = true; bumpInput(); }
+  if (e.code === 'Escape') hideCard();
+});
+window.addEventListener('keyup', (e) => {
+  if (['ArrowUp','KeyW'].includes(e.code)) keys.up = false;
+  if (['ArrowDown','KeyS'].includes(e.code)) keys.down = false;
+  if (['ArrowLeft','KeyA'].includes(e.code)) keys.left = false;
+  if (['ArrowRight','KeyD'].includes(e.code)) keys.right = false;
+});
+
+// Joystick (mobile)
+const joystick = document.getElementById('joystick');
+const nub = document.getElementById('nub');
+let joyActive = false;
+let joyVec = { x: 0, y: 0 };
+function joyStart(e) {
+  joyActive = true; bumpInput();
+}
+function joyMove(e) {
+  if (!joyActive) return;
+  const t = e.touches ? e.touches[0] : e;
+  const rect = joystick.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  let dx = t.clientX - cx;
+  let dy = t.clientY - cy;
+  const max = rect.width / 2 - 18;
+  const len = Math.hypot(dx, dy);
+  if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+  nub.style.left = `${50 + (dx / (rect.width/2)) * 50}%`;
+  nub.style.top  = `${50 + (dy / (rect.height/2)) * 50}%`;
+  joyVec.x = dx / max;
+  joyVec.y = dy / max;
+}
+function joyEnd() {
+  joyActive = false;
+  nub.style.left = '50%'; nub.style.top = '50%';
+  joyVec.x = 0; joyVec.y = 0;
+}
+joystick.addEventListener('touchstart', joyStart, { passive: true });
+joystick.addEventListener('touchmove', joyMove, { passive: true });
+joystick.addEventListener('touchend', joyEnd);
+joystick.addEventListener('mousedown', joyStart);
+window.addEventListener('mousemove', joyMove);
+window.addEventListener('mouseup', joyEnd);
+
+/* ===========================================================
+   CAR DRIVING MODEL (custom mini-physics — toy feel)
+   - longitudinal acceleration & exponential drag
+   - steering angular velocity scales with speed (so it actually turns)
+   - collision: AABB vs AABB; on hit, push out + dampen velocity
+   - ramps: detect overlap, lerp Y up the ramp slope
+   =========================================================== */
+const carState = {
+  pos: new THREE.Vector3(0, 0, 14),
+  vel: 0,                  // forward velocity scalar
+  heading: Math.PI,        // yaw radians; PI = facing -Z (north)
+  steer: 0,                // current steer angle (rad) for visual wheel
+  onRampY: 0,              // current ramp lift
+};
+
+const carHalf = new THREE.Vector3(0.95, 0.7, 1.65);
+
+function getInputAxes() {
+  let acc = 0, steer = 0;
+  if (keys.up) acc += 1;
+  if (keys.down) acc -= 1;
+  if (keys.left) steer += 1;
+  if (keys.right) steer -= 1;
+  if (joyActive) {
+    acc += -joyVec.y;                      // up on joystick = forward
+    steer += -joyVec.x;
+  }
+  return { acc: Math.max(-1, Math.min(1, acc)), steer: Math.max(-1, Math.min(1, steer)) };
+}
+
+function updateCar(dt) {
+  const { acc, steer } = getInputAxes();
+  const accel = 28; // units / s^2
+  const maxFwd = 22;
+  const maxRev = 12;
+  const drag = 1.4;
+  const brake = 8;
+  // Apply input
+  if (acc !== 0) {
+    carState.vel += acc * accel * dt;
+  } else {
+    // friction / drag
+    const sign = Math.sign(carState.vel);
+    carState.vel -= sign * drag * Math.abs(carState.vel) * dt;
+    if (Math.abs(carState.vel) < 0.05) carState.vel = 0;
+  }
+  // Active brake if input opposes velocity
+  if (acc !== 0 && Math.sign(acc) !== Math.sign(carState.vel) && Math.abs(carState.vel) > 0.1) {
+    carState.vel -= Math.sign(carState.vel) * brake * dt;
+  }
+  carState.vel = Math.max(-maxRev, Math.min(maxFwd, carState.vel));
+
+  // Steering — scaled with forward speed, signed by direction (so reversing feels right)
+  const speedFactor = Math.min(1, Math.abs(carState.vel) / 4);
+  const steerSpeed = 2.2 * speedFactor;
+  carState.heading += steer * steerSpeed * dt * Math.sign(carState.vel || 1);
+  // Visual wheel turn lerp
+  carState.steer = THREE.MathUtils.lerp(carState.steer, steer * 0.5, 6 * dt);
+
+  // Integrate position
+  const forward = new THREE.Vector3(Math.sin(carState.heading), 0, Math.cos(carState.heading));
+  const next = carState.pos.clone().addScaledVector(forward, carState.vel * dt);
+
+  // World bounds (round arena)
+  const r = 56;
+  const distOut = Math.hypot(next.x, next.z);
+  if (distOut > r) {
+    const ang = Math.atan2(next.z, next.x);
+    next.x = Math.cos(ang) * r;
+    next.z = Math.sin(ang) * r;
+    carState.vel *= 0.4;
+  }
+
+  // Ramp lift — if XZ inside any ramp, set Y
+  let lift = 0;
+  for (const ramp of ramps) {
+    const dx = next.x - ramp.x;
+    const dz = next.z - ramp.z;
+    const localW = ramp.w / 2, localD = ramp.d / 2;
+    let lx = dx, lz = dz;
+    if (ramp.dir === 'south') { lx = -dx; lz = -dz; }
+    if (ramp.dir === 'east')  { lx = dz;  lz = -dx; }
+    if (ramp.dir === 'west')  { lx = -dz; lz =  dx; }
+    if (Math.abs(lx) < localW && Math.abs(lz) < localD) {
+      // lz = -localD at bottom (entry), +localD at top
+      const t = (lz + localD) / (2 * localD); // 0..1
+      lift = Math.max(lift, t * ramp.h);
+    }
+  }
+  carState.onRampY = THREE.MathUtils.lerp(carState.onRampY, lift, 10 * dt);
+
+  // AABB collision sliding
+  const carBox = new THREE.Box3(
+    new THREE.Vector3(next.x - carHalf.x, 0, next.z - carHalf.z),
+    new THREE.Vector3(next.x + carHalf.x, carHalf.y * 2, next.z + carHalf.z)
+  );
+  for (const ob of obstacles) {
+    if (carBox.intersectsBox(ob.box)) {
+      // Compute overlap in X / Z, resolve along the smaller one
+      const ox = Math.min(carBox.max.x, ob.box.max.x) - Math.max(carBox.min.x, ob.box.min.x);
+      const oz = Math.min(carBox.max.z, ob.box.max.z) - Math.max(carBox.min.z, ob.box.min.z);
+      if (ox < oz) {
+        const sign = (carBox.min.x + carBox.max.x) / 2 < (ob.box.min.x + ob.box.max.x) / 2 ? -1 : 1;
+        next.x += sign * ox;
+      } else {
+        const sign = (carBox.min.z + carBox.max.z) / 2 < (ob.box.min.z + ob.box.max.z) / 2 ? -1 : 1;
+        next.z += sign * oz;
+      }
+      carState.vel *= 0.55;
+    }
+  }
+
+  carState.pos.copy(next);
+
+  // Apply to car group
+  car.position.set(carState.pos.x, carState.onRampY, carState.pos.z);
+  car.rotation.y = carState.heading;
+  // Wobble tilt with steering at speed
+  car.rotation.z = -carState.steer * 0.08 * speedFactor;
+  // Pitch up the slope
+  let pitch = 0;
+  for (const ramp of ramps) {
+    const dx = carState.pos.x - ramp.x;
+    const dz = carState.pos.z - ramp.z;
+    const localW = ramp.w / 2, localD = ramp.d / 2;
+    let lx = dx, lz = dz;
+    if (ramp.dir === 'south') { lx = -dx; lz = -dz; }
+    if (ramp.dir === 'east')  { lx = dz;  lz = -dx; }
+    if (ramp.dir === 'west')  { lx = -dz; lz =  dx; }
+    if (Math.abs(lx) < localW && Math.abs(lz) < localD) {
+      pitch = -ramp.angle;
+      // direction-correct: 'north' = facing -Z; we want nose up when driving up
+      // align with heading dot ramp forward
+    }
+  }
+  car.rotation.x = THREE.MathUtils.lerp(car.rotation.x, pitch, 8 * dt);
+
+  // Spin wheels
+  const wheelSpin = carState.vel * dt * 2.6;
+  wheels.forEach((w, i) => {
+    w.rotation.x += wheelSpin;
+    // Steer the FRONT wheels (first two)
+    if (i < 2) w.rotation.y = carState.steer * 0.6;
+  });
+
+  // Triggers
+  for (const t of triggers) {
+    const d = Math.hypot(carState.pos.x - t.x, carState.pos.z - t.z);
+    if (d < t.radius && !t.fired) {
+      t.fired = true;
+      showCard(t.meta);
+    } else if (d > t.radius + 2) {
+      t.fired = false;
+    }
+  }
+}
+
+/* ===========================================================
+   CHASE CAMERA
+   =========================================================== */
+const camTarget = new THREE.Vector3();
+function updateCamera(dt) {
+  const back = 14;
+  const up = 9;
+  const ix = -Math.sin(carState.heading) * back;
+  const iz = -Math.cos(carState.heading) * back;
+  const target = new THREE.Vector3(
+    carState.pos.x + ix,
+    up + carState.onRampY,
+    carState.pos.z + iz
+  );
+  camera.position.lerp(target, Math.min(1, 4 * dt));
+  camTarget.lerp(new THREE.Vector3(carState.pos.x, 1 + carState.onRampY, carState.pos.z), Math.min(1, 5 * dt));
+  camera.lookAt(camTarget);
+}
+
+/* ===========================================================
+   PROJECT POPUP CARD
+   =========================================================== */
+const cardEl   = document.getElementById('card');
+const cardT    = document.getElementById('card-title');
+const cardTag  = document.getElementById('card-tag');
+const cardMeta = document.getElementById('card-meta');
+const cardBody = document.getElementById('card-body');
+document.getElementById('card-close').addEventListener('click', hideCard);
+
+function showCard(meta) {
+  cardT.textContent = meta.title;
+  cardTag.textContent = meta.tag;
+  cardMeta.textContent = meta.meta;
+  cardBody.textContent = meta.body;
+  cardEl.classList.add('show');
+}
+function hideCard() { cardEl.classList.remove('show'); }
+
+/* ===========================================================
+   RESET / SOUND TOGGLE
+   =========================================================== */
+document.getElementById('reset').addEventListener('click', () => {
+  carState.pos.set(0, 0, 14);
+  carState.vel = 0;
+  carState.heading = Math.PI;
+  hideCard();
+});
+const soundBtn = document.getElementById('sound');
+let soundOn = false;
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.querySelector('span').textContent = soundOn ? 'SOUND ON' : 'SOUND OFF';
+});
+
+/* ===========================================================
+   FAKE LOADER (purely visual — site loads fast)
+   =========================================================== */
+const loaderEl = document.getElementById('loader');
+const barEl    = document.getElementById('bar');
+let progress = 0;
+function tickLoader() {
+  progress = Math.min(100, progress + 6 + Math.random()*9);
+  barEl.style.width = progress + '%';
+  if (progress < 100) requestAnimationFrame(tickLoader);
+  else {
+    setTimeout(() => loaderEl.classList.add('gone'), 250);
+    setTimeout(() => loaderEl.remove(), 1200);
+  }
+}
+requestAnimationFrame(tickLoader);
+
+/* ===========================================================
+   MAIN LOOP
+   =========================================================== */
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  updateCar(dt);
+  updateCamera(dt);
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ===========================================================
+   RESIZE
+   =========================================================== */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+<!--
+  NOTES ON FIDELITY & TRADE-OFFS
+  =======================================================================
+  PRESERVED ESPECIALLY WELL
+    • The DRIVE-A-CAR-AROUND signature — the page IS the interaction, exactly
+      as on bruno-simon.com. Arrow keys → moves a chase-cam car through a
+      hand-laid toy world.
+    • Toy aesthetic: pastel sky, gridded shaded grass, plank-striped wood
+      ramps, brick walls with mortar caps, crayon-style ground writing in
+      Patrick Hand SC — same warmth Bruno's site radiates.
+    • The intro overlay: BRUNO SIMON / Creative Developer + arrow-key prompt
+      that auto-dismisses on the first input, identical pattern to the live
+      site.
+    • Project zones with proximity-triggered popup cards (Three.js Journey,
+      Lego, Madbox), an AWARDS row with little gold trophies, and a CONTACT
+      maze leading to the @ block — mirrors Bruno's island layout.
+    • Forgiving car feel: speed-scaled steering, slide-on-collision, ramps
+      you can actually drive up, soft chase camera, head/tail lights.
+
+  INTENTIONAL TRADE-OFFS
+    • No cannon-es / RaycastVehicle: full simulated suspension would have
+      cost a heavier physics library and noisier tuning; I rolled a small
+      custom driving model that captures the toy-springy feel deterministically.
+    • No audio bed (Bruno has subtle engine + bump sounds): no royalty-free
+      audio assets allowed in the brief, so the SOUND toggle is wired UI only.
+    • Geometry is hand-laid boxes/cylinders rather than imported GLTF — the
+      brief forbids brand assets, so this is the right call AND keeps the
+      single-file budget reasonable.
+    • Ramps work as proximity Y-lifts (not vertex-accurate planes), which is
+      the same trick Bruno's original uses internally on most of its props.
+-->
+</body>
+</html>

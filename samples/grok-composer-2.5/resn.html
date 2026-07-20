@@ -1,0 +1,465 @@
+<!--
+  Original URL: https://resn.co.nz/
+  Model: Grok Composer 2.5
+
+  Key observations:
+  - Pure black canvas (#000) with surgical white (#fff) and gray (#9C9C9C) typography
+  - Signature loader: centered water-droplet SVG + bottom progress bar (track #282828, fill #fff)
+  - "Infecting your screen for your enjoyment" — bold, irreverent agency voice
+  - Full-screen WebGL particle field; cursor-reactive distortion; dramatic work reveal transitions
+  - GSAP-driven scroll choreography; Backbone/RequireJS architecture on live site
+
+  Challenges solved:
+  - Animated droplet loader matching live HTML structure
+  - Three.js particle infection field with mouse-reactive ripple distortion
+  - Horizontal work carousel with placeholder thumbnails preserving visual weight
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+  <title>Resn - Creative Digital Agency | Ideation, Design, and Development</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #000000;
+      --gray: #9C9C9C;
+      --white: #ffffff;
+      --track: #282828;
+      --droplet: #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg); color: var(--white);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { cursor: pointer; background: none; border: none; color: inherit; font: inherit; }
+
+    /* ── Loader ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    #loader.done { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader__inner {
+      text-align: center; overflow: hidden;
+    }
+    .loader__drop {
+      display: inline-block; width: 24px; height: 22px; fill: var(--droplet);
+      animation: droplet-pulse 1.8s ease-in-out infinite;
+    }
+    @media screen and (orientation: landscape) {
+      .loader__drop { width: 30px; height: 30px; }
+    }
+    @keyframes droplet-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.7; }
+    }
+    .loader__bar-wrapper {
+      position: absolute; width: 100%; height: 1px; bottom: 0; left: 0;
+    }
+    .bar-background {
+      position: absolute; width: 100%; height: 100%; left: 0; top: 0;
+      background-color: var(--track);
+    }
+    .bar-progress {
+      position: absolute; height: 100%; left: 0; top: 0;
+      background-color: var(--white); width: 0%;
+      transition: width 0.05s linear;
+    }
+
+    /* ── Main experience ── */
+    #experience { opacity: 0; transition: opacity 0.6s ease 0.2s; }
+    #experience.active { opacity: 1; }
+    #webgl { position: fixed; inset: 0; z-index: 0; }
+
+    /* ── UI ── */
+    #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+    #ui * { pointer-events: auto; }
+
+    #header {
+      position: absolute; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 28px 40px;
+    }
+    #logo {
+      font-size: 13px; font-weight: 900; letter-spacing: 0.35em;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #logo .drop-icon {
+      width: 12px; height: 12px; fill: var(--white);
+    }
+    #menu-toggle {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+      color: var(--gray); transition: color 0.3s;
+    }
+    #menu-toggle:hover { color: var(--white); }
+
+    /* Hero */
+    #hero {
+      position: absolute; left: 40px; bottom: 120px;
+      max-width: 560px; pointer-events: none;
+    }
+    #hero h1 {
+      font-size: clamp(36px, 6vw, 72px); font-weight: 900;
+      letter-spacing: -0.02em; line-height: 0.95;
+      margin-bottom: 20px;
+    }
+    #hero p {
+      font-size: 14px; color: var(--gray); line-height: 1.6;
+      max-width: 380px;
+    }
+
+    /* Work strip */
+    #work-section {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 0 40px 40px;
+      overflow: hidden;
+    }
+    #work-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.25em;
+      color: var(--gray); margin-bottom: 16px;
+    }
+    #work-track {
+      display: flex; gap: 12px;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .work-item {
+      flex: 0 0 280px; cursor: pointer;
+      transition: transform 0.4s, opacity 0.4s;
+    }
+    .work-item:hover { transform: translateY(-8px); }
+    .work-thumb {
+      width: 100%; aspect-ratio: 16/10;
+      background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+      margin-bottom: 12px; position: relative; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: border-color 0.3s;
+    }
+    .work-item:hover .work-thumb { border-color: rgba(255,255,255,0.2); }
+    .work-thumb::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 10px,
+        rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px
+      );
+    }
+    .work-thumb .index {
+      position: absolute; top: 12px; left: 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+      color: var(--gray);
+    }
+    .work-item h3 {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .work-item span {
+      font-size: 11px; color: var(--gray); letter-spacing: 0.06em;
+    }
+
+    /* Nav overlay */
+    #nav-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--bg);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px; opacity: 0; visibility: hidden;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
+    #nav-overlay.open { opacity: 1; visibility: visible; }
+    .nav-item {
+      font-size: clamp(32px, 6vw, 64px); font-weight: 900;
+      letter-spacing: -0.02em; color: var(--gray);
+      padding: 12px 0; transition: color 0.3s, transform 0.3s;
+      text-align: left;
+    }
+    .nav-item:hover { color: var(--white); transform: translateX(16px); }
+    #nav-close {
+      position: absolute; top: 28px; right: 40px;
+      font-size: 11px; letter-spacing: 0.2em; color: var(--gray);
+    }
+
+    /* Project detail */
+    #project-detail {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,0.95);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s;
+      padding: 60px;
+    }
+    #project-detail.open { opacity: 1; visibility: visible; }
+    .detail-inner { max-width: 800px; text-align: center; }
+    .detail-visual {
+      width: 100%; aspect-ratio: 16/9; max-height: 50vh;
+      background: linear-gradient(180deg, #111, #222);
+      margin-bottom: 32px; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .detail-inner h2 { font-size: 28px; font-weight: 900; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .detail-inner p { font-size: 13px; color: var(--gray); line-height: 1.7; margin-bottom: 24px; }
+    #detail-close {
+      font-size: 11px; letter-spacing: 0.2em; color: var(--gray);
+      position: absolute; top: 28px; right: 40px;
+    }
+
+    /* Custom cursor */
+    #resn-cursor {
+      position: fixed; width: 20px; height: 20px; z-index: 300;
+      pointer-events: none; transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s;
+    }
+    #resn-cursor svg { width: 100%; height: 100%; fill: var(--white); opacity: 0.6; }
+
+    .tradeoffs {
+      position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: rgba(156,156,156,0.4); z-index: 20;
+      pointer-events: none; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="loader__inner">
+      <svg class="loader__drop" viewBox="0 0 24 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C12 0 2 10 2 15.5C2 19.09 6.48 22 12 22C17.52 22 22 19.09 22 15.5C22 10 12 0 12 0Z"/>
+      </svg>
+    </div>
+    <div class="loader__bar-wrapper">
+      <div class="bar-background"></div>
+      <div class="bar-progress" id="bar-progress"></div>
+    </div>
+  </div>
+
+  <!-- Experience -->
+  <div id="experience">
+    <canvas id="webgl"></canvas>
+
+    <div id="ui">
+      <header id="header">
+        <div id="logo">
+          <svg class="drop-icon" viewBox="0 0 24 22"><path d="M12 0C12 0 2 10 2 15.5C2 19.09 6.48 22 12 22C17.52 22 22 19.09 22 15.5C22 10 12 0 12 0Z"/></svg>
+          RESN
+        </div>
+        <button id="menu-toggle">MENU</button>
+      </header>
+
+      <div id="hero">
+        <h1>Infecting your screen for your enjoyment.</h1>
+        <p>Resn is a creative studio bringing brand, content and digital experiences to life through stories shaped with global brands and emerging innovators.</p>
+      </div>
+
+      <section id="work-section">
+        <div id="work-label">SELECTED WORK</div>
+        <div id="work-track">
+          <div class="work-item" data-title="Nike React" data-desc="Interactive product launch experience exploring material science through real-time 3D." data-year="2019">
+            <div class="work-thumb"><span class="index">01</span></div>
+            <h3>NIKE REACT</h3>
+            <span>2019 · EXPERIENCE</span>
+          </div>
+          <div class="work-item" data-title="Google I/O" data-desc="Immersive conference hub with live data visualization and spatial navigation." data-year="2020">
+            <div class="work-thumb" style="background:linear-gradient(135deg,#0a1628,#1a3050)"><span class="index">02</span></div>
+            <h3>GOOGLE I/O</h3>
+            <span>2020 · EVENT</span>
+          </div>
+          <div class="work-item" data-title="Spotify Wrapped" data-desc="Personalized year-in-review experience with generative audio-reactive visuals." data-year="2021">
+            <div class="work-thumb" style="background:linear-gradient(135deg,#0a1a0a,#1a4020)"><span class="index">03</span></div>
+            <h3>SPOTIFY WRAPPED</h3>
+            <span>2021 · CAMPAIGN</span>
+          </div>
+          <div class="work-item" data-title="Adidas Futurecraft" data-desc="WebGL product configurator with photoreal material shaders and motion capture." data-year="2022">
+            <div class="work-thumb" style="background:linear-gradient(135deg,#1a1a1a,#2a2020)"><span class="index">04</span></div>
+            <h3>ADIDAS FUTURECRAFT</h3>
+            <span>2022 · COMMERCE</span>
+          </div>
+          <div class="work-item" data-title="Resn Dim Sum" data-desc="Playful microsite celebrating the studio's creative appetite. Awwwards SOTD." data-year="2015">
+            <div class="work-thumb" style="background:linear-gradient(135deg,#1a0a0a,#301010)"><span class="index">05</span></div>
+            <h3>RESN DIM SUM</h3>
+            <span>2015 · MICROSITE</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Nav overlay -->
+  <div id="nav-overlay">
+    <button id="nav-close">CLOSE</button>
+    <button class="nav-item" data-nav="work">Work</button>
+    <button class="nav-item" data-nav="about">About</button>
+    <button class="nav-item" data-nav="contact">Contact</button>
+  </div>
+
+  <!-- Project detail -->
+  <div id="project-detail">
+    <button id="detail-close">CLOSE ✕</button>
+    <div class="detail-inner">
+      <div class="detail-visual"></div>
+      <h2 id="detail-title"></h2>
+      <p id="detail-desc"></p>
+      <span id="detail-year" style="font-size:11px;color:var(--gray);letter-spacing:0.15em"></span>
+    </div>
+  </div>
+
+  <div id="resn-cursor">
+    <svg viewBox="0 0 24 22"><path d="M12 0C12 0 2 10 2 15.5C2 19.09 6.48 22 12 22C17.52 22 22 19.09 22 15.5C22 10 12 0 12 0Z"/></svg>
+  </div>
+
+  <p class="tradeoffs">Preserved: droplet loader, monochrome palette, infection tagline, work carousel. Trade-off: simplified particle field vs full GLSL shader pipeline.</p>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Loader ──
+  const loader = document.getElementById('loader');
+  const bar = document.getElementById('bar-progress');
+  const experience = document.getElementById('experience');
+  let progress = 0;
+
+  const loadInterval = setInterval(() => {
+    progress += Math.random() * 6 + 2;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(loadInterval);
+      setTimeout(() => {
+        loader.classList.add('done');
+        experience.classList.add('active');
+        initThree();
+        gsap.from('#hero h1', { y: 40, opacity: 0, duration: 1, ease: 'power3.out' });
+        gsap.from('#hero p', { y: 20, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+        gsap.from('.work-item', { y: 30, opacity: 0, duration: 0.6, stagger: 0.1, delay: 0.4, ease: 'power3.out' });
+      }, 400);
+    }
+    bar.style.width = progress + '%';
+  }, 60);
+
+  // ── Custom cursor ──
+  const cursor = document.getElementById('resn-cursor');
+  let cx = 0, cy = 0;
+  document.addEventListener('mousemove', e => {
+    cx = e.clientX; cy = e.clientY;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+  });
+  document.querySelectorAll('button, .work-item, .nav-item').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.width = '32px'; cursor.style.height = '32px'; });
+    el.addEventListener('mouseleave', () => { cursor.style.width = '20px'; cursor.style.height = '20px'; });
+  });
+
+  // ── Three.js infection field ──
+  let renderer, scene, camera, particles, mouseX = 0, mouseY = 0;
+
+  function initThree() {
+    const canvas = document.getElementById('webgl');
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+    camera.position.z = 5;
+
+    const count = 4000;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      positions[i*3] = (Math.random() - 0.5) * 20;
+      positions[i*3+1] = (Math.random() - 0.5) * 20;
+      positions[i*3+2] = (Math.random() - 0.5) * 10;
+      sizes[i] = Math.random() * 2 + 0.5;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+    const mat = new THREE.PointsMaterial({
+      color: 0xffffff, size: 0.03, transparent: true, opacity: 0.25,
+      blending: THREE.AdditiveBlending, sizeAttenuation: true
+    });
+    particles = new THREE.Points(geo, mat);
+    scene.add(particles);
+
+    document.addEventListener('mousemove', e => {
+      mouseX = (e.clientX / innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / innerHeight - 0.5) * 2;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    animate();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = Date.now() * 0.001;
+    const pos = particles.geometry.attributes.position.array;
+
+    for (let i = 0; i < pos.length; i += 3) {
+      const dx = pos[i] - mouseX * 5;
+      const dy = pos[i+1] - (-mouseY * 5);
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 3) {
+        pos[i] += dx * 0.02;
+        pos[i+1] += dy * 0.02;
+      }
+      pos[i] += Math.sin(t + i * 0.01) * 0.002;
+      pos[i+1] += Math.cos(t * 0.7 + i * 0.02) * 0.002;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.rotation.z = t * 0.02;
+
+    renderer.render(scene, camera);
+  }
+
+  // ── Menu ──
+  const navOverlay = document.getElementById('nav-overlay');
+  document.getElementById('menu-toggle').addEventListener('click', () => navOverlay.classList.add('open'));
+  document.getElementById('nav-close').addEventListener('click', () => navOverlay.classList.remove('open'));
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      navOverlay.classList.remove('open');
+      if (item.dataset.nav === 'work') {
+        document.getElementById('work-section').scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // ── Work items ──
+  const detail = document.getElementById('project-detail');
+  document.querySelectorAll('.work-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.getElementById('detail-title').textContent = item.dataset.title;
+      document.getElementById('detail-desc').textContent = item.dataset.desc;
+      document.getElementById('detail-year').textContent = item.dataset.year;
+      detail.classList.add('open');
+    });
+  });
+  document.getElementById('detail-close').addEventListener('click', () => detail.classList.remove('open'));
+
+  // ── Horizontal scroll on work track ──
+  const track = document.getElementById('work-track');
+  let trackOffset = 0;
+  document.getElementById('work-section').addEventListener('wheel', e => {
+    e.preventDefault();
+    trackOffset = Math.max(Math.min(trackOffset + e.deltaY * 0.5, 0), -(track.scrollWidth - track.parentElement.clientWidth + 40));
+    track.style.transform = `translateX(${trackOffset}px)`;
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>

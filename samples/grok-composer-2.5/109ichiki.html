@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1:09 Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /*
+    =============================================================================
+    URL: https://109ichiki.com/
+    OBSERVATIONS:
+    - Japanese illustrator portfolio with aggressive fluorescent neon aesthetic
+    - Black background, hot pink / electric green / yellow accents throughout
+    - Loading screen counts 0–100% before revealing main content
+    - Sticky nav: home / Works / Profile / Contact + Twitter / Instagram
+    - Hero: oversized "1:09" + "illustration portfolio" stacked typography
+    - Horizontal meme gallery strip with duplicated scroll illusion
+    - Event schedule section with dated list (かわいいは展, ハマクリ, デザインフェスタ)
+    - Works section: 4 numbered categories with play/pause media controls + timestamp
+    - Pickup works grid with category tags (イラスト, オリジナル, etc.)
+    - Profile section with sticker collage and bio text
+    - Heavy use of monospace labels in parentheses: (schedule), (my skills), (pickup works)
+    CHALLENGES:
+    - Recreating meme gallery infinite-scroll feel without original WebP assets
+    - Simulating video/media player UI with placeholder divs only
+    - Matching chaotic sticker scatter layout with CSS positioning
+    - Fluorescent color vibrancy on standard displays without oversaturating
+    - Japanese typographic rhythm with Noto Sans JP at varied weights/sizes
+    MODEL: Grok Composer 2.5
+    =============================================================================
+    */
+
+    :root {
+      --neon-pink: #ff2d95;
+      --neon-green: #39ff14;
+      --neon-yellow: #ffff00;
+      --neon-cyan: #00f5ff;
+      --bg-black: #0a0a0a;
+      --bg-dark: #111111;
+      --text-white: #f5f5f5;
+      --text-muted: #888888;
+      --border-neon: 2px solid var(--neon-pink);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-black);
+      color: var(--text-white);
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    ::selection {
+      background: var(--neon-pink);
+      color: var(--bg-black);
+    }
+
+    /* Loading Screen */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg-black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .loader-text {
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--neon-green);
+      text-transform: lowercase;
+    }
+
+    .loader-percent {
+      font-size: clamp(3rem, 12vw, 8rem);
+      font-weight: 900;
+      color: var(--neon-pink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .loader-bar {
+      width: min(300px, 80vw);
+      height: 4px;
+      background: #222;
+      border: 1px solid var(--neon-yellow);
+      overflow: hidden;
+    }
+
+    .loader-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-pink), var(--neon-green));
+      box-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    /* Neon placeholder */
+    .placeholder {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border: 2px solid var(--neon-pink);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .placeholder::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 45, 149, 0.05) 10px,
+        rgba(255, 45, 149, 0.05) 20px
+      );
+    }
+
+    .placeholder-green { border-color: var(--neon-green); }
+    .placeholder-yellow { border-color: var(--neon-yellow); }
+    .placeholder-cyan { border-color: var(--neon-cyan); }
+
+    /* Navigation */
+    .nav-link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: lowercase;
+      color: var(--text-white);
+      transition: color 0.2s, text-shadow 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      color: var(--neon-pink);
+      text-shadow: 0 0 8px var(--neon-pink);
+    }
+
+    .social-link {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--neon-green);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .social-link:hover {
+      color: var(--neon-yellow);
+    }
+
+    /* Section labels */
+    .section-label {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      line-height: 0.9;
+      text-transform: lowercase;
+    }
+
+    .section-label-pink { color: var(--neon-pink); }
+    .section-label-green { color: var(--neon-green); }
+    .section-label-yellow { color: var(--neon-yellow); }
+
+    .mono-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: lowercase;
+    }
+
+    /* Hero */
+    .hero-title {
+      font-size: clamp(4rem, 18vw, 14rem);
+      font-weight: 900;
+      line-height: 0.85;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
+      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+
+    /* Meme gallery marquee */
+    .marquee-track {
+      display: flex;
+      gap: 1rem;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+    }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .meme-card {
+      flex-shrink: 0;
+      width: clamp(200px, 25vw, 320px);
+      aspect-ratio: 3/4;
+    }
+
+    /* Event schedule */
+    .event-item {
+      border-left: 3px solid var(--neon-green);
+      padding-left: 1.5rem;
+      transition: border-color 0.3s;
+    }
+
+    .event-item:hover {
+      border-color: var(--neon-pink);
+    }
+
+    .event-date {
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: var(--neon-yellow);
+      letter-spacing: 0.05em;
+    }
+
+    /* Works category tabs */
+    .category-tab {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid #333;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.3s;
+      background: transparent;
+    }
+
+    .category-tab.active,
+    .category-tab:hover {
+      border-color: var(--neon-pink);
+      color: var(--neon-pink);
+      box-shadow: 0 0 12px rgba(255, 45, 149, 0.3);
+    }
+
+    /* Media controls */
+    .media-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+    }
+
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--neon-green);
+      background: transparent;
+      color: var(--neon-green);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--neon-green);
+      color: var(--bg-black);
+      box-shadow: 0 0 15px var(--neon-green);
+    }
+
+    .control-btn.active {
+      background: var(--neon-pink);
+      border-color: var(--neon-pink);
+      color: var(--bg-black);
+    }
+
+    .timestamp {
+      color: var(--neon-yellow);
+      letter-spacing: 0.15em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Pickup works */
+    .work-card {
+      border: 1px solid #222;
+      transition: border-color 0.3s, transform 0.3s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .work-card:hover {
+      border-color: var(--neon-pink);
+      transform: translateY(-4px);
+    }
+
+    .work-tag {
+      font-size: 0.6rem;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid #333;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* Profile stickers */
+    .sticker {
+      position: absolute;
+      border: 2px solid var(--neon-yellow);
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.2);
+      transition: transform 0.3s;
+    }
+
+    .sticker:hover {
+      transform: rotate(0deg) scale(1.1) !important;
+      z-index: 10;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-black);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--neon-pink);
+    }
+
+    /* Main content hidden until load */
+    #main-content {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #main-content.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Glitch accent */
+    .glitch-line {
+      height: 2px;
+      background: linear-gradient(90deg, var(--neon-pink), var(--neon-green), var(--neon-yellow), var(--neon-pink));
+      background-size: 300% 100%;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Trade-offs note */
+    .tradeoffs {
+      border-top: 1px solid #222;
+      font-size: 0.7rem;
+      color: #555;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loader">
+    <p class="loader-text">loading...</p>
+    <p class="loader-percent" id="loader-percent">0%</p>
+    <div class="loader-bar">
+      <div class="loader-bar-fill" id="loader-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main-content">
+
+    <!-- Top Bar -->
+    <header class="fixed top-0 left-0 right-0 z-50 mix-blend-difference">
+      <div class="flex items-center justify-between px-6 py-4 md:px-10">
+        <a href="#" class="text-xl md:text-2xl font-black tracking-tight" style="color: var(--neon-pink);">1:09</a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="https://x.com/osusi109/" class="social-link" target="_blank">Twitter</a>
+          <a href="https://www.instagram.com/ichiki109/" class="social-link" target="_blank">Instagram</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 right-0 z-50 h-full flex flex-col justify-center pr-6 md:pr-12 gap-4">
+      <ul class="flex flex-col gap-3 text-right">
+        <li><a href="#" class="nav-link">home</a></li>
+        <li><a href="#works" class="nav-link">Works</a></li>
+        <li><a href="#profile" class="nav-link">Profile</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <div class="flex flex-col gap-2 mt-6 md:hidden">
+        <a href="https://x.com/osusi109/" class="social-link" target="_blank">Twitter</a>
+        <a href="https://www.instagram.com/ichiki109/" class="social-link" target="_blank">Instagram</a>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex flex-col justify-center px-6 md:px-16 pt-24 pb-16 relative">
+      <div class="glitch-line mb-8 w-32"></div>
+      <h1 class="hero-title" style="color: var(--neon-pink);">
+        <span class="block hero-reveal">1:09</span>
+      </h1>
+      <p class="hero-sub mt-2" style="color: var(--neon-green);">
+        <span class="block hero-reveal">illustration</span>
+        <span class="block hero-reveal">portfolio</span>
+      </p>
+      <p class="mono-tag mt-8 hero-reveal">portfolio</p>
+      <div class="absolute bottom-10 left-6 md:left-16 flex gap-4 hero-reveal">
+        <a href="https://x.com/osusi109/" class="social-link" target="_blank">Twitter</a>
+        <a href="https://www.instagram.com/ichiki109/" class="social-link" target="_blank">Instagram</a>
+      </div>
+      <!-- Decorative placeholder -->
+      <div class="absolute right-10 top-1/3 w-32 h-32 md:w-48 md:h-48 placeholder placeholder-green rounded-full opacity-60 hero-reveal hidden md:block"></div>
+    </section>
+
+    <!-- Meme Gallery Section -->
+    <section class="py-16 overflow-hidden" id="meme-gallery">
+      <div class="px-6 md:px-16 mb-6">
+        <p class="mono-tag">meme.webp</p>
+      </div>
+      <div class="marquee-wrapper overflow-hidden">
+        <div class="marquee-track" id="marquee-track">
+          <!-- Cards duplicated for seamless loop -->
+          <div class="meme-card placeholder placeholder-pink rounded"></div>
+          <div class="meme-card placeholder placeholder-green rounded"></div>
+          <div class="meme-card placeholder placeholder-yellow rounded"></div>
+          <div class="meme-card placeholder placeholder-cyan rounded"></div>
+          <div class="meme-card placeholder placeholder-pink rounded"></div>
+          <div class="meme-card placeholder placeholder-green rounded"></div>
+          <div class="meme-card placeholder placeholder-yellow rounded"></div>
+          <div class="meme-card placeholder placeholder-cyan rounded"></div>
+          <!-- Duplicate set -->
+          <div class="meme-card placeholder placeholder-pink rounded"></div>
+          <div class="meme-card placeholder placeholder-green rounded"></div>
+          <div class="meme-card placeholder placeholder-yellow rounded"></div>
+          <div class="meme-card placeholder placeholder-cyan rounded"></div>
+          <div class="meme-card placeholder placeholder-pink rounded"></div>
+          <div class="meme-card placeholder placeholder-green rounded"></div>
+          <div class="meme-card placeholder placeholder-yellow rounded"></div>
+          <div class="meme-card placeholder placeholder-cyan rounded"></div>
+        </div>
+      </div>
+      <div class="px-6 md:px-16 mt-6">
+        <p class="mono-tag">meme.webp</p>
+      </div>
+    </section>
+
+    <!-- Event Schedule Section -->
+    <section class="py-20 px-6 md:px-16" id="events">
+      <div class="max-w-5xl">
+        <div class="flex flex-wrap items-end gap-4 mb-4">
+          <h2 class="section-label section-label-green">event</h2>
+          <span class="mono-tag mb-2">event</span>
+        </div>
+        <p class="text-sm md:text-base text-gray-400 mb-2 max-w-xl leading-relaxed">
+          イベントなどのスケジュールを更新しています。
+        </p>
+        <p class="text-sm md:text-base text-gray-400 mb-10 max-w-xl leading-relaxed">
+          より最新の情報は<a href="https://x.com/osusi109" class="social-link" target="_blank">Twitter(X)</a>を見てください。
+        </p>
+        <p class="mono-tag mb-8">(schedule)</p>
+
+        <ul class="space-y-8">
+          <li class="event-item">
+            <p class="event-date">2025.09.13 - 2025.09.15</p>
+            <h3 class="text-xl md:text-2xl font-bold mt-2" style="color: var(--neon-pink);">かわいいは⚪︎⚪︎展</h3>
+          </li>
+          <li class="event-item">
+            <p class="event-date">2025.10.04 - 2025.10.05</p>
+            <h3 class="text-xl md:text-2xl font-bold mt-2" style="color: var(--neon-green);">ハマクリ</h3>
+          </li>
+          <li class="event-item">
+            <p class="event-date">2025.11.15 - 2025.11.16</p>
+            <h3 class="text-xl md:text-2xl font-bold mt-2" style="color: var(--neon-yellow);">デザインフェスタ</h3>
+          </li>
+        </ul>
+
+        <!-- Event stickers -->
+        <div class="flex gap-4 mt-12">
+          <div class="w-20 h-20 md:w-28 md:h-28 placeholder placeholder-yellow rounded-full rotate-12"></div>
+          <div class="w-16 h-16 md:w-24 md:h-24 placeholder placeholder-pink rounded -rotate-6 mt-4"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="glitch-line mx-6 md:mx-16"></div>
+
+    <!-- Works Section -->
+    <section class="py-20 px-6 md:px-16" id="works">
+      <div class="max-w-6xl">
+        <div class="flex flex-wrap items-end gap-4 mb-4">
+          <h2 class="section-label section-label-pink">works</h2>
+          <span class="mono-tag mb-2">works</span>
+        </div>
+        <p class="text-sm md:text-base text-gray-400 mb-2 max-w-2xl leading-relaxed">
+          イラストだけでなく、MVイラストやグッズ制作など
+        </p>
+        <p class="text-sm md:text-base text-gray-400 mb-6 max-w-2xl leading-relaxed">
+          幅広いジャンルの制作を得意としています。
+        </p>
+        <p class="mono-tag mb-10">(my skills)</p>
+
+        <!-- Category tabs -->
+        <div class="mb-8">
+          <h3 class="text-sm font-bold mb-4" style="color: var(--neon-yellow);">works category</h3>
+          <div class="flex flex-wrap gap-2" id="category-tabs">
+            <button class="category-tab active" data-category="0">1: illustration</button>
+            <button class="category-tab" data-category="1">2: mv-illustration</button>
+            <button class="category-tab" data-category="2">3: event</button>
+            <button class="category-tab" data-category="3">4: goods</button>
+          </div>
+        </div>
+
+        <!-- Media Controls -->
+        <div class="media-controls mb-8">
+          <button class="control-btn active" id="btn-play" aria-label="play">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          </button>
+          <button class="control-btn" id="btn-pause" aria-label="pause">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+          </button>
+          <span class="text-gray-500 text-xs">play</span>
+          <span class="text-gray-500 text-xs">pause</span>
+          <span class="timestamp ml-4" id="timestamp">00:00:00:00</span>
+        </div>
+
+        <!-- Category Panels -->
+        <div id="category-panels">
+          <!-- Category 01: Illustration -->
+          <div class="category-panel" data-panel="0">
+            <p class="mono-tag mb-4">category_01</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+              <div class="aspect-[4/5] placeholder placeholder-pink rounded"></div>
+              <div>
+                <h4 class="text-2xl md:text-3xl font-bold mb-4" style="color: var(--neon-pink);">イラスト</h4>
+                <p class="text-gray-400 text-sm leading-relaxed mb-2">蛍光色やパキッとしたラインが好き。</p>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">人物メインのインパクトのある絵を制作。</p>
+                <a href="#" class="inline-block text-xs font-bold tracking-widest border-b border-pink-500 pb-1" style="color: var(--neon-pink);">イラスト一覧へ</a>
+                <p class="mono-tag mt-6">category1</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 02: MV Illustration -->
+          <div class="category-panel hidden" data-panel="1">
+            <p class="mono-tag mb-4">category_02</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+              <div class="aspect-video placeholder placeholder-green rounded"></div>
+              <div>
+                <h4 class="text-2xl md:text-3xl font-bold mb-4" style="color: var(--neon-green);">MVイラスト</h4>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">ボカロやCover動画の<br>MVイラストを描きます。</p>
+                <a href="#" class="inline-block text-xs font-bold tracking-widest border-b border-green-400 pb-1" style="color: var(--neon-green);">MVイラスト一覧へ</a>
+                <p class="mono-tag mt-6">category2</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 03: Event -->
+          <div class="category-panel hidden" data-panel="2">
+            <p class="mono-tag mb-4">category_03</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+              <div class="aspect-[3/2] placeholder placeholder-yellow rounded"></div>
+              <div>
+                <h4 class="text-2xl md:text-3xl font-bold mb-4" style="color: var(--neon-yellow);">イベント</h4>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">イベントや展示など、<br>東京でたくさん活動しています。</p>
+                <a href="#" class="inline-block text-xs font-bold tracking-widest border-b border-yellow-400 pb-1" style="color: var(--neon-yellow);">イベント一覧へ</a>
+                <p class="mono-tag mt-6">category3</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 04: Goods -->
+          <div class="category-panel hidden" data-panel="3">
+            <p class="mono-tag mb-4">category_04</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+              <div class="aspect-square placeholder placeholder-cyan rounded"></div>
+              <div>
+                <h4 class="text-2xl md:text-3xl font-bold mb-4" style="color: var(--neon-cyan);">グッズ</h4>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">オリジナルキャラクター「もちうさ」をはじめ、<br>いろいろなグッズを作っています。</p>
+                <a href="#" class="inline-block text-xs font-bold tracking-widest border-b border-cyan-400 pb-1" style="color: var(--neon-cyan);">グッズ一覧へ</a>
+                <p class="mono-tag mt-6">category4</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pickup Works Grid -->
+    <section class="py-20 px-6 md:px-16" id="pickup">
+      <div class="max-w-6xl">
+        <h3 class="text-lg font-bold mb-2" style="color: var(--neon-pink);">
+          <span class="mono-tag">(pickup works)</span>
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">イラスト本表紙</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イラスト</span>
+              <span class="work-tag">オリジナル</span>
+            </div>
+            <div class="aspect-[2/1] placeholder placeholder-pink rounded"></div>
+          </a>
+
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">猫の日、アベイルTシャツイラスト</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イラスト</span>
+              <span class="work-tag">オリジナル</span>
+            </div>
+            <div class="aspect-[5/4] placeholder placeholder-green rounded"></div>
+          </a>
+
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">memeイラスト</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イラスト</span>
+              <span class="work-tag">オリジナル</span>
+            </div>
+            <div class="aspect-[3/5] placeholder placeholder-yellow rounded"></div>
+          </a>
+
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">池袋emotions2022</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イラスト</span>
+              <span class="work-tag">お仕事</span>
+            </div>
+            <div class="aspect-[3/4] placeholder placeholder-cyan rounded"></div>
+          </a>
+
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">メイドの日</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イラスト</span>
+              <span class="work-tag">オリジナル</span>
+            </div>
+            <div class="aspect-[3/4] placeholder placeholder-pink rounded"></div>
+          </a>
+
+          <a href="#" class="work-card p-4">
+            <h4 class="text-sm font-bold mb-3">Y2Kぬい展</h4>
+            <div class="flex gap-2 mb-4">
+              <span class="work-tag">イベント</span>
+              <span class="work-tag">オリジナル</span>
+            </div>
+            <div class="aspect-[2/3] placeholder placeholder-green rounded"></div>
+          </a>
+        </div>
+
+        <div class="mt-10 text-center">
+          <a href="#" class="inline-block text-xs font-bold tracking-widest px-8 py-3 border-2 transition-all hover:shadow-lg" style="border-color: var(--neon-pink); color: var(--neon-pink);">すべて見る</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="glitch-line mx-6 md:mx-16"></div>
+
+    <!-- Profile Section -->
+    <section class="py-20 px-6 md:px-16 relative" id="profile">
+      <div class="max-w-6xl">
+        <div class="flex flex-wrap items-end gap-4 mb-4">
+          <h2 class="section-label section-label-yellow">profile</h2>
+          <span class="mono-tag mb-2">profile</span>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 items-start mt-8">
+          <div>
+            <p class="text-3xl font-black mb-6" style="color: var(--neon-pink);">1:09</p>
+            <p class="text-sm text-gray-400 leading-relaxed mb-3">
+              フリーのイラストレーターの1:09(いちき)です。
+            </p>
+            <p class="text-sm text-gray-400 leading-relaxed mb-3">
+              東京を中心に活動、イベント出展多数。
+            </p>
+            <p class="text-sm text-gray-400 leading-relaxed mb-3">
+              蛍光色とハッキリとした線のイラストを主に制作。
+            </p>
+            <p class="text-sm text-gray-400 leading-relaxed mb-8">
+              ぬいぐるみやアパレル、グッズデザインなど幅広く活動しています。
+            </p>
+            <a href="#" class="inline-block text-xs font-bold tracking-widest border-b border-yellow-400 pb-1" style="color: var(--neon-yellow);">もっと見る</a>
+          </div>
+
+          <!-- Profile image + sticker collage -->
+          <div class="relative min-h-[400px]">
+            <div class="aspect-[3/4] placeholder placeholder-pink rounded max-w-sm mx-auto"></div>
+
+            <!-- Stickers scattered -->
+            <div class="sticker w-16 h-16 md:w-20 md:h-20 placeholder placeholder-yellow rounded-full" style="top: -10px; left: 0; transform: rotate(-15deg);"></div>
+            <div class="sticker w-14 h-14 md:w-18 md:h-18 placeholder placeholder-green rounded" style="top: 20px; right: -10px; transform: rotate(12deg);"></div>
+            <div class="sticker w-12 h-12 md:w-16 md:h-16 placeholder placeholder-cyan rounded-full" style="bottom: 60px; left: -20px; transform: rotate(8deg);"></div>
+            <div class="sticker w-20 h-20 md:w-24 md:h-24 placeholder placeholder-pink rounded" style="bottom: -10px; right: 20px; transform: rotate(-8deg);"></div>
+            <div class="sticker w-10 h-10 placeholder placeholder-yellow rounded-full" style="top: 50%; right: -30px; transform: rotate(20deg);"></div>
+          </div>
+        </div>
+
+        <!-- Profile gallery strip -->
+        <div class="mt-16 overflow-hidden">
+          <p class="mono-tag mb-4">profile.jpg</p>
+          <div class="flex gap-3 overflow-x-auto pb-4" id="profile-strip">
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-pink rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-green rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-yellow rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-cyan rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-pink rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-green rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-yellow rounded"></div>
+            <div class="flex-shrink-0 w-32 h-40 placeholder placeholder-cyan rounded"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact / Footer -->
+    <footer class="py-16 px-6 md:px-16 border-t border-gray-900" id="contact">
+      <div class="max-w-6xl flex flex-col md:flex-row justify-between items-start gap-8">
+        <div>
+          <p class="text-4xl font-black mb-4" style="color: var(--neon-pink);">1:09</p>
+          <p class="text-xs text-gray-500">illustration portfolio</p>
+        </div>
+        <div class="flex flex-col gap-3">
+          <a href="#" class="nav-link">home</a>
+          <a href="#works" class="nav-link">Works</a>
+          <a href="#profile" class="nav-link">Profile</a>
+          <a href="#contact" class="nav-link">Contact</a>
+        </div>
+        <div class="flex flex-col gap-3">
+          <a href="https://x.com/osusi109/" class="social-link" target="_blank">Twitter</a>
+          <a href="https://www.instagram.com/ichiki109/" class="social-link" target="_blank">Instagram</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Trade-offs Note -->
+    <aside class="tradeoffs px-6 md:px-16 py-10">
+      <p class="font-bold mb-3" style="color: #666;">— Trade-offs (Grok Composer 2.5) —</p>
+      <ul class="space-y-1 list-disc list-inside">
+        <li>Original WebP illustrations, stickers, and Sanity CDN images replaced with neon-bordered gradient placeholders.</li>
+        <li>Infinite horizontal scroll on meme gallery approximated via CSS marquee animation rather than GSAP ScrollTrigger pin/scrub.</li>
+        <li>Original site's custom cursor, page transitions, and WebGL/canvas effects omitted for self-contained portability.</li>
+        <li>Video player timestamp simulated with JS interval; no actual media playback.</li>
+        <li>Category switching uses simple show/hide panels instead of original's animated video-sequence transitions.</li>
+        <li>Sticker positions are statically placed; original uses dynamic layout with actual PNG assets.</li>
+        <li>Sub-pages (/works/, /profile/, /contact/) consolidated into single-page anchors.</li>
+        <li>Fluorescent palette approximated via CSS variables; true neon glow limited by display gamut.</li>
+      </ul>
+    </aside>
+
+  </div><!-- /main-content -->
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // ── Loading Screen 0–100% ──
+    const loaderPercent = document.getElementById('loader-percent');
+    const loaderBarFill = document.getElementById('loader-bar-fill');
+    const loader = document.getElementById('loader');
+    const mainContent = document.getElementById('main-content');
+
+    let progress = 0;
+    const loadInterval = setInterval(() => {
+      progress += Math.floor(Math.random() * 8) + 3;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(loadInterval);
+        finishLoading();
+      }
+      loaderPercent.textContent = progress + '%';
+      loaderBarFill.style.width = progress + '%';
+    }, 80);
+
+    function finishLoading() {
+      gsap.to(loader, {
+        opacity: 0,
+        duration: 0.6,
+        delay: 0.3,
+        onComplete: () => {
+          loader.style.display = 'none';
+          mainContent.classList.add('visible');
+          initAnimations();
+        }
+      });
+    }
+
+    function initAnimations() {
+      // Hero reveals
+      gsap.from('.hero-reveal', {
+        y: 60,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.15,
+        ease: 'power3.out'
+      });
+
+      // Section scroll reveals
+      const sections = document.querySelectorAll('section');
+      sections.forEach(section => {
+        gsap.from(section.querySelectorAll('h2, h3, h4, .event-item, .work-card, .category-panel'), {
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          },
+          y: 40,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: 'power2.out'
+        });
+      });
+
+      // Sticker float
+      gsap.to('.sticker', {
+        y: '+=8',
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        stagger: 0.3
+      });
+    }
+
+    // ── Category Tabs ──
+    const tabs = document.querySelectorAll('.category-tab');
+    const panels = document.querySelectorAll('.category-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const idx = tab.dataset.category;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        panels.forEach(panel => {
+          if (panel.dataset.panel === idx) {
+            panel.classList.remove('hidden');
+            gsap.from(panel, { opacity: 0, x: 30, duration: 0.5, ease: 'power2.out' });
+          } else {
+            panel.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // ── Play / Pause Media Controls ──
+    const btnPlay = document.getElementById('btn-play');
+    const btnPause = document.getElementById('btn-pause');
+    const timestampEl = document.getElementById('timestamp');
+    let isPlaying = true;
+    let frameCount = 0;
+    let timerInterval;
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (!isPlaying) return;
+        frameCount++;
+        const h = String(Math.floor(frameCount / 3600) % 100).padStart(2, '0');
+        const m = String(Math.floor(frameCount / 60) % 60).padStart(2, '0');
+        const s = String(frameCount % 60).padStart(2, '0');
+        const f = String(frameCount % 24).padStart(2, '0');
+        timestampEl.textContent = `${h}:${m}:${s}:${f}`;
+      }, 1000 / 24);
+    }
+
+    btnPlay.addEventListener('click', () => {
+      isPlaying = true;
+      btnPlay.classList.add('active');
+      btnPause.classList.remove('active');
+    });
+
+    btnPause.addEventListener('click', () => {
+      isPlaying = false;
+      btnPause.classList.add('active');
+      btnPlay.classList.remove('active');
+    });
+
+    startTimer();
+
+    // ── GSAP Marquee enhancement (optional speed on scroll) ──
+    ScrollTrigger.create({
+      trigger: '#meme-gallery',
+      start: 'top bottom',
+      end: 'bottom top',
+      onUpdate: (self) => {
+        const track = document.getElementById('marquee-track');
+        if (track) {
+          track.style.animationDuration = (30 - self.progress * 10) + 's';
+        }
+      }
+    });
+
+    // ── Profile strip auto-scroll hint ──
+    const profileStrip = document.getElementById('profile-strip');
+    if (profileStrip) {
+      let scrollPos = 0;
+      setInterval(() => {
+        scrollPos += 1;
+        if (scrollPos >= profileStrip.scrollWidth - profileStrip.clientWidth) {
+          scrollPos = 0;
+        }
+        profileStrip.scrollLeft = scrollPos;
+      }, 50);
+    }
+  </script>
+</body>
+</html>
