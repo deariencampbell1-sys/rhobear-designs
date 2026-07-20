@@ -20,3 +20,8 @@ onlyBuiltDependencies:
   - esbuild
   - protobufjs
   - sharp
+
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+  node-pty: true

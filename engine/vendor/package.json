@@ -10,7 +10,7 @@
     "pnpm": ">=10.33.2"
   },
   "scripts": {
-    "build": "pnpm --filter @open-design/contracts build && pnpm --filter @open-design/registry-protocol build && pnpm --filter @open-design/daemon build",
+    "build": "pnpm -r --if-present run build",
     "daemon": "pnpm --filter @open-design/daemon run daemon"
   },
   "devDependencies": {
