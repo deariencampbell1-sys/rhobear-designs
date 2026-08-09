@@ -4,3 +4,4 @@ editor/test-results/
 editor/playwright-report/
 .DS_Store
 *.log
+.code-graph/

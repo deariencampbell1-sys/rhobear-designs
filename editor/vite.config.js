@@ -52,6 +52,20 @@ export default defineConfig({
     // Allow serving the repo-root samples/ (one level above this editor app)
     // so the templates gallery can bundle template HTML via import.meta.glob.
     fs: { allow: ['..'] },
+    // Dev-only AI proxy. LLM providers (MiniMax included) don't send CORS headers,
+    // so a browser fetch to them is blocked and "returns nothing". In dev we route
+    // the call through Vite (same-origin → no CORS): set the editor's Base URL to
+    //   /mm/v1
+    // and your Authorization key still rides through to MiniMax untouched.
+    // To use your own stood-up endpoint instead, change `target` to its origin.
+    proxy: {
+      '/mm': {
+        target: 'https://api.minimax.io',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/mm/, ''),
+      },
+    },
   },
   preview: {
     port: 4173,
