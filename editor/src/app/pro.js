@@ -96,7 +96,7 @@ function buildModal() {
     st.textContent = `
       #rb-pro-modal{border:none;background:transparent;padding:0;max-width:460px;width:calc(100% - 2rem);color:#e8eef2;font:inherit}
       #rb-pro-modal::backdrop{background:rgba(6,9,13,.66);backdrop-filter:blur(3px)}
-      .rb-pro-card{position:relative;background:linear-gradient(180deg,#131a22,#0d131a);border:1px solid rgba(255,58,42,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(255,58,42,.45)}
+      .rb-pro-card{position:relative;background:linear-gradient(180deg,#131a22,#0d131a);border:1px solid rgba(200,75,75,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(200,75,75,.45)}
       .rb-pro-card__head{display:flex;align-items:flex-start;justify-content:space-between}
       .rb-pro-card__title{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
       .rb-pro-card__title small{display:block;font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#C84B4B;margin-bottom:.2rem}

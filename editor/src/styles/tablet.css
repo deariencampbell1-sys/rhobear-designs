@@ -32,6 +32,24 @@
 #rho-launch { top: 70px !important; }
 #rho-panel { top: 122px !important; }
 
+/* At tablet widths the full control set is wider than a portrait viewport.
+   Wrap complete groups instead of letting the last file actions disappear
+   past the right edge. */
+@media (max-width: 1100px) {
+  .rb-toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--rb-toolbar-h);
+    padding-top: 6px;
+    padding-bottom: 6px;
+    row-gap: 4px;
+    align-content: flex-start;
+  }
+  .rb-toolbar__spacer { display: none; }
+  #rho-launch { top: 118px !important; }
+  #rho-panel { top: 170px !important; }
+}
+
 /* rails overlay the canvas instead of shrinking it (portrait especially) */
 @media (max-width: 1100px) {
   .rb-workspace { position: relative; }

@@ -194,7 +194,8 @@ html, body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.rb-brand__name em {
+.rb-brand__accent {
+  color: var(--rb-brand);
   font-family: var(--designs-font-brand);
   font-style: normal;
   font-weight: 400;
@@ -717,7 +718,6 @@ html, body {
 .rb-inspector__title {
   font-family: var(--designs-font-body);
 }
-.designs-panel-section__label,
 .rb-setting__label,
 .rb-field__label {
   font-family: var(--designs-font-body);
@@ -729,79 +729,6 @@ html, body {
   margin: 10px 10px 6px;
 }
 
-/* ── Chip style (pack) ──────────────────────────────────────── */
-.designs-chip {
-  padding: 4px 10px;
-  border: 1px solid var(--designs-border);
-  border-radius: 6px;
-  font-size: 0.72rem;
-  color: var(--designs-text-secondary);
-  background: transparent;
-  cursor: pointer;
-  transition: all 120ms;
-}
-.designs-chip:hover {
-  border-color: var(--designs-accent);
-  color: var(--designs-accent);
-  background: var(--designs-accent-dim);
-}
-
-/* ── AI bubble (teal floating chat) ───────────────────────────
-   The design-assistant FAB keeps its current position; this adds
-   the teal ring from the pack spec. */
-.designs-ai-bubble {
-  position: fixed; bottom: 36px; right: 20px;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(42,143,168,0.15);
-  border: 1px solid rgba(42,143,168,0.4);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 50;
-  box-shadow: 0 0 16px rgba(42,143,168,0.2);
-  transition: all 200ms var(--designs-ease);
-}
-.designs-ai-bubble:hover {
-  background: rgba(42,143,168,0.25);
-  box-shadow: 0 0 28px rgba(42,143,168,0.4);
-  transform: scale(1.08);
-}
-
-/* ── Status bar (mono) ──────────────────────────────────────── */
-.designs-statusbar {
-  grid-column: 1 / -1;
-  display: flex; align-items: center; gap: 16px;
-  padding: 0 12px;
-  background: var(--designs-panel-bg);
-  border-top: 1px solid var(--designs-border);
-}
-.designs-statusbar span {
-  font-family: var(--designs-font-mono);
-  font-size: 0.65rem;
-  color: var(--designs-text-muted);
-}
-
-/* ── Template cards (frosted glass) ─────────────────────────── */
-.designs-template-card {
-  background: var(--designs-surface);
-  border: 1px solid var(--designs-border);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: border-color 150ms;
-  backdrop-filter: blur(12px);
-}
-.designs-template-card:hover {
-  border-color: var(--designs-accent);
-}
-.designs-template-card__name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--designs-text-primary);
-}
-.designs-template-card__desc {
-  font-size: 0.7rem;
-  color: var(--designs-text-muted);
-  line-height: 1.4;
-}
 
 /* Honour reduced-motion: drop hover transitions for users who ask. */
 @media (prefers-reduced-motion: reduce) {

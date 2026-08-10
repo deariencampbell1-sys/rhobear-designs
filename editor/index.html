@@ -100,7 +100,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR <em>Designs</em></span>
+            <span class="rb-brand__name">RHOBEAR <span class="rb-brand__accent">Designs</span></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -389,13 +389,13 @@
   #dsOnb{position:fixed;inset:0;z-index:99000;display:none;flex-direction:column;background:#080810;overflow:hidden;font-family:var(--rb-font,system-ui,sans-serif)}
   #dsOnb.on{display:flex}
   #dsOnb::before{content:"";position:absolute;bottom:-10%;right:-5%;width:52%;height:52%;
-    background:radial-gradient(ellipse,rgba(255,58,42,.09),transparent 70%);pointer-events:none}
+    background:radial-gradient(ellipse,rgba(200,75,75,.09),transparent 70%);pointer-events:none}
   #dsOnb::after{content:"";position:absolute;top:-12%;left:-6%;width:46%;height:46%;
     background:radial-gradient(ellipse,rgba(74,158,255,.07),transparent 70%);pointer-events:none}
   .dsob-brand{display:flex;align-items:center;gap:10px;padding:24px 32px;position:relative;z-index:1}
-  .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(255,58,42,.4))}
+  .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(200,75,75,.4))}
   .dsob-name{font-size:15px;font-weight:700;color:#fff}
-  .dsob-name span{color:#C84B4B}
+  .dsob-name .rb-brand__accent{color:#C84B4B}
   .dsob-dots{display:flex;gap:6px;margin-left:auto}
   .dsob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .2s}
   .dsob-dot.active{background:#fff}.dsob-dot.done{background:#C84B4B}
@@ -416,12 +416,12 @@
     border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
     display:inline-flex;align-items:center}
   .dsob-pill.active{background:#C84B4B;color:#fff;border-color:transparent;font-weight:600;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 16px -6px rgba(255,58,42,.35)}
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 16px -6px rgba(200,75,75,.35)}
   .dsob-cta{height:52px;padding:0 28px;background:linear-gradient(135deg,#C84B4B,#a63a3a);border:none;border-radius:12px;color:#fff;
     font-size:18px;font-weight:700;cursor:pointer;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 24px rgba(255,58,42,.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 24px rgba(200,75,75,.3);
     transition:filter .12s,box-shadow .12s;display:inline-flex;align-items:center}
-  .dsob-cta:hover{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 36px rgba(255,58,42,.5)}
+  .dsob-cta:hover{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 36px rgba(200,75,75,.5)}
   .dsob-tpls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;max-width:620px}
   .dsob-tpl{aspect-ratio:4/3;border-radius:10px;border:1px solid rgba(255,255,255,.10);
     background-color:rgba(9,10,12,.45);
@@ -439,7 +439,7 @@
   .dsob-handle.bl{bottom:-6px;left:-6px}.dsob-handle.br{bottom:-6px;right:-6px}
   .dsob-orb{width:72px;height:72px;border-radius:50%;margin-bottom:20px;display:grid;place-items:center;
     background:linear-gradient(168deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),rgba(9,10,12,.45);
-    backdrop-filter:blur(22px);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 32px rgba(255,58,42,.35),0 0 64px rgba(74,158,255,.15);
+    backdrop-filter:blur(22px);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 32px rgba(200,75,75,.35),0 0 64px rgba(74,158,255,.15);
     animation:dsob-breathe 5s ease-in-out infinite}
   .dsob-orb img{width:64%;height:64%}
   @keyframes dsob-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
@@ -448,7 +448,7 @@
 <div id="dsOnb" role="dialog" aria-modal="true" aria-label="Welcome to RHOBEAR Designs">
   <div class="dsob-brand">
     <img src="/src/assets/rhobear-logo.png" alt="">
-    <span class="dsob-name">RHOBEAR <em>Designs</em></span>
+    <span class="dsob-name">RHOBEAR <span class="rb-brand__accent">Designs</span></span>
     <div class="dsob-dots" id="dsobDots"></div>
     <button class="dsob-skip" id="dsobSkip" type="button">Skip</button>
   </div>

@@ -24,6 +24,11 @@ body { -webkit-tap-highlight-color: transparent; }
   padding-top: env(safe-area-inset-top);
   height: calc(var(--rbm-top-h) + env(safe-area-inset-top));
   gap: 8px;
+  flex-wrap: wrap;
+  height: auto;
+  min-height: calc(var(--rbm-top-h) + env(safe-area-inset-top));
+  padding-bottom: 6px;
+  align-content: flex-start;
 }
 .rb-brand__name { font-size: 0.78rem; }
 .rb-brand__doc { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

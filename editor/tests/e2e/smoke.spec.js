@@ -8,10 +8,23 @@ const FIXTURES = path.join(__dirname, '../fixtures');
 const SCRIPTED = path.join(FIXTURES, 'scripted-page.html');
 const SAMPLE = path.join(FIXTURES, 'sample-page.html');
 
+async function skipOnboarding(page) {
+  const onboarding = page.locator('#dsOnb');
+  if (await onboarding.count() && await onboarding.evaluate((el) => el.classList.contains('on'))) {
+    await onboarding.locator('#dsobSkip').click();
+    await expect(onboarding).not.toHaveClass(/on/);
+  }
+}
+
 test.describe('RHOBEAR Designs — UX smoke (Starlight)', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     await page.goto('/');
     await page.waitForFunction(() => window.__RB_EDITOR__?.ready);
+    // Keep the onboarding assertion intentional; all other smoke flows are
+    // post-onboarding product checks and must drive the real surface below it.
+    if (!testInfo.title.includes('default = live mode with onboarding')) {
+      await skipOnboarding(page);
+    }
   });
 
   test('shell + all toolbar controls present', async ({ page }) => {
