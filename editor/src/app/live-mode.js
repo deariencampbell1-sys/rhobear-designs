@@ -27,7 +27,7 @@ const EDIT_CURSOR = 'body *{cursor:pointer!important}[contenteditable="true"]{cu
 // chrome) — the family system explicitly leaves this channel free: users build
 // in any color. The Designs red brand gradient leads the list.
 const GRADIENTS = [
-  'linear-gradient(135deg,#ff3a2a,#ff6b5e)',
+  'linear-gradient(135deg,#C84B4B,#d86a6a)',
   'linear-gradient(135deg,#667eea,#764ba2)',
   'linear-gradient(135deg,#f093fb,#f5576c)',
   'linear-gradient(135deg,#0f2027,#2c5364)',

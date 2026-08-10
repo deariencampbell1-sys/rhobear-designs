@@ -99,24 +99,24 @@ function buildModal() {
       .rb-pro-card{position:relative;background:linear-gradient(180deg,#131a22,#0d131a);border:1px solid rgba(255,58,42,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(255,58,42,.45)}
       .rb-pro-card__head{display:flex;align-items:flex-start;justify-content:space-between}
       .rb-pro-card__title{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
-      .rb-pro-card__title small{display:block;font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#ff3a2a;margin-bottom:.2rem}
+      .rb-pro-card__title small{display:block;font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#C84B4B;margin-bottom:.2rem}
       .rb-pro-card__x{background:transparent;border:0;color:#9db0bb;font-size:1.05rem;cursor:pointer;line-height:1;padding:.15rem .3rem;border-radius:8px}
       .rb-pro-card__x:hover{color:#e8eef2;background:rgba(151,183,196,.1)}
-      .rb-pro-note{color:#ff3a2a;font-weight:600;margin:.35rem 0 0;font-size:.9rem}
+      .rb-pro-note{color:#C84B4B;font-weight:600;margin:.35rem 0 0;font-size:.9rem}
       .rb-pro-feats{list-style:none;padding:0;margin:1rem 0 1.15rem;display:grid;gap:.7rem}
       .rb-pro-feats li{display:grid;grid-template-columns:1rem 1fr;gap:.55rem;align-items:start}
-      .rb-pro-feats b.d{color:#ff3a2a;font-size:.85rem;line-height:1.55}
+      .rb-pro-feats b.d{color:#C84B4B;font-size:.85rem;line-height:1.55}
       .rb-pro-feats .t{font-weight:600}
       .rb-pro-feats .s{opacity:.62;font-size:.87em;display:block;margin-top:.12rem;line-height:1.4}
-      .rb-pro-buy{display:block;text-align:center;text-decoration:none;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff3a2a,#cc2e20);border-radius:12px;padding:.85rem 1rem;letter-spacing:.01em;box-shadow:0 8px 24px -8px rgba(255,58,42,.6);transition:transform .12s ease,filter .12s ease}
+      .rb-pro-buy{display:block;text-align:center;text-decoration:none;font-weight:700;color:#fff;background:linear-gradient(135deg,#C84B4B,#a63a3a);border-radius:12px;padding:.85rem 1rem;letter-spacing:.01em;box-shadow:0 8px 24px -8px rgba(200,75,75,.6);transition:transform .12s ease,filter .12s ease}
       .rb-pro-buy:hover{transform:translateY(-1px);filter:brightness(1.06)}
       .rb-pro-redeem{margin-top:1.15rem;border-top:1px solid rgba(151,183,196,.12);padding-top:1rem}
       .rb-pro-redeem label{font-size:.82rem;color:#9db0bb}
       .rb-pro-redeem .row{display:flex;gap:.45rem;margin-top:.45rem}
       .rb-pro-redeem input{flex:1;background:#0a0e13;border:1px solid rgba(151,183,196,.18);border-radius:9px;padding:.55rem .7rem;color:#e8eef2;font-size:.9rem}
-      .rb-pro-redeem input:focus{outline:none;border-color:#ff3a2a}
+      .rb-pro-redeem input:focus{outline:none;border-color:#C84B4B}
       .rb-pro-redeem button{background:transparent;border:1px solid rgba(151,183,196,.28);border-radius:9px;color:#e8eef2;padding:.55rem .95rem;cursor:pointer;transition:border-color .12s ease}
-      .rb-pro-redeem button:hover{border-color:#ff3a2a}
+      .rb-pro-redeem button:hover{border-color:#C84B4B}
       .rb-pro-msg{min-height:1.1em;margin:.5rem 0 0;font-size:.88rem}
     `;
     document.head.appendChild(st);
@@ -153,7 +153,7 @@ function buildModal() {
   redeemBtn.addEventListener('click', async () => {
     const inp = d.querySelector('#rb-pro-code'); const msg = d.querySelector('[data-pro-msg]');
     const r = await redeem(inp.value);
-    if (msg) { msg.textContent = r.message; msg.style.color = r.ok ? '#2e9e6b' : '#ff3a2a'; }
+    if (msg) { msg.textContent = r.message; msg.style.color = r.ok ? '#2e9e6b' : '#C84B4B'; }
     if (r.ok) { setTimeout(() => { try { d.close(); } catch (_e) {} window.dispatchEvent(new Event('rb-pro-changed')); }, 700); }
   });
   return d;

@@ -16,14 +16,14 @@
    up-left. Subtle: they exist to give the panes depth, not to shout. */
 .rb-app {
   background:
-    radial-gradient(900px 620px at 88% 96%, rgba(255, 58, 42, 0.075), transparent 62%),
+    radial-gradient(900px 620px at 88% 96%, rgba(200, 75, 75, 0.075), transparent 62%),
     radial-gradient(760px 520px at 6% -4%, rgba(74, 158, 255, 0.055), transparent 60%),
     radial-gradient(640px 480px at 55% 118%, rgba(124, 92, 255, 0.045), transparent 65%),
     var(--rb-bg);
 }
 :root[data-theme="light"] .rb-app {
   background:
-    radial-gradient(900px 620px at 88% 96%, rgba(209, 56, 83, 0.05), transparent 62%),
+    radial-gradient(900px 620px at 88% 96%, rgba(200, 75, 75, 0.05), transparent 62%),
     radial-gradient(760px 520px at 6% -4%, rgba(74, 158, 255, 0.05), transparent 60%),
     var(--rb-bg);
 }

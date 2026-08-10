@@ -8,12 +8,38 @@
    ============================================================================ */
 
 :root {
-  /* Starlight — dark (canonical) */
-  --rb-bg: #0a0e13;
-  --rb-canvas-bd: #0f151c;
-  --rb-panel: #0f151c;
-  --rb-panel-2: #151d26;
-  --rb-panel-3: #1c2631;
+  /* ── Pack design tokens ──────────────────────────────────────
+     Splice from _FIREFLY/04-designs/designs.css. These are the canonical
+     pack values; --rb-* vars derive from them. */
+  --designs-bg:            #0A0D10;
+  --designs-canvas-bg:     #111518;
+  --designs-panel-bg:      #0D1014;
+  --designs-surface:       #131820;
+  --designs-border:        rgba(255,255,255,0.06);
+  --designs-border-hover:  rgba(255,255,255,0.12);
+  --designs-accent:        #C84B4B;
+  --designs-accent-dim:    rgba(200,75,75,0.12);
+  --designs-accent-glow:   0 0 20px rgba(200,75,75,0.3);
+  --designs-text-primary:   #E8F0F7;
+  --designs-text-secondary: rgba(232,240,247,0.6);
+  --designs-text-muted:     rgba(232,240,247,0.3);
+  --designs-text-section:   #2A8FA8;
+  --designs-font-display:  'rokkitt', Georgia, serif;
+  --designs-font-body:     'lato', system-ui, sans-serif;
+  --designs-font-mono:     'droid-sans-mono', monospace;
+  --designs-font-brand:    'allura', cursive;
+  --designs-topbar-h:      44px;
+  --designs-statusbar-h:   24px;
+  --designs-panel-w:       240px;
+  --designs-ease:          cubic-bezier(0.16,1,0.3,1);
+  --designs-duration:      200ms;
+
+  /* Pack ground: #0A0D10 (canvas #111518, panel #0D1014) */
+  --rb-bg: #0A0D10;
+  --rb-canvas-bd: #111518;
+  --rb-panel: #0D1014;
+  --rb-panel-2: #131820;
+  --rb-panel-3: #1A2028;
   --rb-border: rgba(151, 183, 196, 0.12);
   --rb-border-soft: rgba(151, 183, 196, 0.12);
   --rb-border-strong: rgba(151, 183, 196, 0.24);
@@ -28,14 +54,13 @@
   --rb-success: #53c98b;
   --rb-success-soft: rgba(83, 201, 139, 0.13);
 
-  /* The ONE accent — RED BEAR, the Designs product color (distinct from
-     Hub teal #00E5CC / Plans purple #6B4EFF / Reviews gold #FFB800; family =
-     shared shell + own face). LOCKED to #FF3A2A by the premium pass. */
-  --rb-brand: #ff3a2a;
-  --rb-brand-press: #cc2e20;
-  --rb-brand-soft: rgba(255, 58, 42, 0.12);
-  --rb-brand-glow: rgba(255, 58, 42, 0.35);
-  --rb-brand-faint: rgba(255, 58, 42, 0.12);
+  /* The ONE accent — RED BEAR, the Designs product color (pack: #C84B4B).
+     ONE red, locked. Teal #2A8FA8 is shared for section labels only. */
+  --rb-brand: #C84B4B;
+  --rb-brand-press: #a63a3a;
+  --rb-brand-soft: rgba(200, 75, 75, 0.12);
+  --rb-brand-glow: rgba(200, 75, 75, 0.35);
+  --rb-brand-faint: rgba(200, 75, 75, 0.12);
   --rb-brand-ink: #ffffff;
 
   /* The star — BLUE (LOCKED). Selection handles, live/preview indicators,
@@ -53,9 +78,11 @@
   --rb-radius-sm: 8px;
   --rb-radius-lg: 14px;
 
-  --rb-font: -apple-system, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
-  --rb-serif: "New York", "Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
-  --rb-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  /* Typekit — rokkitt (display/RHOBEAR), lato (body UI), droid-sans-mono (code).
+     allura is the brand-word face for "Designs" (used only in the product wordmark). */
+  --rb-font: 'lato', system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rb-serif: 'rokkitt', Georgia, "Times New Roman", serif;
+  --rb-mono: 'droid-sans-mono', ui-monospace, "SF Mono", Consolas, monospace;
 
   /* No shadows in the family system — separation is a hairline + a step up
      the bg scale. Kept as a variable (== none) so nothing breaks if referenced. */
@@ -73,11 +100,11 @@
 }
 
 [data-theme="light"] {
-  --rb-bg: #f4f7f8;
-  --rb-canvas-bd: #eef2f4;
-  --rb-panel: #eef2f4;
+  --rb-bg: #f0f2f5;
+  --rb-canvas-bd: #e8ebee;
+  --rb-panel: #e8ebee;
   --rb-panel-2: #ffffff;
-  --rb-panel-3: #e5ebee;
+  --rb-panel-3: #dde2e8;
   --rb-border: rgba(24, 42, 52, 0.10);
   --rb-border-soft: rgba(24, 42, 52, 0.10);
   --rb-border-strong: rgba(24, 42, 52, 0.20);
@@ -92,11 +119,11 @@
   --rb-success: #1f9d5e;
   --rb-success-soft: rgba(31, 157, 94, 0.11);
 
-  --rb-brand: #d13853;
-  --rb-brand-press: #b52e46;
-  --rb-brand-soft: rgba(209, 56, 83, 0.10);
-  --rb-brand-glow: rgba(209, 56, 83, 0.28);
-  --rb-brand-faint: rgba(209, 56, 83, 0.10);
+  --rb-brand: #C84B4B;
+  --rb-brand-press: #a63a3a;
+  --rb-brand-soft: rgba(200, 75, 75, 0.10);
+  --rb-brand-glow: rgba(200, 75, 75, 0.28);
+  --rb-brand-faint: rgba(200, 75, 75, 0.10);
   --rb-brand-ink: #ffffff;
 }
 
@@ -158,7 +185,22 @@ html, body {
 }
 .rb-brand__text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 /* Wordmark: caps, tracked — the one place case rules bend. */
-.rb-brand__name { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+/* Wordmark: the "Designs" word wears allura script (brand-word face).
+   RHOBEAR itself stays rokkitt block (via --rb-serif on the container). */
+.rb-brand__name {
+  font-family: var(--designs-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rb-brand__name em {
+  font-family: var(--designs-font-brand);
+  font-style: normal;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
 .rb-brand__doc {
   font-size: 0.68rem; color: var(--rb-text-muted); font-family: var(--rb-mono);
   max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -665,6 +707,101 @@ html, body {
 /* Section + inspector headers. */
 .rb-inspector__title { font-weight: 500; }
 .rb-sector__head { font-weight: 500; }
+
+/* ── Pack section labels (teal) ───────────────────────────────
+   Splice from _FIREFLY/04-designs/designs.css. Teal #2A8FA8 is
+   the shared section-label colour across the entire RHOBEAR family. */
+.rb-start__label,
+.rb-rail__tab,
+.rb-sector__head,
+.rb-inspector__title {
+  font-family: var(--designs-font-body);
+}
+.designs-panel-section__label,
+.rb-setting__label,
+.rb-field__label {
+  font-family: var(--designs-font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--designs-text-section);
+  margin: 10px 10px 6px;
+}
+
+/* ── Chip style (pack) ──────────────────────────────────────── */
+.designs-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--designs-border);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: var(--designs-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 120ms;
+}
+.designs-chip:hover {
+  border-color: var(--designs-accent);
+  color: var(--designs-accent);
+  background: var(--designs-accent-dim);
+}
+
+/* ── AI bubble (teal floating chat) ───────────────────────────
+   The design-assistant FAB keeps its current position; this adds
+   the teal ring from the pack spec. */
+.designs-ai-bubble {
+  position: fixed; bottom: 36px; right: 20px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(42,143,168,0.15);
+  border: 1px solid rgba(42,143,168,0.4);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 50;
+  box-shadow: 0 0 16px rgba(42,143,168,0.2);
+  transition: all 200ms var(--designs-ease);
+}
+.designs-ai-bubble:hover {
+  background: rgba(42,143,168,0.25);
+  box-shadow: 0 0 28px rgba(42,143,168,0.4);
+  transform: scale(1.08);
+}
+
+/* ── Status bar (mono) ──────────────────────────────────────── */
+.designs-statusbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 12px;
+  background: var(--designs-panel-bg);
+  border-top: 1px solid var(--designs-border);
+}
+.designs-statusbar span {
+  font-family: var(--designs-font-mono);
+  font-size: 0.65rem;
+  color: var(--designs-text-muted);
+}
+
+/* ── Template cards (frosted glass) ─────────────────────────── */
+.designs-template-card {
+  background: var(--designs-surface);
+  border: 1px solid var(--designs-border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 150ms;
+  backdrop-filter: blur(12px);
+}
+.designs-template-card:hover {
+  border-color: var(--designs-accent);
+}
+.designs-template-card__name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--designs-text-primary);
+}
+.designs-template-card__desc {
+  font-size: 0.7rem;
+  color: var(--designs-text-muted);
+  line-height: 1.4;
+}
 
 /* Honour reduced-motion: drop hover transitions for users who ask. */
 @media (prefers-reduced-motion: reduce) {

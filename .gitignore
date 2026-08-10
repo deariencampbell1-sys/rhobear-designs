@@ -11,3 +11,4 @@ service/data/
 .claude/
 editor/src-tauri/target/
 editor/src-tauri/gen/
+screenshots/

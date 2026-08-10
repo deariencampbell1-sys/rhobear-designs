@@ -7,7 +7,7 @@
 
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#ff3a2a" />
+    <meta name="theme-color" content="#C84B4B" />
     <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
     <link rel="icon" href="icons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
@@ -56,15 +56,15 @@
       })();
     </script>
 
-    <!-- Chrome typography is system stacks (Starlight) — no webfont for the
-         app shell. Google Fonts still load per-family at runtime for USER
-         content via the font picker. -->
+    <!-- Typekit — rokkitt (display/RHOBEAR), lato (body), droid-sans-mono (mono),
+         allura (brand-word face for "Designs"). One kit, one contract. -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+    <link rel="preconnect" href="https://p.typekit.net" crossorigin>
+    <link rel="stylesheet" href="https://use.typekit.net/sbv5bcv.css" />
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
     <link rel="stylesheet" href="/src/styles/premium-glass.css" />
-    <!-- NACELLE company font overlay (PREMIUM-UI-LAW). Served from web root /nacelle/. -->
-    <link rel="stylesheet" href="/nacelle/nacelle.css?v=1784300000" />
   </head>
   <body>
     <!-- Premium line-icon sprite (ecosystem chat-surface icon language) -->
@@ -100,7 +100,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__name">RHOBEAR <em>Designs</em></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -372,7 +372,7 @@
       window.RHOBEAR_COMPANION = {
         endpoint: 'https://workbench.rhobear.ai/companion',
         ready: true,
-        accent: '#ff3a2a',
+        accent: '#C84B4B',
       };
     </script>
     <script defer src="companion-embed.js"></script>
@@ -395,19 +395,19 @@
   .dsob-brand{display:flex;align-items:center;gap:10px;padding:24px 32px;position:relative;z-index:1}
   .dsob-brand img{width:28px;height:28px;filter:drop-shadow(0 0 8px rgba(255,58,42,.4))}
   .dsob-name{font-size:15px;font-weight:700;color:#fff}
-  .dsob-name span{color:#ff3a2a}
+  .dsob-name span{color:#C84B4B}
   .dsob-dots{display:flex;gap:6px;margin-left:auto}
   .dsob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .2s}
-  .dsob-dot.active{background:#fff}.dsob-dot.done{background:#ff3a2a}
+  .dsob-dot.active{background:#fff}.dsob-dot.done{background:#C84B4B}
   .dsob-skip{margin-left:14px;background:none;border:none;color:#6b6b8a;font-size:13px;cursor:pointer}
   .dsob-skip:hover{color:#fff}
   .dsob-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px 48px;max-width:780px;position:relative;z-index:1}
   .dsob-step{display:none;animation:dsob-rise .4s cubic-bezier(.21,1.02,.55,1)}
   .dsob-step.on{display:block}
   @keyframes dsob-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-  .dsob-eyebrow{font-size:11px;font-weight:700;color:#ff3a2a;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px}
+  .dsob-eyebrow{font-size:11px;font-weight:700;color:#C84B4B;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px}
   .dsob-h{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:#fff;line-height:1.1;margin-bottom:20px;letter-spacing:-.02em}
-  .dsob-h em{font-style:normal;color:#ff3a2a}
+  .dsob-h em{font-style:normal;color:#C84B4B}
   .dsob-body{font-size:17px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:28px;max-width:560px}
   .dsob-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
   .dsob-pill{height:34px;padding:0 14px;border-radius:17px;font-size:14px;color:rgba(255,255,255,.7);
@@ -415,9 +415,9 @@
     backdrop-filter:blur(14px) saturate(1.35);-webkit-backdrop-filter:blur(14px) saturate(1.35);
     border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
     display:inline-flex;align-items:center}
-  .dsob-pill.active{background:#ff3a2a;color:#fff;border-color:transparent;font-weight:600;
+  .dsob-pill.active{background:#C84B4B;color:#fff;border-color:transparent;font-weight:600;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 16px -6px rgba(255,58,42,.35)}
-  .dsob-cta{height:52px;padding:0 28px;background:linear-gradient(135deg,#ff3a2a,#cc2e20);border:none;border-radius:12px;color:#fff;
+  .dsob-cta{height:52px;padding:0 28px;background:linear-gradient(135deg,#C84B4B,#a63a3a);border:none;border-radius:12px;color:#fff;
     font-size:18px;font-weight:700;cursor:pointer;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 24px rgba(255,58,42,.3);
     transition:filter .12s,box-shadow .12s;display:inline-flex;align-items:center}
@@ -448,7 +448,7 @@
 <div id="dsOnb" role="dialog" aria-modal="true" aria-label="Welcome to RHOBEAR Designs">
   <div class="dsob-brand">
     <img src="/src/assets/rhobear-logo.png" alt="">
-    <span class="dsob-name">RHOBEAR <span>Designs</span></span>
+    <span class="dsob-name">RHOBEAR <em>Designs</em></span>
     <div class="dsob-dots" id="dsobDots"></div>
     <button class="dsob-skip" id="dsobSkip" type="button">Skip</button>
   </div>

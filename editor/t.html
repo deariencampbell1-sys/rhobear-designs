@@ -7,7 +7,7 @@
 
     <!-- PWA: installable app (Microsoft Store packaging via PWABuilder → MSIX) -->
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#ff3a2a" />
+    <meta name="theme-color" content="#C84B4B" />
     <meta name="description" content="Free, MIT-licensed Canva-style website editor — Edit Live, Build, 3D Studio. 100% client-side, BYO-LLM AI assist." />
     <link rel="icon" href="icons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192" />
@@ -54,14 +54,13 @@
       })();
     </script>
 
-    <!-- Chrome typography is system stacks (Starlight) — no webfont for the
-         app shell. Google Fonts still load per-family at runtime for USER
-         content via the font picker. -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+    <link rel="preconnect" href="https://p.typekit.net" crossorigin>
+    <link rel="stylesheet" href="https://use.typekit.net/sbv5bcv.css" />
     <link rel="stylesheet" href="/src/styles/rhobear-theme.css" />
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
     <link rel="stylesheet" href="/src/styles/premium-glass.css" />
-    <link rel="stylesheet" href="/nacelle/nacelle.css?v=1784300000" />
     <link rel="stylesheet" href="/src/styles/tablet.css" />
   </head>
   <body>
@@ -98,7 +97,7 @@
         <div class="rb-brand">
           <span class="rb-logo" aria-hidden="true"><img class="rb-logo-img" src="/src/assets/rhobear-logo.png" alt="" /></span>
           <span class="rb-brand__text">
-            <span class="rb-brand__name">RHOBEAR Designs</span>
+            <span class="rb-brand__name">RHOBEAR <em>Designs</em></span>
             <span class="rb-brand__doc" id="doc-title" data-testid="doc-title">Untitled page</span>
           </span>
         </div>
@@ -377,7 +376,7 @@
       window.RHOBEAR_COMPANION = {
         endpoint: 'https://workbench.rhobear.ai/companion',
         ready: true,
-        accent: '#ff3a2a',
+        accent: '#C84B4B',
       };
     </script>
     <script defer src="companion-embed.js"></script>

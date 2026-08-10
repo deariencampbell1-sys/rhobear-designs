@@ -13,7 +13,7 @@ const BLANK_PAGE = `
 <section style="padding: 60px 24px; text-align: center; font-family: system-ui, sans-serif;">
   <h1 style="font-size: 2.5rem; margin-bottom: 16px;">Your page title</h1>
   <p style="color: #666; max-width: 560px; margin: 0 auto 24px;">Click any element to edit. Drag blocks from the left panel or use the toolbar to add sections.</p>
-  <a href="#" style="display: inline-block; padding: 12px 28px; background: #ff3a2a; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">Get started</a>
+  <a href="#" style="display: inline-block; padding: 12px 28px; background: #C84B4B; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">Get started</a>
 </section>`;
 
 export function createEditor() {
