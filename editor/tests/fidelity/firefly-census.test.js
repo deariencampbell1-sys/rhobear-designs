@@ -6,7 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EDITOR_ROOT = path.resolve(HERE, '../..');
-const SOURCE_ROOTS = ['index.html', 'm.html', 't.html', 'src'];
+// PWA + desktop-shell artifacts are user-visible brand surfaces too: the
+// manifest's chrome/splash colours and the service worker's cached shell
+// must carry the pack values just like the HTML entries. src-tauri JSON
+// (tauri.conf.json, capabilities/) rides along for the same reason.
+const SOURCE_ROOTS = ['index.html', 'm.html', 't.html', 'src', 'public', 'src-tauri'];
 const SKIP_DIRS = new Set(['vendor', 'node_modules', 'dist']);
 const TEXT_EXTENSIONS = new Set(['.css', '.html', '.js', '.json', '.mjs']);
 
@@ -44,7 +48,9 @@ function matchesInSource(pattern) {
 }
 
 test('Firefly census — old accent is absent in both hex and RGB spellings', () => {
-  const oldHex = /#(?:ff3a2a|cc2e20)\b/gi;
+  // ff6b5e: the old Firefly gradient stop (removed in live-mode.js) — same
+  // stale-accent family as ff3a2a/cc2e20, now covered too.
+  const oldHex = /#(?:ff3a2a|cc2e20|ff6b5e)\b/gi;
   const oldRgb = /\brgba?\(\s*255\s*,\s*58\s*,\s*42(?:\s*,|\s*\))/gi;
   const hits = [...matchesInSource(oldHex), ...matchesInSource(oldRgb)];
   assert.deepEqual(hits, [], `old Firefly accent remnants found:\n${hits.join('\n')}`);
@@ -53,6 +59,14 @@ test('Firefly census — old accent is absent in both hex and RGB spellings', ()
 test('Firefly census — no unused .designs-* selector pack remains', () => {
   const selectors = matchesInSource(/(?:^|[,{\s])\.designs-[a-z0-9_-]+(?=[\s:{>,])/g);
   assert.deepEqual(selectors, [], `unused .designs-* selectors found:\n${selectors.join('\n')}`);
+});
+
+test('PWA manifest — chrome and splash wear the canonical Firefly colours', () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(EDITOR_ROOT, 'public', 'manifest.webmanifest'), 'utf8'),
+  );
+  assert.equal(manifest.theme_color, '#C84B4B', 'browser chrome must use the ONE Firefly accent');
+  assert.equal(manifest.background_color, '#0A0D10', 'splash background must use the Firefly ground');
 });
 
 test('wordmark DOM — all three entrypoints use the non-semantic Designs span', () => {

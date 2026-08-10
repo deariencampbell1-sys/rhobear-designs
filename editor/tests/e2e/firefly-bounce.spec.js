@@ -148,11 +148,47 @@ async function assertEditorSurface(page, surface) {
   }
 }
 
-async function assertNoBrowserErrors(diagnostics, surface) {
-  const localFailures = diagnostics.failedRequests.filter(({ url }) => url.startsWith('http://127.0.0.1:5180'));
+/**
+ * The pack faces (rokkitt/lato/droid-sans-mono + allura wordmark) all load
+ * from the Typekit kit via use.typekit.net/sbv5bcv.css; the font files
+ * themselves come from p.typekit.net. A broken or blocked kit silently
+ * degrades every pack face to fallbacks, so Typekit failures MUST fail the
+ * bounce. Local (app origin) failures must too. Other cross-origin traffic
+ * (Rho companion embed, BYOK endpoints, template thumbnails) is recorded
+ * but not asserted — those lanes have their own proofs. If an external
+ * proxy/offline box blocks Typekit, this test fails honestly: the PR's
+ * headline dependency is not working in that environment.
+ */
+function assertNoBrowserErrors(diagnostics, surface) {
+  const appOrigin = 'http://127.0.0.1:5180';
+  const typekitHosts = ['https://use.typekit.net', 'https://p.typekit.net'];
+  const relevant = diagnostics.failedRequests.filter(({ url }) =>
+    url.startsWith(appOrigin) || typekitHosts.some((host) => url.startsWith(host))
+  );
   expect(diagnostics.consoleErrors, `${surface} console errors`).toEqual([]);
   expect(diagnostics.pageErrors, `${surface} page errors`).toEqual([]);
-  expect(localFailures, `${surface} local request failures`).toEqual([]);
+  expect(relevant, `${surface} app/Typekit request failures (external blocking counts as failure)`).toEqual([]);
+}
+
+/**
+ * Typekit faces must actually report available — not just be declared.
+ * Wait for document.fonts to settle (bounded), then require every kit face
+ * this surface depends on to exist in the FontFaceSet with status 'loaded'.
+ * If the kit CSS never arrived there are no faces at all; if a font file
+ * was blocked the face flips to 'error'. Both fail loudly with a bounded
+ * face list in the message.
+ */
+async function assertTypekitFaces(page, surface, requiredFaces) {
+  await page.waitForFunction(() => document.fonts.status === 'loaded', null, { timeout: 20_000 }).catch(() => {});
+  const faces = await page.evaluate(() =>
+    [...document.fonts].map((f) => ({ family: String(f.family).replace(/"/g, ''), status: f.status }))
+  );
+  const missing = requiredFaces.filter((face) => !faces.some((f) => f.family.toLowerCase().includes(face)));
+  const failed = requiredFaces.filter((face) =>
+    faces.some((f) => f.family.toLowerCase().includes(face) && f.status === 'error')
+  );
+  expect(missing, `${surface}: kit face never declared — Typekit CSS blocked or kit changed? faces=${JSON.stringify(faces)}`).toEqual([]);
+  expect(failed, `${surface}: kit face failed to load — Typekit font file blocked? faces=${JSON.stringify(faces)}`).toEqual([]);
 }
 
 test.describe('RHOBEAR Designs — Firefly bounce proof', () => {
@@ -167,6 +203,7 @@ test.describe('RHOBEAR Designs — Firefly bounce proof', () => {
     const diagnostics = watchBrowser(page);
     await page.goto('/index.html?surface=desktop', { waitUntil: 'domcontentloaded' });
     await waitForShell(page);
+    await assertTypekitFaces(page, 'desktop', ['rokkitt', 'lato', 'allura', 'droid-sans-mono']);
 
     const onboarding = page.locator('#dsOnb');
     await expect(onboarding).toHaveClass(/on/);
@@ -197,6 +234,7 @@ test.describe('RHOBEAR Designs — Firefly bounce proof', () => {
     const diagnostics = watchBrowser(page);
     await page.goto('/t.html?surface=tablet', { waitUntil: 'domcontentloaded' });
     await waitForShell(page);
+    await assertTypekitFaces(page, 'tablet', ['rokkitt', 'lato', 'allura', 'droid-sans-mono']);
     await assertWordmarkDom(page);
     await page.getByTestId('empty-build').click();
     await waitForBuildReady(page, 'tablet');
@@ -210,6 +248,7 @@ test.describe('RHOBEAR Designs — Firefly bounce proof', () => {
     const diagnostics = watchBrowser(page);
     await page.goto('/m.html?surface=mobile', { waitUntil: 'domcontentloaded' });
     await waitForShell(page);
+    await assertTypekitFaces(page, 'mobile', ['rokkitt', 'lato', 'allura']);
     await assertWordmarkDom(page);
     await page.getByTestId('empty-build').click();
     await waitForBuildReady(page, 'mobile');

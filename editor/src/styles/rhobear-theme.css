@@ -9,36 +9,29 @@
 
 :root {
   /* ── Pack design tokens ──────────────────────────────────────
-     Splice from _FIREFLY/04-designs/designs.css. These are the canonical
-     pack values; --rb-* vars derive from them. */
+     Splice from _FIREFLY/04-designs/designs.css — the consumed subset.
+     --rb-* vars derive from these (light-theme overrides below). Tokens
+     the app never consumes were dropped instead of kept as drift bait:
+     shell metrics (--designs-topbar-h/statusbar-h/panel-w — this app has
+     its own .rb-app chrome), the accent glow shadow, border-hover, and
+     text-primary/secondary/muted + font-mono (the app's --rb-text/--rb-mono
+     have their own values/fallbacks). */
   --designs-bg:            #0A0D10;
   --designs-canvas-bg:     #111518;
   --designs-panel-bg:      #0D1014;
   --designs-surface:       #131820;
-  --designs-border:        rgba(255,255,255,0.06);
-  --designs-border-hover:  rgba(255,255,255,0.12);
   --designs-accent:        #C84B4B;
   --designs-accent-dim:    rgba(200,75,75,0.12);
-  --designs-accent-glow:   0 0 20px rgba(200,75,75,0.3);
-  --designs-text-primary:   #E8F0F7;
-  --designs-text-secondary: rgba(232,240,247,0.6);
-  --designs-text-muted:     rgba(232,240,247,0.3);
   --designs-text-section:   #2A8FA8;
   --designs-font-display:  'rokkitt', Georgia, serif;
   --designs-font-body:     'lato', system-ui, sans-serif;
-  --designs-font-mono:     'droid-sans-mono', monospace;
   --designs-font-brand:    'allura', cursive;
-  --designs-topbar-h:      44px;
-  --designs-statusbar-h:   24px;
-  --designs-panel-w:       240px;
-  --designs-ease:          cubic-bezier(0.16,1,0.3,1);
-  --designs-duration:      200ms;
 
   /* Pack ground: #0A0D10 (canvas #111518, panel #0D1014) */
-  --rb-bg: #0A0D10;
-  --rb-canvas-bd: #111518;
-  --rb-panel: #0D1014;
-  --rb-panel-2: #131820;
+  --rb-bg: var(--designs-bg);
+  --rb-canvas-bd: var(--designs-canvas-bg);
+  --rb-panel: var(--designs-panel-bg);
+  --rb-panel-2: var(--designs-surface);
   --rb-panel-3: #1A2028;
   --rb-border: rgba(151, 183, 196, 0.12);
   --rb-border-soft: rgba(151, 183, 196, 0.12);
@@ -56,11 +49,11 @@
 
   /* The ONE accent — RED BEAR, the Designs product color (pack: #C84B4B).
      ONE red, locked. Teal #2A8FA8 is shared for section labels only. */
-  --rb-brand: #C84B4B;
+  --rb-brand: var(--designs-accent);
   --rb-brand-press: #a63a3a;
-  --rb-brand-soft: rgba(200, 75, 75, 0.12);
+  --rb-brand-soft: var(--designs-accent-dim);
   --rb-brand-glow: rgba(200, 75, 75, 0.35);
-  --rb-brand-faint: rgba(200, 75, 75, 0.12);
+  --rb-brand-faint: var(--designs-accent-dim);
   --rb-brand-ink: #ffffff;
 
   /* The star — BLUE (LOCKED). Selection handles, live/preview indicators,
@@ -707,26 +700,44 @@ html, body {
 
 /* Section + inspector headers. */
 .rb-inspector__title { font-weight: 500; }
-.rb-sector__head { font-weight: 500; }
 
 /* ── Pack section labels (teal) ───────────────────────────────
    Splice from _FIREFLY/04-designs/designs.css. Teal #2A8FA8 is
-   the shared section-label colour across the entire RHOBEAR family. */
+   the shared section-label colour across the entire RHOBEAR family.
+   The teal treatment belongs to SECTION labels/headers: the start
+   screen's section headings and the inspector's intent groups.
+   Tabs (rb-rail__tab) and panel titles (rb-inspector__title) keep
+   their own chrome and only take the pack body face. Field labels
+   (.rb-field__label / .rb-setting__label) stay FIELD labels — body
+   face only, no teal, no casing, no injected margins. */
 .rb-start__label,
 .rb-rail__tab,
 .rb-sector__head,
 .rb-inspector__title {
   font-family: var(--designs-font-body);
 }
-.rb-setting__label,
-.rb-field__label {
-  font-family: var(--designs-font-body);
+.rb-start__label {
+  /* Pack micro-label: uppercase, tracked, teal. (Its own margin:0 and
+     the start grid's gap handle spacing — the pack's 10px panel margins
+     belong to left-rail labels, not column headings.) */
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--designs-text-section);
+}
+.rb-sector__head {
+  /* Inspector intent groups are sections: pack label casing + teal.
+     No pack margins here — this is a full-width button row with its
+     own padding and chevron. */
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--designs-text-section);
-  margin: 10px 10px 6px;
+}
+.rb-setting__label,
+.rb-field__label {
+  font-family: var(--designs-font-body);
 }
 
 

@@ -95,8 +95,13 @@ function buildModal() {
     const st = document.createElement('style'); st.id = 'rb-pro-modal-style';
     st.textContent = `
       #rb-pro-modal{border:none;background:transparent;padding:0;max-width:460px;width:calc(100% - 2rem);color:#e8eef2;font:inherit}
-      #rb-pro-modal::backdrop{background:rgba(6,9,13,.66);backdrop-filter:blur(3px)}
-      .rb-pro-card{position:relative;background:linear-gradient(180deg,#131a22,#0d131a);border:1px solid rgba(200,75,75,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(200,75,75,.45)}
+      /* Pack ground mapping: rgba(6,9,13) was the pre-pack ground; the pack
+         ground is #0A0D10 (--designs-bg). The card gradient uses the pack
+         surface/panel tones; the redeem field sits on the pack ground like
+         every other input. Vars resolve from the theme :root — this modal is
+         only ever injected into the editor app, which links rhobear-theme.css. */
+      #rb-pro-modal::backdrop{background:rgba(10,13,16,.66);backdrop-filter:blur(3px)}
+      .rb-pro-card{position:relative;background:linear-gradient(180deg,var(--designs-surface),var(--designs-panel-bg));border:1px solid rgba(200,75,75,.28);border-radius:20px;padding:1.5rem 1.5rem 1.35rem;box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset,0 0 44px -18px rgba(200,75,75,.45)}
       .rb-pro-card__head{display:flex;align-items:flex-start;justify-content:space-between}
       .rb-pro-card__title{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
       .rb-pro-card__title small{display:block;font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#C84B4B;margin-bottom:.2rem}
@@ -113,7 +118,7 @@ function buildModal() {
       .rb-pro-redeem{margin-top:1.15rem;border-top:1px solid rgba(151,183,196,.12);padding-top:1rem}
       .rb-pro-redeem label{font-size:.82rem;color:#9db0bb}
       .rb-pro-redeem .row{display:flex;gap:.45rem;margin-top:.45rem}
-      .rb-pro-redeem input{flex:1;background:#0a0e13;border:1px solid rgba(151,183,196,.18);border-radius:9px;padding:.55rem .7rem;color:#e8eef2;font-size:.9rem}
+      .rb-pro-redeem input{flex:1;background:var(--designs-bg);border:1px solid rgba(151,183,196,.18);border-radius:9px;padding:.55rem .7rem;color:#e8eef2;font-size:.9rem}
       .rb-pro-redeem input:focus{outline:none;border-color:#C84B4B}
       .rb-pro-redeem button{background:transparent;border:1px solid rgba(151,183,196,.28);border-radius:9px;color:#e8eef2;padding:.55rem .95rem;cursor:pointer;transition:border-color .12s ease}
       .rb-pro-redeem button:hover{border-color:#C84B4B}
