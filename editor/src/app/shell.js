@@ -352,7 +352,24 @@ export function bootShell() {
     'mode-live': () => setMode('live'),
     'mode-build': () => setMode('build'),
     'mode-3d': () => setMode('3d'),
-    'toggle-rail': () => refs.rail.classList.toggle('is-collapsed'),
+    'toggle-rail': () => {
+      refs.rail.classList.toggle('is-collapsed');
+      // Narrow shells (index/t at ≤480px) present the rail as a bottom sheet:
+      // the scrim mirrors the open state. Gated to phone widths so a desktop
+      // toggle never leaves narrow-state classes behind for a later resize.
+      const scrim = $('narrow-scrim');
+      if (scrim && matchMedia('(max-width: 480px)').matches) {
+        refs.rail.classList.toggle('is-narrow-open');
+        scrim.classList.toggle('is-on', refs.rail.classList.contains('is-narrow-open'));
+      }
+    },
+    'narrow-close': () => {
+      // Scrim tap (or any sheet-close): return the rail to its desktop
+      // default (visible/not-collapsed) so a resize never leaves it hidden.
+      refs.rail.classList.remove('is-collapsed', 'is-narrow-open');
+      const scrim = $('narrow-scrim');
+      if (scrim) scrim.classList.remove('is-on');
+    },
 
     'new': () => {
       if (!confirm('Start a new blank page? Unsaved changes will be lost.')) return;

@@ -1,0 +1,196 @@
+/*
+ * RHOBEAR Designs — NARROW desktop-shell layout (index.html + t.html, ≤480px).
+ *
+ * The purpose-built phone studio (m.html) owns real touch; this file keeps the
+ * desktop/tablet studio from becoming a squeezed desktop when the window is
+ * narrower than a phone (a 375×812 review viewport, a narrow laptop window).
+ * Phone-safe hierarchy, same components, no product changes:
+ *   - the toolbar re-flows into compact labeled rows (nothing truncates);
+ *   - the rail becomes a bottom sheet (Add / Layers / Files), the inspector a
+ *     bottom sheet — the canvas keeps the full width;
+ *   - file actions move into the rail's Files tab (labeled, one tap away),
+ *     reachable while the toolbar keeps the primary controls;
+ *   - modals go full-screen, the AI panel becomes a sheet.
+ * Everything is gated to ≤480px except the two "off by default" rules that
+ * keep the Files tab + sheet scrim inert on wider screens. Loaded after
+ * premium-glass.css so the glass treatments carry over.
+ */
+
+/* The Files rail tab + sheet scrim live in the DOM of every desktop shell;
+   they only mean something at phone widths. */
+.rb-rail__tab[data-rail-tab="files"] { display: none; }
+.rb-narrow-scrim { display: none; }
+
+@media (max-width: 480px) {
+  /* ── toolbar: compact labeled rows ─────────────────────────
+     Groups flatten (display:contents) and the toolbar becomes an explicit
+     grid so every control lands on a promised row — no squeezed rows, no
+     wrap surprises:
+       R1  brand | spacer | undo redo | preview | save
+       R2  toggle | mode switch (fills the row)
+       R3  devices | Templates | Projects
+       R4  auth (trailing, hidden when signed in)
+     File actions leave the toolbar for the Files rail tab (see below). */
+  .rb-toolbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto auto;
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+    gap: 4px 6px;
+    height: auto;
+    min-height: 0;
+    padding: 6px 10px;
+    padding-left: max(10px, env(safe-area-inset-left, 0));
+    padding-right: max(10px, env(safe-area-inset-right, 0));
+    padding-top: max(6px, env(safe-area-inset-top, 0));
+  }
+  .rb-toolbar .rb-group { display: contents; }   /* one grid flow, no group boxes */
+  .rb-brand { grid-column: 1; grid-row: 1; }
+  .rb-toolbar__spacer { grid-column: 2; grid-row: 1; }
+  .rb-toolbar [data-action="undo"] { grid-column: 3; grid-row: 1; }
+  .rb-toolbar [data-action="redo"] { grid-column: 4; grid-row: 1; }
+  .rb-toolbar [data-action="preview"] { grid-column: 5; grid-row: 1; }
+  .rb-toolbar [data-action="preview"] span { display: none; }   /* icon + aria-label */
+  .rb-toolbar [data-action="save-html"] { grid-column: 6; grid-row: 1; }
+  .rb-toolbar [data-action="save-html"] span { display: inline; }  /* t.html hides spans */
+  .rb-toolbar [data-action="toggle-rail"] { grid-column: 1; grid-row: 2; }
+  .rb-toolbar .rb-modeswitch { grid-column: 2 / -1; grid-row: 2; min-width: 0; }
+  .rb-modeswitch__btn { flex: 1; min-height: 38px; padding: 7px 4px; font-size: 0.7rem; white-space: nowrap; overflow: hidden; }
+  .rb-toolbar [data-action="device-desktop"] { grid-column: 1; grid-row: 3; }
+  .rb-toolbar [data-action="device-tablet"] { grid-column: 2; grid-row: 3; }
+  .rb-toolbar [data-action="device-mobile"] { grid-column: 3; grid-row: 3; }
+  .rb-toolbar [data-action="open-templates"] { grid-column: 4; grid-row: 3; }
+  .rb-toolbar [data-action="open-projects"] { grid-column: 5; grid-row: 3; }
+  /* File actions live in the rail's Files tab at phone widths — hidden here
+     with a labeled replacement, not removed. */
+  .rb-toolbar [data-action="new"],
+  .rb-toolbar [data-action="open-html"],
+  .rb-toolbar [data-action="open-folder"],
+  .rb-toolbar [data-action="export-zip"] { display: none; }
+  /* The auth group is display:contents here — placement goes on its button,
+     on its own trailing row (empty when signed in). */
+  .rb-toolbar #rb-auth-group button { grid-column: 1 / -1; grid-row: 4; justify-self: start; min-height: 38px; padding: 7px 11px; }
+  .rb-brand__text { display: flex; }             /* t.html hides it at tablet widths */
+  .rb-brand__name { font-size: 0.66rem; }
+  .rb-brand__doc { max-width: 22vw; font-size: 0.62rem; }
+  .rb-toolbar .rb-btn { min-height: 38px; padding: 7px 11px; font-size: 0.76rem; }
+  .rb-toolbar .rb-btn--icon { min-width: 38px; padding: 7px 9px; }
+  @media (max-width: 340px) {                    /* narrowest phones: let R1 breathe */
+    .rb-brand__doc { display: none; }
+    .rb-toolbar { gap: 4px 4px; }
+    .rb-toolbar .rb-btn--icon { min-width: 36px; }
+  }
+
+  /* ── workspace: canvas owns the whole width ───────────────
+     The rail + inspector are position:fixed below, so they leave the flex
+     flow and the canvas fills the workspace by itself (flex stays on: a
+     block workspace would collapse the canvas-wrap height chain). */
+  .rb-canvas-wrap { flex: 1; }
+
+  /* ── rail: bottom sheet ─────────────────────────────────── */
+  .rb-rail {
+    position: fixed; left: 0; right: 0; top: auto; bottom: 0;
+    width: 100%; max-width: none; height: 46dvh; min-height: 300px;
+    margin: 0 !important;               /* desktop collapse (margin-left) is n/a */
+    border-right: none;
+    border-top: 1px solid var(--rb-glass-bd);
+    border-radius: 18px 18px 0 0;
+    z-index: 40;
+    transform: translateY(110%);
+    transition: transform 240ms var(--rb-ease);
+    box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.65);
+  }
+  .rb-rail.is-collapsed { margin-left: 0; }
+  .rb-rail.is-narrow-open { transform: translateY(0); }
+  .rb-rail::before {                 /* grab handle */
+    content: ""; align-self: center; flex-shrink: 0;
+    width: 42px; height: 4px; border-radius: 999px;
+    margin: 8px 0 2px; background: var(--rb-text-faint); opacity: 0.5;
+  }
+  .rb-rail__tabs { padding: 6px 10px 0; }
+  .rb-rail__tab { min-height: 40px; }
+  .rb-rail__tab[data-rail-tab="files"] { display: block; }
+  .rb-rail__body { padding: 6px 10px 12px; }
+  .rb-lib-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .rb-lib-card__preview { height: 80px; }
+
+  /* Files pane — the labeled home of the file actions at phone widths */
+  .rb-narrow-files { display: flex; flex-direction: column; gap: 8px; padding: 8px 0 4px; }
+  .rb-narrow-files .rb-btn {
+    display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+    min-height: 44px; padding: 10px 12px; text-align: left; font-size: 0.8rem;
+  }
+
+  /* ── inspector: bottom sheet (driven by selection, as on desktop) ── */
+  .rb-inspector {
+    position: fixed; left: 0; right: 0; top: auto; bottom: 0;
+    width: 100%; max-width: none; height: 62dvh;
+    margin-right: 0 !important;         /* the desktop hide uses margin-right */
+    border-left: none;
+    border-top: 1px solid var(--rb-glass-bd);
+    border-radius: 18px 18px 0 0;
+    z-index: 42;
+    background: var(--glass-body), rgba(10, 14, 19, 0.82);
+    backdrop-filter: blur(24px) saturate(1.35);
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    transform: translateY(110%);
+    transition: transform 240ms var(--rb-ease);
+    box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.65);
+  }
+  .rb-inspector.is-hidden { margin-right: 0; transform: translateY(110%); }
+  .rb-inspector:not(.is-hidden) { transform: translateY(0); }
+  .rb-inspector::before {
+    content: ""; align-self: center; flex-shrink: 0;
+    width: 42px; height: 4px; border-radius: 999px;
+    margin: 8px 0 2px; background: var(--rb-text-faint); opacity: 0.5;
+  }
+
+  /* ── scrim behind the open sheet ────────────────────────── */
+  .rb-narrow-scrim {
+    display: block;
+    position: fixed; inset: 0; z-index: 39;
+    background: rgba(4, 7, 10, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 200ms var(--rb-ease);
+  }
+  .rb-narrow-scrim.is-on { opacity: 1; pointer-events: auto; }
+
+  /* ── modals go full screen ──────────────────────────────── */
+  .rb-modal { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+  .rb-modal .rb-modal__content { border-radius: 0; }
+  .rb-tpl-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── AI panel: full-width sheet, FAB stays reachable below it ── */
+  .rb-ai-panel {
+    position: fixed; left: 0; right: 0; top: auto; bottom: 86px;
+    width: 100%; max-width: none; max-height: 62dvh;
+    border-radius: 16px 16px 0 0;
+    z-index: 46;
+  }
+
+  /* ── floatbar: bottom-center, big targets (engine sets inline top/left) ── */
+  .rb-floatbar {
+    position: fixed !important; left: 50% !important; top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0) + 14px) !important;
+    transform: translateX(-50%);
+    z-index: 45;
+  }
+  .rb-floatbar .rb-btn--icon { min-width: 42px; min-height: 42px; }
+
+  /* ── start screen tuned for a narrow window ─────────────── */
+  .rb-empty__inner { padding: 24px 16px 48px; }
+  .rb-empty__title { font-size: 1.45rem; }
+  .rb-empty__sub { font-size: 0.84rem; }
+  .rb-empty__actions { flex-direction: column; align-items: stretch; margin-top: 2px; }
+  .rb-empty__actions .rb-btn { min-height: 44px; justify-content: center; }
+  .rb-start__grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── status bar: keep, compact ──────────────────────────── */
+  .rb-status { min-height: 22px; height: auto; padding: 3px 10px; font-size: 0.64rem; }
+
+  /* ── Rho sits below the (now 4-row) toolbar ─────────────── */
+  #rho-launch { top: calc(env(safe-area-inset-top, 0) + 204px) !important; right: 10px !important; }
+  #rho-panel { top: calc(env(safe-area-inset-top, 0) + 252px) !important; right: 10px !important; max-height: min(60vh, 520px); }
+}

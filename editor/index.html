@@ -65,6 +65,7 @@
     <link rel="stylesheet" href="/src/styles/grapes-overrides.css" />
     <link rel="stylesheet" href="/src/styles/adobe-surfaces.css" />
     <link rel="stylesheet" href="/src/styles/premium-glass.css" />
+    <link rel="stylesheet" href="/src/styles/narrow.css" />
   </head>
   <body>
     <!-- Premium line-icon sprite (ecosystem chat-surface icon language) -->
@@ -127,7 +128,7 @@
           <button type="button" class="rb-btn rb-btn--icon is-active" data-action="device-desktop" data-testid="btn-device-desktop" title="Desktop" aria-label="Desktop"><svg class="rb-icn"><use href="#i-desktop"/></svg></button>
           <button type="button" class="rb-btn rb-btn--icon" data-action="device-tablet" data-testid="btn-device-tablet" title="Tablet" aria-label="Tablet"><svg class="rb-icn"><use href="#i-tablet"/></svg></button>
           <button type="button" class="rb-btn rb-btn--icon" data-action="device-mobile" data-testid="btn-device-mobile" title="Mobile" aria-label="Mobile"><svg class="rb-icn"><use href="#i-phone"/></svg></button>
-          <button type="button" class="rb-btn" data-action="preview" data-testid="btn-preview"><svg class="rb-icn"><use href="#i-eye"/></svg><span>Preview</span></button>
+          <button type="button" class="rb-btn" data-action="preview" data-testid="btn-preview" title="Preview" aria-label="Preview"><svg class="rb-icn"><use href="#i-eye"/></svg><span>Preview</span></button>
         </div>
 
         <div class="rb-group" role="group" aria-label="File">
@@ -150,6 +151,7 @@
           <div class="rb-rail__tabs">
             <button type="button" class="rb-rail__tab is-active" data-rail-tab="add" data-testid="rail-tab-add">Add</button>
             <button type="button" class="rb-rail__tab" data-rail-tab="layers" data-testid="rail-tab-layers">Layers</button>
+            <button type="button" class="rb-rail__tab" data-rail-tab="files" data-testid="rail-tab-files">Files</button>
           </div>
           <div class="rb-rail__body rb-scroll">
             <div class="rb-rail__pane is-active" data-rail-pane="add" data-testid="rail-pane-add">
@@ -163,6 +165,17 @@
             <div class="rb-rail__pane" data-rail-pane="layers" data-testid="rail-pane-layers">
               <div id="gjs-layers" data-build-only></div>
               <div id="live-layers" data-live-only class="is-gone" data-testid="live-layers"></div>
+            </div>
+            <!-- Files — the labeled home of the file actions on phone widths.
+                 Visible only ≤480px (narrow.css); the desktop toolbar keeps
+                 New/Open/Export directly. -->
+            <div class="rb-rail__pane" data-rail-pane="files" data-testid="rail-pane-files">
+              <div class="rb-narrow-files">
+                <button type="button" class="rb-btn" data-action="new" data-testid="narrow-new" title="New blank page"><svg class="rb-icn"><use href="#i-file-plus"/></svg>New blank page</button>
+                <button type="button" class="rb-btn" data-action="open-html" data-testid="narrow-open" title="Open an HTML file"><svg class="rb-icn"><use href="#i-folder-open"/></svg>Open an HTML file</button>
+                <button type="button" class="rb-btn" data-action="open-folder" data-testid="narrow-open-folder" title="Open a folder of assets"><svg class="rb-icn"><use href="#i-folder-open"/></svg>Open a folder of assets</button>
+                <button type="button" class="rb-btn" data-action="export-zip" data-testid="narrow-export" title="Export HTML + CSS as ZIP"><svg class="rb-icn"><use href="#i-export"/></svg>Export HTML + CSS as ZIP</button>
+              </div>
             </div>
           </div>
         </aside>
@@ -266,6 +279,9 @@
         <span class="rb-status__spacer"></span>
         <span class="rb-status__sel" id="status-selection" data-testid="status-selection">No selection</span>
       </footer>
+
+      <!-- Narrow-shell sheet scrim (visible only ≤480px — narrow.css). -->
+      <div class="rb-narrow-scrim" id="narrow-scrim" data-action="narrow-close" data-testid="narrow-scrim"></div>
     </div>
 
     <!-- Hidden file inputs -->
@@ -364,6 +380,27 @@
     </dialog>
 
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // Narrow-shell sheet choreography (≤480px; inert at wider widths — the
+      // scrim has no box and the actions below only close the rail sheet).
+      // The dock-less desktop shell gets the same rule as the mobile dock:
+      // acting on a modal-opening or file control closes the sheet so the
+      // result is visible. shell.js owns the open/close toggle itself.
+      (function () {
+        var rail = document.getElementById('rail');
+        var scrim = document.getElementById('narrow-scrim');
+        if (!rail || !scrim) return;
+        var CLOSE_ACTIONS = ['open-templates', 'open-projects', 'open-settings', 'preview',
+          'new', 'open-html', 'open-folder', 'export-zip', 'save-html'];
+        document.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-action]');
+          if (!btn || btn.dataset.action === 'toggle-rail') return;
+          if (CLOSE_ACTIONS.indexOf(btn.dataset.action) === -1) return;
+          rail.classList.remove('is-narrow-open');
+          scrim.classList.remove('is-on');
+        });
+      })();
+    </script>
 
     <!-- Rho — the RHOBEAR companion, riding along in Designs' red. Lives in the
          bottom-LEFT corner (the design assistant owns bottom-right: Rho is the
