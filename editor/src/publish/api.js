@@ -22,9 +22,7 @@
  *       Storage layout (what the bundle contains):
  *         bundle/
  *           index.html          — SPA entry point
- *           styles.css          — all CSS (inline in the document
- *                                 for the export, separate file for
- *                                 the published bundle)
+ *           styles.css          — all CSS (separate file)
  *           404.html            — Cloudflare Pages 404 fallback
  *           _headers            — cache policy for Cloudflare Pages
  *           assets/             — binary assets (images, fonts, etc.)
@@ -103,6 +101,36 @@ export function validateConfig(config) {
 }
 
 /**
+ * Validate a bundle structure before deploy. Checks that the
+ * bundle contains the minimum files a static host needs.
+ *
+ * @param {Record<string, string | Uint8Array>} bundle
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+export function validateBundle(bundle) {
+  const errors = [];
+
+  if (!bundle || typeof bundle !== 'object') {
+    errors.push('bundle must be an object');
+    return { valid: false, errors };
+  }
+
+  if (!('index.html' in bundle)) {
+    errors.push('bundle is missing index.html');
+  }
+
+  if (!('styles.css' in bundle)) {
+    errors.push('bundle is missing styles.css');
+  }
+
+  if (!('404.html' in bundle)) {
+    errors.push('bundle is missing 404.html');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
  * Dry-run a publish — validates the config and bundle, then
  * returns a description of what WOULD be deployed. No network
  * calls are made. This is the path used by tests and by the
@@ -132,9 +160,36 @@ export function dryRun(config, bundle) {
     };
   }
 
+  // Validate bundle structure (required files)
+  const bundleValidation = validateBundle(bundle);
+  if (!bundleValidation.valid) {
+    return {
+      ok: false,
+      summary: 'Bundle validation failed',
+      files: [],
+      errors: bundleValidation.errors,
+    };
+  }
+
   const files = Object.keys(bundle).sort();
   const textFiles = files.filter((f) => typeof bundle[f] === 'string');
   const binaryFiles = files.filter((f) => bundle[f] instanceof Uint8Array);
+
+  // Validate that all bundle values are string or Uint8Array.
+  // Other types would fail serialization during a real deploy.
+  const invalidFiles = files.filter(
+    (f) => typeof bundle[f] !== 'string' && !(bundle[f] instanceof Uint8Array),
+  );
+  if (invalidFiles.length > 0) {
+    return {
+      ok: false,
+      summary: 'Bundle contains invalid value types',
+      files: [],
+      errors: invalidFiles.map(
+        (f) => `Bundle value for "${f}" must be string or Uint8Array`,
+      ),
+    };
+  }
 
   return {
     ok: true,
@@ -176,21 +231,14 @@ export async function publish(config, bundle) {
     throw new Error('publish: bundle must be a non-empty object');
   }
 
-  // Stub: in production this would call the Cloudflare Pages API.
+  // Stub: the real implementation would call the Cloudflare Pages API.
   // The owner must wire the real deploy before this function
-  // goes live. For now it returns a deterministic URL so the
-  // editor can assume the publish succeeded in dry-run mode.
-  const url = `https://${config.projectName}.pages.dev`;
-
-  // NOTE: the real implementation would:
-  //   1. Authenticate with `config.apiToken` against the CF API
-  //   2. Create a deployment for `config.projectName` under `config.accountId`
-  //   3. Upload each bundle entry (text files as strings, binary as Uint8Array)
-  //   4. Wait for the deployment to be live
-  //   5. Return { url: <deployed-url> }
-  //
-  // The stub returns the expected URL shape so callers can
-  // wire their UI without a real account.
-
-  return { url };
+  // goes live. Until then, this throws with clear instructions —
+  // returning a fake success URL would silently mislead callers.
+  throw new Error(
+    'publish: Cloudflare Pages publish is not yet wired. ' +
+    'The owner must provide: (1) a Cloudflare API token, ' +
+    '(2) an account ID, (3) a Pages project name. ' +
+    'See the publish contract in editor/src/publish/api.js for the config shape.',
+  );
 }

@@ -103,15 +103,16 @@ test('dryRun: validates a valid config + bundle', () => {
       projectName: 'my-project',
       directory: '/tmp/bundle',
     },
-    { 'index.html': '<p>hi</p>', 'styles.css': 'p{}' },
+    { 'index.html': '<p>hi</p>', 'styles.css': 'p{}', '404.html': '<p>not found</p>' },
   );
 
   assert.equal(result.ok, true);
   assert.equal(result.errors.length, 0);
   assert.ok(result.summary.includes('my-project'));
-  assert.ok(result.summary.includes('2 files'));
+  assert.ok(result.summary.includes('3 files'));
   assert.ok(result.files.includes('index.html'));
   assert.ok(result.files.includes('styles.css'));
+  assert.ok(result.files.includes('404.html'));
 });
 
 test('dryRun: rejects invalid config', () => {
@@ -150,13 +151,14 @@ test('dryRun: counts text and binary files correctly', () => {
     {
       'index.html': '<p>hi</p>',
       'styles.css': 'p{}',
+      '404.html': '<p>not found</p>',
       'assets/logo.png': new Uint8Array([0x89]),
     },
   );
 
   assert.equal(result.ok, true);
-  assert.ok(result.summary.includes('3 files'));
-  assert.ok(result.summary.includes('2 text'));
+  assert.ok(result.summary.includes('4 files'));
+  assert.ok(result.summary.includes('3 text'));
   assert.ok(result.summary.includes('1 binary'));
 });
 
@@ -164,20 +166,19 @@ test('dryRun: counts text and binary files correctly', () => {
 // publish (stub)
 // ---------------------------------------------------------------------------
 
-test('publish: stub validates config and returns a URL shape', async () => {
-  const result = await publish(
-    {
-      accountId: 'abc123',
-      apiToken: 'token-xyz',
-      projectName: 'my-project',
-      directory: '/tmp/bundle',
-    },
-    { 'index.html': '<p>hi</p>' },
+test('publish: stub throws with instructions (not a real deploy)', async () => {
+  await assert.rejects(
+    async () => publish(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      { 'index.html': '<p>hi</p>' },
+    ),
+    /Cloudflare Pages publish is not yet wired/,
   );
-
-  assert.ok(result.url);
-  assert.match(result.url, /\.pages\.dev$/);
-  assert.match(result.url, /my-project/);
 });
 
 test('publish: stub rejects invalid config', async () => {

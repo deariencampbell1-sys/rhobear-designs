@@ -16,7 +16,15 @@
  *       never from this module. No secrets are hardcoded.
  */
 
-import { dryRun, publish, validateConfig } from './api.js';
+import {
+  validateConfig,
+  dryRun as dryRunImpl,
+  publish,
+  validateBundle,
+} from './api.js';
+
+// Re-export for consumers
+export { validateConfig, validateBundle };
 import { exportBundle } from './export.js';
 
 // ---------------------------------------------------------------------------
@@ -24,42 +32,16 @@ import { exportBundle } from './export.js';
 // from either deploy.js or api.js
 // ---------------------------------------------------------------------------
 
-export { validateConfig, dryRun, publish };
+export { dryRunImpl as dryRun, publish };
+
+// Note: validateConfig, validateBundle exported above
 export { exportBundle };
 
 // ---------------------------------------------------------------------------
 // Deploy-specific helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Validate a bundle structure before deploy. Checks that the
- * bundle contains the minimum files a static host needs.
- *
- * @param {Record<string, string | Uint8Array>} bundle
- * @returns {{ valid: boolean, errors: string[] }}
- */
-export function validateBundle(bundle) {
-  const errors = [];
-
-  if (!bundle || typeof bundle !== 'object') {
-    errors.push('bundle must be an object');
-    return { valid: false, errors };
-  }
-
-  if (!('index.html' in bundle)) {
-    errors.push('bundle is missing index.html');
-  }
-
-  if (!('styles.css' in bundle)) {
-    errors.push('bundle is missing styles.css');
-  }
-
-  if (!('404.html' in bundle)) {
-    errors.push('bundle is missing 404.html (Cloudflare Pages doctrine)');
-  }
-
-  return { valid: errors.length === 0, errors };
-}
+// validateBundle is imported from api.js and re-exported above
 
 /**
  * Perform a dry-run deploy: validate config + bundle, then
@@ -84,7 +66,7 @@ export function dryRunDeploy(config, project) {
     };
   }
 
-  return dryRun(config, bundle);
+  return dryRunImpl(config, bundle);
 }
 
 /**

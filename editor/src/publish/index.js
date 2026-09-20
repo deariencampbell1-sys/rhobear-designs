@@ -16,5 +16,5 @@
  */
 
 export { exportBundle } from './export.js';
-export { validateConfig, dryRun, publish } from './api.js';
-export { validateBundle, dryRunDeploy, deploy, exportBundle as exportProject } from './deploy.js';
+export { validateConfig, validateBundle, dryRun, publish } from './api.js';
+export { dryRunDeploy, deploy } from './deploy.js';

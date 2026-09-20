@@ -132,7 +132,7 @@ test('dryRunDeploy: rejects invalid config', () => {
   assert.ok(result.errors.length > 0);
 });
 
-test('dryRunDeploy: rejects project with missing html', () => {
+test('dryRunDeploy: allows project with missing html (empty body is valid)', () => {
   // An empty project still produces a valid bundle (empty html
   // is safe), so this test confirms the bundle is still valid.
   const result = dryRunDeploy(
