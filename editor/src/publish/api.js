@@ -15,6 +15,12 @@
  *            publish (staging branch per user).
  *         5. Whether to add a custom _redirects file for SPA
  *            client-side routing.
+ *         6. What content/abuse policy applies to user-authored
+ *            HTML/CSS published verbatim to a RHOBEAR-controlled
+ *            *.pages.dev project — phishing, malware hosting, and
+ *            same-site abuse are all served from our origin, so the
+ *            owner must decide whether passthrough is intended
+ *            product behavior or gated (scan, review, takedown).
  *
  *       This module surfaces those decision points. It does NOT
  *       make any of them.
@@ -131,6 +137,22 @@ export function validateBundle(bundle) {
 }
 
 /**
+ * Find bundle keys whose value is neither a string nor a Uint8Array.
+ * Other types would fail serialization during a real deploy.
+ *
+ * Shared by dryRun() and publish() so the dry-run path and the real
+ * deploy path enforce the same value-type contract.
+ *
+ * @param {Record<string, unknown>} bundle
+ * @returns {string[]} The offending keys, sorted.
+ */
+function findInvalidBundleValues(bundle) {
+  return Object.keys(bundle)
+    .sort()
+    .filter((f) => typeof bundle[f] !== 'string' && !(bundle[f] instanceof Uint8Array));
+}
+
+/**
  * Dry-run a publish — validates the config and bundle, then
  * returns a description of what WOULD be deployed. No network
  * calls are made. This is the path used by tests and by the
@@ -177,9 +199,7 @@ export function dryRun(config, bundle) {
 
   // Validate that all bundle values are string or Uint8Array.
   // Other types would fail serialization during a real deploy.
-  const invalidFiles = files.filter(
-    (f) => typeof bundle[f] !== 'string' && !(bundle[f] instanceof Uint8Array),
-  );
+  const invalidFiles = findInvalidBundleValues(bundle);
   if (invalidFiles.length > 0) {
     return {
       ok: false,
@@ -205,9 +225,11 @@ export function dryRun(config, bundle) {
  *
  * This is a STUB — the real implementation requires a live
  * Cloudflare account and API token. The stub validates the
- * config and bundle, then throws with a clear message telling
- * the caller what they need to provide. This ensures the
- * interface is correct and testable without real credentials.
+ * config and the bundle exactly as dryRun() does, then throws
+ * with a clear message telling the caller what they need to
+ * provide. This ensures the interface is correct and testable
+ * without real credentials, and that the real deploy path is
+ * never laxer than the dry-run path.
  *
  * Owner must decide: which Cloudflare account/project to bind
  * to before this function can be wired to a real deploy.
@@ -216,8 +238,8 @@ export function dryRun(config, bundle) {
  * @param {Record<string, string | Uint8Array>} bundle
  * @returns {Promise<{ url: string }>} The deployed URL.
  *
- * @throws {Error} If config is invalid, bundle is empty, or
- *         credentials are missing.
+ * @throws {Error} If config is invalid, bundle is empty or
+ *         malformed, or credentials are missing.
  */
 export async function publish(config, bundle) {
   const configResult = validateConfig(config);
@@ -229,6 +251,24 @@ export async function publish(config, bundle) {
 
   if (!bundle || typeof bundle !== 'object' || Object.keys(bundle).length === 0) {
     throw new Error('publish: bundle must be a non-empty object');
+  }
+
+  // Enforce the same bundle contract dryRun() does. The real deploy path
+  // must never be weaker than the dry-run path.
+  const bundleValidation = validateBundle(bundle);
+  if (!bundleValidation.valid) {
+    throw new Error(
+      'publish: bundle validation failed — ' + bundleValidation.errors.join('; '),
+    );
+  }
+
+  const invalidFiles = findInvalidBundleValues(bundle);
+  if (invalidFiles.length > 0) {
+    throw new Error(
+      'publish: bundle contains invalid value types — ' + invalidFiles.map(
+        (f) => `Bundle value for "${f}" must be string or Uint8Array`,
+      ).join('; '),
+    );
   }
 
   // Stub: the real implementation would call the Cloudflare Pages API.

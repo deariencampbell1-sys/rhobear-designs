@@ -6,9 +6,11 @@
  *         - index.html contains the html, css, and title
  *         - styles.css contains the css
  *         - 404.html is present (Cloudflare Pages doctrine)
- *         - _headers is present with cache policy
+ *         - _headers is present with a revalidate-only cache policy
+ *           (no immutable / long max-age on unhashed paths)
  *         - assets/ directory contains provided assets
  *         - path traversal in asset keys is rejected
+ *         - exportBundleDetailed reports skipped asset keys
  *         - empty/missing fields use safe defaults
  *         - bundle is a locally-loadable static site (index.html
  *           is a valid HTML5 document)
@@ -19,7 +21,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { exportBundle } from './export.js';
+import { exportBundle, exportBundleDetailed } from './export.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -125,7 +127,18 @@ test('exportBundle: _headers contains cache policy', () => {
   const headers = bundle['_headers'];
   assert.equal(typeof headers, 'string');
   assert.match(headers, /Cache-Control/);
-  assert.match(headers, /max-age=31536000/);
+
+  // Every bundle path is mutable and unhashed: republishing reuses the
+  // same URL, so an immutable / 1-year cache would pin stale bytes in
+  // returning browsers with no way to force a refresh.
+  assert.ok(!headers.includes('immutable'),
+    '_headers must not mark unhashed paths immutable');
+  assert.ok(!headers.includes('max-age=31536000'),
+    '_headers must not use a 1-year max-age');
+
+  // styles.css and assets/* revalidate on every request.
+  assert.match(headers, /\/styles\.css\n\s+Cache-Control: no-cache/);
+  assert.match(headers, /\/assets\/\*\n\s+Cache-Control: no-cache/);
 });
 
 // ---------------------------------------------------------------------------
@@ -193,6 +206,68 @@ test('exportBundle: leading slashes in asset keys are stripped', () => {
 
   assert.ok('assets/logo.png' in bundle);
   assert.ok(!('/logo.png' in bundle));
+});
+
+test('exportBundleDetailed: backslash keys are skipped as unsafe-path', () => {
+  const { bundle, skipped } = exportBundleDetailed({
+    html: '<p>hi</p>',
+    css: 'p { color: red; }',
+    title: 'Test Page',
+    assets: {
+      // Windows treats '\' as a path separator, so a backslash key is
+      // rejected outright — traversal protection must not be OS-dependent.
+      '..\\..\\escape.png': new Uint8Array([1]),
+      // Rejected even without a '..' segment: bundle keys are URL paths.
+      'sub\\dir.png': new Uint8Array([2]),
+      'ok.png': new Uint8Array([3]),
+    },
+  });
+
+  assert.ok(!('assets/..\\..\\escape.png' in bundle));
+  assert.ok(!('assets/sub\\dir.png' in bundle));
+  assert.ok('assets/ok.png' in bundle);
+  assert.deepEqual(skipped, [
+    { key: '..\\..\\escape.png', reason: 'unsafe-path' },
+    { key: 'sub\\dir.png', reason: 'unsafe-path' },
+  ]);
+});
+
+test('exportBundleDetailed: colliding destinations keep the first writer', () => {
+  const first = new Uint8Array([0x89]);
+  const second = new Uint8Array([0x50]);
+
+  const { bundle, skipped } = exportBundleDetailed({
+    html: '<p>hi</p>',
+    css: 'p { color: red; }',
+    title: 'Test Page',
+    assets: {
+      // Both normalize to assets/logo.png (leading slash stripped).
+      // Keys are sorted before the loop, so '/logo.png' wins.
+      '/logo.png': first,
+      'logo.png': second,
+    },
+  });
+
+  assert.equal(bundle['assets/logo.png'], first);
+  assert.deepEqual(skipped, [{ key: 'logo.png', reason: 'collision' }]);
+});
+
+test('exportBundleDetailed: skipped is empty for a clean project', () => {
+  const { bundle, skipped } = exportBundleDetailed({
+    html: '<p>hi</p>',
+    css: 'p { color: red; }',
+    title: 'Test Page',
+    assets: {
+      'logo.png': new Uint8Array([0x89]),
+    },
+  });
+
+  assert.deepEqual(skipped, []);
+  assert.ok('assets/logo.png' in bundle);
+  assert.ok('index.html' in bundle);
+
+  // exportBundle returns only the Bundle map, not the report.
+  assert.ok(!('skipped' in exportBundle({ html: '<p>hi</p>', css: 'p{}' })));
 });
 
 // ---------------------------------------------------------------------------

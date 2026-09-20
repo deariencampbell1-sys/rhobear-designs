@@ -22,26 +22,24 @@ import {
   publish,
   validateBundle,
 } from './api.js';
-
-// Re-export for consumers
-export { validateConfig, validateBundle };
 import { exportBundle } from './export.js';
 
 // ---------------------------------------------------------------------------
-// Re-export the public surface from api.js so consumers can import
-// from either deploy.js or api.js
+// Re-export the public surface so consumers can import from either
+// deploy.js or api.js. index.js stays the documented entry point.
 // ---------------------------------------------------------------------------
 
-export { dryRunImpl as dryRun, publish };
-
-// Note: validateConfig, validateBundle exported above
-export { exportBundle };
+export {
+  validateConfig,
+  validateBundle,
+  dryRunImpl as dryRun,
+  publish,
+  exportBundle,
+};
 
 // ---------------------------------------------------------------------------
 // Deploy-specific helpers
 // ---------------------------------------------------------------------------
-
-// validateBundle is imported from api.js and re-exported above
 
 /**
  * Perform a dry-run deploy: validate config + bundle, then

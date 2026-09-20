@@ -7,14 +7,15 @@
  *       file layout.
  *
  *       The publish substrate provides:
- *         - exportBundle(): turn an editor project into a
- *           self-contained static bundle
+ *         - exportBundle() / exportBundleDetailed(): turn an editor
+ *           project into a self-contained static bundle (the detailed
+ *           form also reports which asset keys were skipped and why)
  *         - validateConfig() / dryRun() / publish(): the
  *           publish contract for Cloudflare Pages
  *         - validateBundle() / dryRunDeploy() / deploy(): the
  *           deploy path with a dry-run mode for tests
  */
 
-export { exportBundle } from './export.js';
+export { exportBundle, exportBundleDetailed } from './export.js';
 export { validateConfig, validateBundle, dryRun, publish } from './api.js';
 export { dryRunDeploy, deploy } from './deploy.js';

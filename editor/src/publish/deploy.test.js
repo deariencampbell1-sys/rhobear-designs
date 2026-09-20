@@ -12,7 +12,8 @@
  *         - dryRunDeploy rejects invalid config
  *         - dryRunDeploy rejects invalid project (missing html)
  *         - deploy stub throws with instructions (not a real deploy)
- *         - deploy stub validates bundle before throwing
+ *         - deploy stub throws after validation for a project
+ *           exportBundle considers valid
  *
  *       Run with: `node --test src/publish/`
  */
@@ -190,9 +191,15 @@ test('deploy: stub throws with instructions', async () => {
   );
 });
 
-test('deploy: stub validates bundle before throwing', async () => {
-  // A project that produces an invalid bundle should fail
-  // at validation, not at the deploy stub.
+test('deploy: stub throws after validation for a project exportBundle considers valid', async () => {
+  // Missing html is fine — exportBundle still emits index.html,
+  // styles.css, and 404.html, so the bundle validates and the call
+  // reaches the deploy stub, which is where it throws.
+  //
+  // Consequence: deploy()'s 'bundle validation failed' branch is
+  // defensive/unreachable today, because every project exportBundle
+  // accepts produces those three required files. It stays as a guard
+  // in case exportBundle ever stops emitting one of them.
   await assert.rejects(
     async () => deploy(
       {
@@ -202,9 +209,6 @@ test('deploy: stub validates bundle before throwing', async () => {
         directory: '/tmp/bundle',
       },
       { css: 'p{}' },
-      // Missing html — but exportBundle still produces a valid
-      // bundle (empty html is fine). So this should reach the
-      // deploy stub and throw there.
     ),
     /Cloudflare Pages deploy is not yet wired/,
   );
