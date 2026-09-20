@@ -139,7 +139,24 @@ For long-lived CDNs with aggressive caching, set:
 
 That pairs the entry's freshness with the assets' cacheability.
 
-## 5. Self-hosting without npm
+## 5. Rho companion (Builds-hosted injection)
+
+When served from the RHOBEAR Builds host (`builds.rhobear.ai`), the three
+Designs shells (`index.html`, `m.html`, `t.html`) receive the **Rho
+companion** (voice assistant orb + chat panel) via a service-worker
+injection that rewrites the HTML to include the companion-embed script.
+
+- The companion script is hosted at `https://builds.rhobear.ai/companion-embed-orb4.js`
+- The injection is transparent to the repo — the shells only need the CSS
+  overrides that position the orb in the chrome (top-right, beside the toolbar)
+- The local `editor/public/companion-embed.js` file is the reference embed
+  (used by the Builds SW to inject); the shells do not load it directly
+
+When self-hosting outside the Builds domain, the companion does NOT appear
+unless you inject the same script block yourself or host the companion
+endpoint separately. The editor is fully functional without Rho.
+
+## 6. Self-hosting without npm
 
 If you only want to *run* the editor and don't want to install npm,
 just download a release tarball (the maintainer publishes one for each
