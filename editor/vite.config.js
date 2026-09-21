@@ -61,6 +61,15 @@ export default defineConfig({
         changeOrigin: true,
         // Don't rewrite — the service already lives at /v1/*.
       },
+      // User-configured MiniMax calls need a same-origin development seam.
+      // The browser's Authorization header is forwarded only by the local
+      // Vite dev server; production builds contain no proxy.
+      '/mm': {
+        target: 'https://api.minimax.io',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/mm/, ''),
+      },
     },
   },
   preview: {
