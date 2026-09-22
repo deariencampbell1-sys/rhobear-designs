@@ -146,15 +146,55 @@ Designs shells (`index.html`, `m.html`, `t.html`) receive the **Rho
 companion** (voice assistant orb + chat panel) via a service-worker
 injection that rewrites the HTML to include the companion-embed script.
 
-- The companion script is hosted at `https://builds.rhobear.ai/companion-embed-orb4.js`
-- The injection is transparent to the repo — the shells only need the CSS
-  overrides that position the orb in the chrome (top-right, beside the toolbar)
-- The local `editor/public/companion-embed.js` file is the reference embed
-  (used by the Builds SW to inject); the shells do not load it directly
+### Service-worker injection contract
 
-When self-hosting outside the Builds domain, the companion does NOT appear
-unless you inject the same script block yourself or host the companion
-endpoint separately. The editor is fully functional without Rho.
+The Builds service worker injects **only the script tag**:
+
+```html
+<script defer src="companion-embed.js"></script>
+```
+
+The embed (`companion-embed-orb4.js` served from `builds.rhobear.ai`) is
+**self-configuring**: it detects the Builds origin and connects to
+`https://workbench.rhobear.ai/companion` with accent `#C84B4B` by default.
+No `window.RHOBEAR_COMPANION` config block is injected.
+
+The shells provide **positioning CSS overrides** to place the orb in the
+chrome (top-right, beside the toolbar) rather than its default canvas-corner
+placement:
+
+| Shell | Positioning |
+|-------|-------------|
+| `index.html` | `#rho-launch { top: 64px; right: 16px; width/height: 36px }` |
+| `t.html` | `#rho-launch { top: 64px; right: 16px; width/height: 36px }` |
+| `m.html` | `#rho-launch { top: 8px; right: 8px; width/height: 32px }` (mobile-fit) |
+
+The local `editor/public/companion-embed.js` file is the reference embed
+used by the Builds SW; the shells do not load it directly.
+
+### Self-hosting without Rho
+
+When self-hosting outside the Builds domain, no Rho companion appears by
+default. The editor is fully functional without it.
+
+If you want the Rho companion on your self-hosted build, you must inject
+the script block yourself. Add this before the closing `</body>` tag in each
+shell that should have the companion:
+
+```html
+<!-- Self-hosted Rho companion (add to your shell(s) if not on builds.rhobear.ai) -->
+<script>
+  window.RHOBEAR_COMPANION = {
+    endpoint: 'https://workbench.rhobear.ai/companion',
+    ready: true,
+    accent: '#C84B4B'
+  };
+</script>
+<script defer src="companion-embed.js"></script>
+```
+
+Host `companion-embed.js` from your static root (copy from
+`editor/public/companion-embed.js`) and adjust `endpoint`/`accent` as needed.
 
 ## 6. Self-hosting without npm
 
