@@ -23,6 +23,7 @@ import assert from 'node:assert/strict';
 
 import {
   exportBundle,
+  exportBundleDetailed,
   validateBundle,
   dryRunDeploy,
   deploy,
@@ -93,6 +94,22 @@ test('deploy: re-exports exportBundle', () => {
   });
 
   assert.ok('index.html' in bundle);
+});
+
+test('deploy: re-exports exportBundleDetailed', () => {
+  // Verify that exportBundleDetailed is re-exported and returns
+  // the skipped array for assets that cannot be safely written.
+  const { bundle, skipped } = exportBundleDetailed({
+    html: '<p>hi</p>',
+    css: 'p{}',
+    title: 'Test',
+    assets: { '/a\\b.png': new Uint8Array([1, 2, 3]) },
+  });
+
+  assert.ok('index.html' in bundle);
+  assert.ok(Array.isArray(skipped));
+  assert.equal(skipped.length, 1);
+  assert.equal(skipped[0].reason, 'unsafe-path');
 });
 
 // ---------------------------------------------------------------------------
@@ -221,5 +238,136 @@ test('deploy: stub rejects invalid config', async () => {
       { html: '<p>hi</p>', css: 'p{}', title: 'Test' },
     ),
     /invalid config/,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// deploy: skipped-asset and value-type contracts
+// ---------------------------------------------------------------------------
+
+test('dryRunDeploy: fails when assets are skipped (unsafe-path)', () => {
+  const result = dryRunDeploy(
+    {
+      accountId: 'abc123',
+      apiToken: 'token-xyz',
+      projectName: 'my-project',
+      directory: '/tmp/bundle',
+    },
+    {
+      html: '<h1>hi</h1>',
+      css: 'h1{}',
+      assets: { '/a\\b.png': new Uint8Array([1, 2, 3]) },
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes('unsafe-path')));
+  assert.ok(Array.isArray(result.skipped));
+  assert.equal(result.skipped.length, 1);
+});
+
+test('dryRunDeploy: fails when assets collide (collision)', () => {
+  const result = dryRunDeploy(
+    {
+      accountId: 'abc123',
+      apiToken: 'token-xyz',
+      projectName: 'my-project',
+      directory: '/tmp/bundle',
+    },
+    {
+      html: '<h1>hi</h1>',
+      css: 'h1{}',
+      assets: {
+        '/logo.png': new Uint8Array([1]),
+        'logo.png': new Uint8Array([2]),
+      },
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes('collision')));
+});
+
+test('dryRunDeploy: skipped is empty array on success', () => {
+  const result = dryRunDeploy(
+    {
+      accountId: 'abc123',
+      apiToken: 'token-xyz',
+      projectName: 'my-project',
+      directory: '/tmp/bundle',
+    },
+    { html: '<h1>hi</h1>', css: 'h1{}' },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.skipped, []);
+});
+
+test('deploy: throws when assets are skipped (unsafe-path)', async () => {
+  await assert.rejects(
+    async () => deploy(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      {
+        html: '<h1>hi</h1>',
+        css: 'h1{}',
+        assets: { '/a\\b.png': new Uint8Array([1, 2, 3]) },
+      },
+    ),
+    /some assets were skipped/,
+  );
+});
+
+test('deploy: throws when assets are skipped (collision)', async () => {
+  await assert.rejects(
+    async () => deploy(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      {
+        html: '<h1>hi</h1>',
+        css: 'h1{}',
+        assets: {
+          '/logo.png': new Uint8Array([1]),
+          'logo.png': new Uint8Array([2]),
+        },
+      },
+    ),
+    /some assets were skipped/,
+  );
+});
+
+test('deploy: throws when the bundle contains invalid value types', async () => {
+  // Build a project whose exported bundle carries a non-string,
+  // non-Uint8Array value. exportBundle does not type-check asset
+  // values, so deploy() must catch it — the real deploy path is
+  // never laxer than the dry-run path.
+  const project = {
+    html: '<h1>hi</h1>',
+    css: 'h1{}',
+    assets: { 'logo.png': /** @type {any} */ (42) },
+  };
+  const { bundle } = exportBundleDetailed(project);
+  // Sanity: the bad value made it into the bundle.
+  assert.equal(bundle['assets/logo.png'], 42);
+
+  await assert.rejects(
+    async () => deploy(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      project,
+    ),
+    /invalid value types/,
   );
 });

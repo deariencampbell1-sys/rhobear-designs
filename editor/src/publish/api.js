@@ -146,7 +146,7 @@ export function validateBundle(bundle) {
  * @param {Record<string, unknown>} bundle
  * @returns {string[]} The offending keys, sorted.
  */
-function findInvalidBundleValues(bundle) {
+export function findInvalidBundleValues(bundle) {
   return Object.keys(bundle)
     .sort()
     .filter((f) => typeof bundle[f] !== 'string' && !(bundle[f] instanceof Uint8Array));

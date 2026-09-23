@@ -21,8 +21,9 @@ import {
   dryRun as dryRunImpl,
   publish,
   validateBundle,
+  findInvalidBundleValues,
 } from './api.js';
-import { exportBundle } from './export.js';
+import { exportBundle, exportBundleDetailed } from './export.js';
 
 // ---------------------------------------------------------------------------
 // Re-export the public surface so consumers can import from either
@@ -35,6 +36,8 @@ export {
   dryRunImpl as dryRun,
   publish,
   exportBundle,
+  exportBundleDetailed,
+  findInvalidBundleValues,
 };
 
 // ---------------------------------------------------------------------------
@@ -47,12 +50,17 @@ export {
  * made. This is the path used by tests and by the editor's
  * preview/preview-deploy flow.
  *
+ * When assets are skipped during export (unsafe path, collision,
+ * or empty key), they are surfaced in the `skipped` field so
+ * callers can warn users instead of silently deploying incomplete
+ * content.
+ *
  * @param {object} config - PublishConfig (see api.js)
  * @param {object} project - The editor project { html, css, title, assets? }
- * @returns {{ ok: boolean, summary: string, files: string[], errors: string[] }}
+ * @returns {{ ok: boolean, summary: string, files: string[], errors: string[], skipped?: object[] }}
  */
 export function dryRunDeploy(config, project) {
-  const bundle = exportBundle(project);
+  const { bundle, skipped } = exportBundleDetailed(project);
   const bundleValidation = validateBundle(bundle);
 
   if (!bundleValidation.valid) {
@@ -64,7 +72,23 @@ export function dryRunDeploy(config, project) {
     };
   }
 
-  return dryRunImpl(config, bundle);
+  // Fail hard on skipped assets: the user's project referenced
+  // assets that cannot be safely deployed. Surface the skipped
+  // list so the caller can explain what was rejected.
+  if (skipped.length > 0) {
+    const reasons = skipped.map(s => `${s.key}: ${s.reason}`);
+    return {
+      ok: false,
+      summary: 'Some assets were skipped during export',
+      files: [],
+      errors: reasons.map(r => `Asset skipped: ${r}`),
+      skipped,
+    };
+  }
+
+  const result = dryRunImpl(config, bundle);
+  // Propagate skipped (empty in success path, populated above for failure)
+  return { ...result, skipped };
 }
 
 /**
@@ -92,12 +116,32 @@ export async function deploy(config, project) {
     );
   }
 
-  const bundle = exportBundle(project);
-  const bundleValidation = validateBundle(bundle);
+  const { bundle, skipped } = exportBundleDetailed(project);
 
+  // Fail hard on skipped assets: the user's project referenced
+  // assets that cannot be safely deployed.
+  if (skipped.length > 0) {
+    const reasons = skipped.map(s => `${s.key}: ${s.reason}`);
+    throw new Error(
+      'deploy: some assets were skipped — ' + reasons.join('; '),
+    );
+  }
+
+  const bundleValidation = validateBundle(bundle);
   if (!bundleValidation.valid) {
     throw new Error(
       'deploy: bundle validation failed — ' + bundleValidation.errors.join('; '),
+    );
+  }
+
+  // Enforce the same bundle contract dryRun() and publish() do.
+  // The real deploy path must never be laxer than the dry-run path.
+  const invalidFiles = findInvalidBundleValues(bundle);
+  if (invalidFiles.length > 0) {
+    throw new Error(
+      'deploy: bundle contains invalid value types — ' + invalidFiles.map(
+        (f) => `Bundle value for "${f}" must be string or Uint8Array`,
+      ).join('; '),
     );
   }
 
