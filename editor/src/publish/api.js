@@ -53,9 +53,9 @@
 /**
  * Configuration for publishing a bundle to Cloudflare Pages.
  *
- * Every field is required for a real deploy. For dry-run mode,
- * only `project` is needed (the rest are validated but not
- * used for network calls).
+ * All four fields (accountId, apiToken, projectName, directory)
+ * are required by both dryRun() and publish(). There is no
+ * "project" field — callers pass the bundle as a separate argument.
  *
  * @typedef {{
  *   accountId: string,

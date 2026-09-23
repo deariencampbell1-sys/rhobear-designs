@@ -117,7 +117,7 @@ test('exportBundle: 404.html is present for Cloudflare Pages doctrine', () => {
     '404.html should mention the missing-page context');
 });
 
-test('exportBundle: _headers contains cache policy', () => {
+test('exportBundle: _headers contains cache policy and security headers', () => {
   const bundle = exportBundle({
     html: '<p>hi</p>',
     css: 'p { color: red; }',
@@ -139,6 +139,11 @@ test('exportBundle: _headers contains cache policy', () => {
   // styles.css and assets/* revalidate on every request.
   assert.match(headers, /\/styles\.css\n\s+Cache-Control: no-cache/);
   assert.match(headers, /\/assets\/\*\n\s+Cache-Control: no-cache/);
+
+  // Security headers are present on all paths.
+  assert.match(headers, /X-Content-Type-Options: nosniff/);
+  assert.match(headers, /Referrer-Policy: strict-origin-when-cross-origin/);
+  assert.match(headers, /Content-Security-Policy: frame-ancestors 'none'/);
 });
 
 // ---------------------------------------------------------------------------
@@ -385,4 +390,55 @@ test('exportBundle: same input produces the same output', () => {
   assert.equal(a['styles.css'], b['styles.css']);
   assert.equal(a['404.html'], b['404.html']);
   assert.equal(a['_headers'], b['_headers']);
+});
+
+// ---------------------------------------------------------------------------
+// Scripts passthrough is intentionally NOT implemented
+// ---------------------------------------------------------------------------
+
+test('exportBundle: scripts input is NOT injected into index.html', () => {
+  // This PR ships only the declared { html, css, title, assets? } contract.
+  // Head-resident script preservation is intentionally OUT OF SCOPE.
+  // A malicious scripts input must NOT result in script injection.
+  const bundle = exportBundle({
+    html: '<p>hi</p>',
+    css: 'p { color: red; }',
+    title: 'Test Page',
+    // @ts-expect-error — scripts is intentionally not part of the contract
+    scripts: [{ raw: '<script src="https://evil.example/x.js"></script>' }],
+  });
+
+  const index = bundle['index.html'];
+  // The malicious script must NOT appear in the output.
+  assert.ok(!index.includes('evil.example'));
+  assert.ok(!index.includes('<script src="https://evil.example/x.js"></script>'));
+});
+
+// ---------------------------------------------------------------------------
+// Invalid asset values
+// ---------------------------------------------------------------------------
+
+test('exportBundleDetailed: non-string, non-Uint8Array values are skipped as invalid-value', () => {
+  const { bundle, skipped } = exportBundleDetailed({
+    html: '<p>hi</p>',
+    css: 'p { color: red; }',
+    title: 'Test Page',
+    assets: {
+      'ok.png': 'AAA',
+      'bad.png': 42,
+      'bad2.png': null,
+      'bad3.png': {},
+    },
+  });
+
+  assert.ok('assets/ok.png' in bundle);
+  assert.ok(!('assets/bad.png' in bundle));
+  assert.ok(!('assets/bad2.png' in bundle));
+  assert.ok(!('assets/bad3.png' in bundle));
+
+  assert.deepEqual(skipped, [
+    { key: 'bad.png', reason: 'invalid-value' },
+    { key: 'bad2.png', reason: 'invalid-value' },
+    { key: 'bad3.png', reason: 'invalid-value' },
+  ]);
 });

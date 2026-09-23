@@ -27,6 +27,12 @@
  *
  *       Owner decisions surfaced in PR description — this module does
  *       NOT make any irreversible hosting choices.
+ *
+ *       OUT OF SCOPE: Head-resident <script> preservation is intentionally
+ *       NOT implemented in this PR. The PR ships only the declared
+ *       { html, css, title, assets? } contract. Script preservation is
+ *       deferred to a follow-up pending owner decision on content/abuse
+ *       policy for user-authored content (owner decision #6).
  */
 
 // ---------------------------------------------------------------------------
@@ -74,22 +80,12 @@ function escapeAttr(s) {
  * Mirrors the shell used by `exportHtml` in `engine/io.js` so the
  * exported bundle is a faithful render of the editor's output.
  *
- * @param {{html: string, title: string, scripts?: object[]}} parts
+ * @param {{html: string, title: string}} parts
  * @returns {string}
  */
-function buildIndexHtml({ html, title, scripts }) {
+function buildIndexHtml({ html, title }) {
   const safeTitle = escapeAttr(title || DEFAULT_TITLE);
-  
-  // Inject scripts into the head if provided. This preserves
-  // head scripts and external scripts that `importHtml` extracts
-  // but the simple `{ html, css }` project shape would otherwise drop.
-  let scriptTags = '';
-  if (Array.isArray(scripts) && scripts.length > 0) {
-    // Scripts are already raw <script> tags with their attributes
-    // (src, type, etc.) and inline content preserved.
-    scriptTags = scripts.map(s => s && typeof s.raw === 'string' ? s.raw : '').join('\n  ');
-  }
-  
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,7 +93,6 @@ function buildIndexHtml({ html, title, scripts }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle}</title>
   <link rel="stylesheet" href="styles.css" />
-  ${scriptTags}
 </head>
 <body>
 ${html || ''}
@@ -138,7 +133,7 @@ function build404Html(title) {
 }
 
 /**
- * Build a _headers file for Cloudflare Pages cache policy.
+ * Build a _headers file for Cloudflare Pages cache policy and security.
  *
  * Every path in the bundle is mutable and unhashed: republishing to
  * the same Pages project reuses the same URLs. A long-lived immutable
@@ -146,10 +141,15 @@ function build404Html(title) {
  * with no way to force a refresh, so all four entries use no-cache
  * (always revalidate — a 304 when unchanged, never stale bytes).
  *
- * - index.html → no-cache
- * - 404.html → no-cache
- * - styles.css → no-cache
- * - assets/* → no-cache
+ * Security headers are applied to all paths:
+ *   - X-Content-Type-Options: nosniff — prevents MIME sniffing
+ *   - Referrer-Policy: strict-origin-when-cross-origin
+ *   - Content-Security-Policy: frame-ancestors 'none' — prevents clickjacking
+ *
+ * - index.html → no-cache + security headers
+ * - 404.html → no-cache + security headers
+ * - styles.css → no-cache + security headers
+ * - assets/* → no-cache + security headers
  *
  * Future optimization: content-hash the filenames (styles.<hash>.css,
  * assets/<hash>-logo.png) and rewrite the references in index.html.
@@ -159,18 +159,30 @@ function build404Html(title) {
  * @returns {string}
  */
 function buildHeaders() {
-  return `# Cloudflare Pages cache policy for RHOBEAR Designs exports
+  return `# Cloudflare Pages cache policy and security headers for RHOBEAR Designs exports
 /index.html
   Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'
 
 /404.html
   Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'
 
 /styles.css
   Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'
 
 /assets/*
   Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'
 `;
 }
 
@@ -190,6 +202,8 @@ function buildHeaders() {
  *     Windows treats `\` as a path separator, so allowing it would
  *     make traversal protection OS-dependent — as is a key with any
  *     `..` segment
+ *   - a value that is neither a string nor a Uint8Array is skipped as
+ *     'invalid-value'
  *   - a key whose destination is already taken (e.g. `/logo.png` and
  *     `logo.png` both normalize to assets/logo.png) is skipped as
  *     'collision'; the first writer wins, nothing is overwritten
@@ -201,12 +215,11 @@ function buildHeaders() {
  *   html: string,
  *   css: string,
  *   title?: string,
- *   assets?: Record<string, string | Uint8Array>,
- *   scripts?: object[]
+ *   assets?: Record<string, string | Uint8Array>
  * }} project
  * @returns {{
  *   bundle: Record<string, string | Uint8Array>,
- *   skipped: Array<{ key: string, reason: 'empty-key' | 'unsafe-path' | 'collision' }>
+ *   skipped: Array<{ key: string, reason: 'empty-key' | 'unsafe-path' | 'invalid-value' | 'collision' }>
  * }}
  *
  * @example
@@ -227,13 +240,12 @@ export function exportBundleDetailed(project) {
   const assets = project?.assets && typeof project.assets === 'object'
     ? project.assets
     : {};
-  const scripts = Array.isArray(project?.scripts) ? project.scripts : [];
 
   /** @type {Record<string, string | Uint8Array>} */
   const bundle = {};
 
   // Main entry point.
-  bundle[INDEX_FILENAME] = buildIndexHtml({ html, title, scripts });
+  bundle[INDEX_FILENAME] = buildIndexHtml({ html, title });
 
   // Standalone stylesheet.
   bundle[STYLES_FILENAME] = css || '/* Generated by RHOBEAR Designs */';
@@ -244,7 +256,7 @@ export function exportBundleDetailed(project) {
   // Cache policy for Cloudflare Pages.
   bundle[HEADERS_FILENAME] = buildHeaders();
 
-  /** @type {Array<{ key: string, reason: 'empty-key' | 'unsafe-path' | 'collision' }>} */
+  /** @type {Array<{ key: string, reason: 'empty-key' | 'unsafe-path' | 'invalid-value' | 'collision' }>} */
   const skipped = [];
 
   // Assets — written under assets/ with path traversal protection.
@@ -263,6 +275,11 @@ export function exportBundleDetailed(project) {
     const hasTraversal = safeKey.split('/').some((seg) => seg === '..');
     if (hasBackslash || hasTraversal) {
       skipped.push({ key, reason: 'unsafe-path' });
+      continue;
+    }
+    // Reject values that are not string or Uint8Array.
+    if (typeof value !== 'string' && !(value instanceof Uint8Array)) {
+      skipped.push({ key, reason: 'invalid-value' });
       continue;
     }
     const destKey = `${ASSETS_DIR}/${safeKey}`;
@@ -293,8 +310,7 @@ export function exportBundleDetailed(project) {
  *   html: string,
  *   css: string,
  *   title?: string,
- *   assets?: Record<string, string | Uint8Array>,
- *   scripts?: object[]
+ *   assets?: Record<string, string | Uint8Array>
  * }} project
  * @returns {Record<string, string | Uint8Array>}
  *

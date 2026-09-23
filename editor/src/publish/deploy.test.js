@@ -344,19 +344,16 @@ test('deploy: throws when assets are skipped (collision)', async () => {
   );
 });
 
-test('deploy: throws when the bundle contains invalid value types', async () => {
-  // Build a project whose exported bundle carries a non-string,
-  // non-Uint8Array value. exportBundle does not type-check asset
-  // values, so deploy() must catch it — the real deploy path is
-  // never laxer than the dry-run path.
+test('deploy: throws when assets have invalid-value types', async () => {
+  // deploy() calls exportBundleDetailed, which now skips assets with
+  // non-string, non-Uint8Array values (invalid-value). The test verifies
+  // that deploy() fails when such assets are present.
+  const invalidAsset = /** @type {any} */ (42);
   const project = {
     html: '<h1>hi</h1>',
     css: 'h1{}',
-    assets: { 'logo.png': /** @type {any} */ (42) },
+    assets: { 'logo.png': invalidAsset },
   };
-  const { bundle } = exportBundleDetailed(project);
-  // Sanity: the bad value made it into the bundle.
-  assert.equal(bundle['assets/logo.png'], 42);
 
   await assert.rejects(
     async () => deploy(
@@ -368,6 +365,6 @@ test('deploy: throws when the bundle contains invalid value types', async () => 
       },
       project,
     ),
-    /invalid value types/,
+    /some assets were skipped/,
   );
 });
