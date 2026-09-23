@@ -22,7 +22,7 @@ import {
   publish,
   validateBundle,
 } from './api.js';
-import { exportBundle } from './export.js';
+import { exportBundleDetailed, exportBundle } from './export.js';
 
 // ---------------------------------------------------------------------------
 // Re-export the public surface so consumers can import from either
@@ -52,7 +52,24 @@ export {
  * @returns {{ ok: boolean, summary: string, files: string[], errors: string[] }}
  */
 export function dryRunDeploy(config, project) {
-  const bundle = exportBundle(project);
+  const { bundle, skipped } = exportBundleDetailed(project);
+
+  // Per export.js contract: nothing is dropped silently.
+  // When assets are skipped, surface warnings to the user.
+  if (skipped.length > 0) {
+    const warnings = skipped.map(
+      (s) => `Asset "${s.key}" skipped: ${s.reason}`,
+    );
+    // Fail hard on skipped assets - the user needs to know before deploy.
+    return {
+      ok: false,
+      summary: 'Bundle contains skipped assets',
+      files: [],
+      errors: warnings,
+      skipped,
+    };
+  }
+
   const bundleValidation = validateBundle(bundle);
 
   if (!bundleValidation.valid) {
@@ -92,12 +109,35 @@ export async function deploy(config, project) {
     );
   }
 
-  const bundle = exportBundle(project);
+  const { bundle, skipped } = exportBundleDetailed(project);
+
+  // Per export.js contract: nothing is dropped silently.
+  // When assets are skipped, fail hard before deploy.
+  if (skipped.length > 0) {
+    const warnings = skipped.map(
+      (s) => `Asset "${s.key}" skipped: ${s.reason}`,
+    );
+    throw new Error('deploy: skipped assets — ' + warnings.join('; '));
+  }
+
   const bundleValidation = validateBundle(bundle);
 
   if (!bundleValidation.valid) {
     throw new Error(
       'deploy: bundle validation failed — ' + bundleValidation.errors.join('; '),
+    );
+  }
+
+  // Validate bundle value types (same check dryRun() and publish() perform)
+  const invalidFiles = Object.keys(bundle)
+    .sort()
+    .filter(
+      (f) => typeof bundle[f] !== 'string' && !(bundle[f] instanceof Uint8Array),
+    );
+  if (invalidFiles.length > 0) {
+    throw new Error(
+      'deploy: bundle contains invalid value types — ' +
+        invalidFiles.map((f) => `Bundle value for "${f}" must be string or Uint8Array`).join('; '),
     );
   }
 

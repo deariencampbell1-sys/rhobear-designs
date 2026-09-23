@@ -172,6 +172,53 @@ test('dryRunDeploy: includes assets in the bundle files', () => {
   assert.ok(result.files.includes('assets/logo.png'));
 });
 
+test('dryRunDeploy: fails on skipped assets (unsafe-path)', () => {
+  const result = dryRunDeploy(
+    {
+      accountId: 'abc123',
+      apiToken: 'token-xyz',
+      projectName: 'my-project',
+      directory: '/tmp/bundle',
+    },
+    {
+      html: '<h1>test</h1>',
+      css: '',
+      title: 'Test',
+      assets: {
+        '/a\\b.png': 'AAA', // backslash causes unsafe-path skip
+      },
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.summary.includes('skipped assets'));
+  assert.ok(result.errors.some((e) => e.includes('unsafe-path')));
+});
+
+test('dryRunDeploy: fails on skipped assets (collision)', () => {
+  const result = dryRunDeploy(
+    {
+      accountId: 'abc123',
+      apiToken: 'token-xyz',
+      projectName: 'my-project',
+      directory: '/tmp/bundle',
+    },
+    {
+      html: '<h1>test</h1>',
+      css: '',
+      title: 'Test',
+      assets: {
+        '/logo.png': 'AAA',
+        'logo.png': 'BBB', // collision - /logo.png wins
+      },
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.summary.includes('skipped assets'));
+  assert.ok(result.errors.some((e) => e.includes('collision')));
+});
+
 // ---------------------------------------------------------------------------
 // deploy (stub)
 // ---------------------------------------------------------------------------
@@ -221,5 +268,51 @@ test('deploy: stub rejects invalid config', async () => {
       { html: '<p>hi</p>', css: 'p{}', title: 'Test' },
     ),
     /invalid config/,
+  );
+});
+
+test('deploy: throws on skipped assets', async () => {
+  await assert.rejects(
+    async () => deploy(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      {
+        html: '<h1>test</h1>',
+        css: '',
+        title: 'Test',
+        assets: {
+          '/logo.png': 'AAA',
+          'logo.png': 'BBB', // collision
+        },
+      },
+    ),
+    /skipped assets/,
+  );
+});
+
+test('deploy: throws on invalid bundle value types', async () => {
+  // Create a malformed bundle by passing project with non-serializable asset
+  await assert.rejects(
+    async () => deploy(
+      {
+        accountId: 'abc123',
+        apiToken: 'token-xyz',
+        projectName: 'my-project',
+        directory: '/tmp/bundle',
+      },
+      {
+        html: '<h1>test</h1>',
+        css: '',
+        title: 'Test',
+        assets: {
+          'x.txt': 42, // number not string/Uint8Array
+        },
+      },
+    ),
+    /invalid value types/,
   );
 });
