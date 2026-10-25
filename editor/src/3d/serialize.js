@@ -21,7 +21,7 @@
  *                 position: [x, y, z],
  *                 rotation: [x, y, z],                 // degrees, Euler XYZ
  *                 scale:    [x, y, z],
- *                 color:    "#e94560",                 // hex string
+ *                 color:    "#e05252",                 // hex string
  *                 metalness: 0..1,
  *                 roughness: 0..1,
  *               },

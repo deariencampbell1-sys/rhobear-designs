@@ -96,7 +96,7 @@ export function createThreeMode(refs) {
     const rotDeg = (st.rotation || [0, 0, 0]).map((r) => Math.round((r * 180) / Math.PI));
     const sc = Math.round(((st.scale && st.scale[0]) || 1) * 100);
 
-    inspectorEl.appendChild(field('Color', colorInput(st.color || '#e94560', (hex) => scene.setColor(id, hex))));
+    inspectorEl.appendChild(field('Color', colorInput(st.color || '#e05252', (hex) => scene.setColor(id, hex))));
     inspectorEl.appendChild(field('Metalness', slider(0, 100, Math.round((st.metalness ?? 0) * 100), (v) => scene.setMetalness(id, v / 100))));
     inspectorEl.appendChild(field('Roughness', slider(0, 100, Math.round((st.roughness ?? 1) * 100), (v) => scene.setRoughness(id, v / 100))));
     const rot = rotDeg.slice();
@@ -155,7 +155,7 @@ export function createThreeMode(refs) {
 }
 
 function deg(d) { return (d * Math.PI) / 180; }
-function hex6(v) { const s = String(v || ''); return /^#[0-9a-f]{6}$/i.test(s) ? s : '#e94560'; }
+function hex6(v) { const s = String(v || ''); return /^#[0-9a-f]{6}$/i.test(s) ? s : '#e05252'; }
 function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 /** A self-contained 3D embed. The scene data rides in a `data-rb-3d` attribute and
@@ -179,7 +179,7 @@ for (const host of document.querySelectorAll('.rb-3d-embed[data-rb-3d]:not([data
   const dl = new THREE.DirectionalLight(0xffffff, 1.15); dl.position.set(5,8,5); scene.add(dl);
   for (const o of (DATA.objects||[])) {
     const geo = (G[o.type]||G.box)();
-    const mat = new THREE.MeshStandardMaterial({ color:o.color||'#e94560', metalness:o.metalness??0, roughness:o.roughness??1 });
+    const mat = new THREE.MeshStandardMaterial({ color:o.color||'#e05252', metalness:o.metalness??0, roughness:o.roughness??1 });
     const mesh = new THREE.Mesh(geo, mat);
     if (o.position) mesh.position.set(o.position[0],o.position[1],o.position[2]);
     if (o.rotation) mesh.rotation.set(o.rotation[0],o.rotation[1],o.rotation[2]);

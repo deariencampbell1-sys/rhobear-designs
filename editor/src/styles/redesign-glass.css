@@ -11,7 +11,7 @@
 /* ── Redesign ambient light — cool red + teal auras ── */
 .rb-app {
   background:
-    radial-gradient(900px 620px at 88% 96%, rgba(200, 75, 75, 0.07), transparent 62%),
+    radial-gradient(900px 620px at 88% 96%, rgba(224, 82, 82, 0.07), transparent 62%),
     radial-gradient(760px 520px at 6% -4%, rgba(42, 143, 168, 0.045), transparent 60%),
     radial-gradient(640px 480px at 55% 118%, rgba(42, 143, 168, 0.035), transparent 65%),
     var(--rb-bg);
@@ -50,21 +50,21 @@
   background: var(--rb-brand);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
-    0 0 20px -4px rgba(200, 75, 75, 0.4);
+    0 0 20px -4px rgba(224, 82, 82, 0.4);
 }
 
 /* ── Primary buttons — cool red gradient ── */
 .rb-btn--primary {
-  background: linear-gradient(135deg, #C84B4B, #A63A3A);
+  background: linear-gradient(135deg, #e05252, #c04444);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
-    0 6px 20px -6px rgba(200, 75, 75, 0.35);
+    0 6px 20px -6px rgba(224, 82, 82, 0.35);
 }
 .rb-btn--primary:hover {
   filter: brightness(1.08);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
-    0 8px 28px -6px rgba(200, 75, 75, 0.45);
+    0 8px 28px -6px rgba(224, 82, 82, 0.45);
 }
 
 /* ── Active tabs and chips — cool red glow ── */
@@ -73,10 +73,10 @@
 .rb-lib-cat.is-active,
 .rb-preset.is-active {
   color: var(--rb-brand);
-  background: var(--glass-body), rgba(200, 75, 75, 0.12);
+  background: var(--glass-body), rgba(224, 82, 82, 0.12);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.12),
-    0 0 18px -8px rgba(200, 75, 75, 0.35);
+    0 0 18px -8px rgba(224, 82, 82, 0.35);
 }
 
 /* ── Templates + library cards — redesign frosted card ── */
@@ -85,7 +85,7 @@
               rgba(9, 10, 12, 0.42);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 0 24px -8px rgba(200, 75, 75, 0.28),
+    0 0 24px -8px rgba(224, 82, 82, 0.28),
     0 14px 30px -14px rgba(0,0,0,0.65);
 }
 .rb-tpl-card:hover, .rb-lib-card:hover {
@@ -94,7 +94,7 @@
               rgba(9, 10, 12, 0.42);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 0 32px -6px rgba(200, 75, 75, 0.45),
+    0 0 32px -6px rgba(224, 82, 82, 0.45),
     0 18px 36px -14px rgba(0,0,0,0.7);
 }
 
@@ -102,7 +102,7 @@
 .rb-btn:hover {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 0 20px -8px rgba(200, 75, 75, 0.35);
+    0 0 20px -8px rgba(224, 82, 82, 0.35);
 }
 
 /* ── Modals — redesign frosted pane ── */
@@ -111,26 +111,26 @@
               rgba(12, 14, 20, 0.72);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 0 32px -8px rgba(200, 75, 75, 0.3),
+    0 0 32px -8px rgba(224, 82, 82, 0.3),
     0 20px 60px rgba(0,0,0,0.6);
 }
 
 /* ── Toast notifications — cool red bloom ── */
 .rb-toast {
   background: var(--glass-body), rgba(20, 8, 8, 0.6);
-  border: 1px solid rgba(200, 75, 75, 0.3);
+  border: 1px solid rgba(224, 82, 82, 0.3);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 10px 34px -12px rgba(200, 75, 75, 0.35);
+    0 10px 34px -12px rgba(224, 82, 82, 0.35);
 }
 
 /* ── Start screen / empty state ── add cool red accent ── */
 .rb-empty__mark {
-  filter: drop-shadow(0 0 20px rgba(200, 75, 75, 0.35));
+  filter: drop-shadow(0 0 20px rgba(224, 82, 82, 0.35));
   transition: filter 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .rb-empty__mark:hover {
-  filter: drop-shadow(0 0 32px rgba(200, 75, 75, 0.5));
+  filter: drop-shadow(0 0 32px rgba(224, 82, 82, 0.5));
 }
 
 /* ── AI FAB — teal accent (redesign style) ── */
@@ -154,7 +154,7 @@
 /* ── Status dot — cool red ── */
 .rb-status__dot {
   color: var(--rb-brand);
-  text-shadow: 0 0 8px rgba(200, 75, 75, 0.5);
+  text-shadow: 0 0 8px rgba(224, 82, 82, 0.5);
 }
 
 /* ── Recent project cards in start screen ── */
@@ -162,13 +162,13 @@
   border: 1px solid var(--rb-glass-bd);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
-    0 0 20px -10px rgba(200, 75, 75, 0.2);
+    0 0 20px -10px rgba(224, 82, 82, 0.2);
 }
 .rb-start__recent:hover {
   border-color: var(--rb-glass-hi);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.12),
-    0 0 24px -10px rgba(200, 75, 75, 0.35);
+    0 0 24px -10px rgba(224, 82, 82, 0.35);
 }
 
 /* ── Section labels — teal (redesign style) ── */
@@ -180,20 +180,20 @@
 .rb-modal--wide .rb-modal__content {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
-    0 0 24px -8px rgba(200, 75, 75, 0.25);
+    0 0 24px -8px rgba(224, 82, 82, 0.25);
 }
 
 /* ── Pro/license modal ── */
 #rb-pro-modal .rb-modal__content {
-  border: 1px solid rgba(200, 75, 75, 0.2);
+  border: 1px solid rgba(224, 82, 82, 0.2);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    0 0 40px -10px rgba(200, 75, 75, 0.4);
+    0 0 40px -10px rgba(224, 82, 82, 0.4);
 }
 
 /* ── Float bar — enhance with cool red accent on hover ── */
 .rb-floatbar .rb-btn:hover svg {
-  filter: drop-shadow(0 0 6px rgba(200, 75, 75, 0.4));
+  filter: drop-shadow(0 0 6px rgba(224, 82, 82, 0.4));
 }
 
 /* ── Inspector tag — cool red ── */

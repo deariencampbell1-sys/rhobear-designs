@@ -27,7 +27,7 @@ const EDIT_CURSOR = 'body *{cursor:pointer!important}[contenteditable="true"]{cu
 // chrome) — the family system explicitly leaves this channel free: users build
 // in any color. The Designs red brand gradient leads the list.
 const GRADIENTS = [
-  'linear-gradient(135deg,#ff3a2a,#ff6b5e)',
+  'linear-gradient(135deg,#e05252,#ff6b5e)',
   'linear-gradient(135deg,#667eea,#764ba2)',
   'linear-gradient(135deg,#f093fb,#f5576c)',
   'linear-gradient(135deg,#0f2027,#2c5364)',
@@ -41,7 +41,7 @@ const SHADOWS = [
   { label: 'Soft', value: '0 2px 8px rgba(0,0,0,.08)' },
   { label: 'Medium', value: '0 8px 24px rgba(0,0,0,.12)' },
   { label: 'Large', value: '0 20px 50px rgba(0,0,0,.2)' },
-  { label: 'Glow', value: '0 0 24px rgba(233,69,96,.5)' },
+  { label: 'Glow', value: '0 0 24px rgba(224, 82, 82,.5)' },
 ];
 
 export function createLiveMode(refs) {

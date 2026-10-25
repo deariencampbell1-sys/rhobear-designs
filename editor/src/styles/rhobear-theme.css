@@ -1,6 +1,6 @@
 /* ============================================================================
    RHOBEAR Designs — editor chrome
-   Structure: Starlight (family design system) — graphite/navy floors, hairline
+   Structure: Designs base (see redesign-tokens.css) — graphite/navy floors, hairline
    separators, no shadows, 8px radius, system type. Matches Hub / Plans / CWB.
    Identity: RED BEAR — Designs' product accent. The family shares one shell
    language; each product wears its own accent + bear tint (Hub owns teal).
@@ -8,7 +8,7 @@
    ============================================================================ */
 
 :root {
-  /* Starlight — dark (canonical) */
+  /* Designs base — dark (canonical) */
   --rb-bg: #0a0e13;
   --rb-canvas-bd: #0f151c;
   --rb-panel: #0f151c;
@@ -30,12 +30,12 @@
 
   /* The ONE accent — RED BEAR, the Designs product color (distinct from
      Hub teal #00E5CC / Plans purple #6B4EFF / Reviews gold #FFB800; family =
-     shared shell + own face). LOCKED to #FF3A2A by the premium pass. */
-  --rb-brand: #ff3a2a;
+     shared shell + own face). LOCKED to #e05252 by the premium pass. */
+  --rb-brand: #e05252;
   --rb-brand-press: #cc2e20;
-  --rb-brand-soft: rgba(255, 58, 42, 0.12);
-  --rb-brand-glow: rgba(255, 58, 42, 0.35);
-  --rb-brand-faint: rgba(255, 58, 42, 0.12);
+  --rb-brand-soft: rgba(224, 82, 82, 0.12);
+  --rb-brand-glow: rgba(224, 82, 82, 0.35);
+  --rb-brand-faint: rgba(224, 82, 82, 0.12);
   --rb-brand-ink: #ffffff;
 
   /* The star — BLUE (LOCKED). Selection handles, live/preview indicators,

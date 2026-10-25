@@ -1,5 +1,5 @@
 // Inline line-icons for the editor chrome — replaces color-emoji buttons
-// (🗑 🎙 🎯) per PREMIUM-UI-LAW (no emoji as UI icons). Monochrome, currentColor,
+// (🗑 🎙 🎯) (no emoji as UI icons). Monochrome, currentColor,
 // so each button tints via its own `color`. Returns an SVG STRING for the
 // vanilla-DOM `innerHTML` / template usage in this codebase.
 const PATHS = {
