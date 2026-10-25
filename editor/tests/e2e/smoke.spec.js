@@ -8,7 +8,7 @@ const FIXTURES = path.join(__dirname, '../fixtures');
 const SCRIPTED = path.join(FIXTURES, 'scripted-page.html');
 const SAMPLE = path.join(FIXTURES, 'sample-page.html');
 
-test.describe('RHOBEAR Designs — UX smoke (Starlight)', () => {
+test.describe('RHOBEAR Designs — UX smoke', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForFunction(() => window.__RB_EDITOR__?.ready);

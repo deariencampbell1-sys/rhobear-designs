@@ -65,7 +65,7 @@ test('buildSceneState: normalizes a runtime-style entry', () => {
         position: { x: 1, y: 2, z: 3 },
         rotation: { x: 10, y: 20, z: 30 },
         scale:    { x: 2, y: 2, z: 2 },
-        color: '#e94560',
+        color: '#e05252',
         metalness: 0.4,
         roughness: 0.6,
       },
@@ -74,7 +74,7 @@ test('buildSceneState: normalizes a runtime-style entry', () => {
   assert.equal(s.objects.length, 1);
   assert.equal(s.objects[0].id, 'o-1');
   assert.deepEqual(s.objects[0].position, [1, 2, 3]);
-  assert.equal(s.objects[0].color, '#e94560');
+  assert.equal(s.objects[0].color, '#e05252');
   assert.equal(s.objects[0].metalness, 0.4);
 });
 
@@ -88,9 +88,9 @@ test('buildSceneState: coerces THREE.Color-like {getHexString}', () => {
 
 test('buildSceneState: coerces numeric color (hex int)', () => {
   const s = buildSceneState({
-    objects: [{ id: 'x', type: 'sphere', color: 0xe94560 }],
+    objects: [{ id: 'x', type: 'sphere', color: 0xe05252 }],
   });
-  assert.equal(s.objects[0].color, '#e94560');
+  assert.equal(s.objects[0].color, '#e05252');
 });
 
 test('buildSceneState: missing color falls back to #cccccc', () => {
@@ -238,7 +238,7 @@ test('serializeScene → deserializeScene: simple scene', () => {
       {
         id: 'o-1', name: 'Box A', type: 'box',
         position: [1, 2, 3], rotation: [10, 20, 30], scale: [1, 1, 1],
-        color: '#e94560', metalness: 0.2, roughness: 0.7,
+        color: '#e05252', metalness: 0.2, roughness: 0.7,
       },
       {
         id: 'o-2', name: 'Sphere', type: 'sphere',
@@ -260,7 +260,7 @@ test('serializeScene → deserializeScene: simple scene', () => {
   assert.deepEqual(parsed.objects[0].position, [1, 2, 3]);
   assert.deepEqual(parsed.objects[0].rotation, [10, 20, 30]);
   assert.deepEqual(parsed.objects[0].scale, [1, 1, 1]);
-  assert.equal(parsed.objects[0].color, '#e94560');
+  assert.equal(parsed.objects[0].color, '#e05252');
   assert.equal(parsed.objects[1].id, 'o-2');
   assert.equal(parsed.selectedId, 'o-2');
   assert.equal(parsed.transformMode, 'rotate');

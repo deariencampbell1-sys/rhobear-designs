@@ -15,32 +15,32 @@
   // the start screen hero area alongside the existing mark.
 
   const CONSTELLATION_SVG = `<svg viewBox="0 0 160 160" fill="none">
-    <circle cx="80" cy="28" r="2.5" fill="#C84B4B"/>
-    <circle cx="56" cy="44" r="2.5" fill="#C84B4B"/>
-    <circle cx="104" cy="44" r="2.5" fill="#C84B4B"/>
-    <circle cx="42" cy="68" r="2" fill="#C84B4B"/>
-    <circle cx="118" cy="68" r="2" fill="#C84B4B"/>
-    <circle cx="50" cy="88" r="2" fill="#C84B4B"/>
-    <circle cx="110" cy="88" r="2" fill="#C84B4B"/>
-    <circle cx="58" cy="106" r="1.8" fill="#C84B4B"/>
-    <circle cx="102" cy="106" r="1.8" fill="#C84B4B"/>
-    <circle cx="64" cy="122" r="1.5" fill="#C84B4B"/>
-    <circle cx="96" cy="122" r="1.5" fill="#C84B4B"/>
-    <circle cx="80" cy="66" r="3" fill="#C84B4B" opacity="0.9"/>
-    <line x1="80" y1="28" x2="56" y2="44" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="80" y1="28" x2="104" y2="44" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="56" y1="44" x2="42" y2="68" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="104" y1="44" x2="118" y2="68" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="42" y1="68" x2="50" y2="88" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="118" y1="68" x2="110" y2="88" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="50" y1="88" x2="58" y2="106" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="110" y1="88" x2="102" y2="106" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="58" y1="106" x2="64" y2="122" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="102" y1="106" x2="96" y2="122" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="56" y1="44" x2="80" y2="66" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="104" y1="44" x2="80" y2="66" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="42" y1="68" x2="80" y2="66" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
-    <line x1="118" y1="68" x2="80" y2="66" stroke="#C84B4B" stroke-width="0.6" opacity="0.3"/>
+    <circle cx="80" cy="28" r="2.5" fill="#e05252"/>
+    <circle cx="56" cy="44" r="2.5" fill="#e05252"/>
+    <circle cx="104" cy="44" r="2.5" fill="#e05252"/>
+    <circle cx="42" cy="68" r="2" fill="#e05252"/>
+    <circle cx="118" cy="68" r="2" fill="#e05252"/>
+    <circle cx="50" cy="88" r="2" fill="#e05252"/>
+    <circle cx="110" cy="88" r="2" fill="#e05252"/>
+    <circle cx="58" cy="106" r="1.8" fill="#e05252"/>
+    <circle cx="102" cy="106" r="1.8" fill="#e05252"/>
+    <circle cx="64" cy="122" r="1.5" fill="#e05252"/>
+    <circle cx="96" cy="122" r="1.5" fill="#e05252"/>
+    <circle cx="80" cy="66" r="3" fill="#e05252" opacity="0.9"/>
+    <line x1="80" y1="28" x2="56" y2="44" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="80" y1="28" x2="104" y2="44" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="56" y1="44" x2="42" y2="68" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="104" y1="44" x2="118" y2="68" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="42" y1="68" x2="50" y2="88" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="118" y1="68" x2="110" y2="88" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="50" y1="88" x2="58" y2="106" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="110" y1="88" x2="102" y2="106" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="58" y1="106" x2="64" y2="122" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="102" y1="106" x2="96" y2="122" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="56" y1="44" x2="80" y2="66" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="104" y1="44" x2="80" y2="66" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="42" y1="68" x2="80" y2="66" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
+    <line x1="118" y1="68" x2="80" y2="66" stroke="#e05252" stroke-width="0.6" opacity="0.3"/>
   </svg>`;
 
   // ─── 1. Inject constellation bear mark into start screen ────
@@ -65,7 +65,7 @@
     glowRing.className = 'rb-constellation-glow';
     glowRing.style.cssText =
       'position:absolute;inset:-8px;border-radius:50%;' +
-      'border:2px solid #C84B4B;opacity:0.2;' +
+      'border:2px solid #e05252;opacity:0.2;' +
       'animation:rb-constellation-pulse 2.5s cubic-bezier(0.16,1,0.3,1) infinite;' +
       'pointer-events:none;';
     mark.style.position = 'relative';

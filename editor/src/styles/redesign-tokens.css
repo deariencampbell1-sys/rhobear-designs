@@ -1,25 +1,18 @@
 /* ═══════════════════════════════════════════════════════════
-   RHOBEAR Designs — Redesign Token Overlay (Layer 1)
-   Applies the redesign palette (#C84B4B accent, #2A8FA8 teal)
-   and font stack (rokkitt / lato / droid-sans-mono) to the
-   existing `.rb-*` design system via CSS custom properties.
-
-   Fonts: Google Fonts @import (OFL/Apache — no Adobe Typekit).
-   Loaded LAST after premium-glass.css so these tokens win.
-
+   RHOBEAR Designs — tokens. Source of truth: the North Star board (Designs red #e05252) and the font contract,
+   docs/north-star/FONTS.md in rhobear-north-star: Adobe kit sbv5bcv (linked in the page head), Rokkitt display,
+   Lato body, Droid Sans Mono, Allura on the word "Designs". Nacelle is banned. Loaded last so these tokens win.
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Google Fonts (OFL/Apache — clean for offline desktop app) ── */
-@import url('https://fonts.googleapis.com/css2?family=Rokkitt:wght@400;700;900&family=Lato:wght@400;600;700&family=Droid+Sans+Mono&display=swap');
 
 /* ── Redesign tokens — dark (canonical) ── */
 :root {
-  /* ─── Accent: cool red #C84B4B (replaces #ff3a2a) ─── */
-  --rb-brand:        #C84B4B;
-  --rb-brand-press:  #A63A3A;
-  --rb-brand-soft:   rgba(200, 75, 75, 0.12);
-  --rb-brand-glow:   rgba(200, 75, 75, 0.35);
-  --rb-brand-faint:  rgba(200, 75, 75, 0.10);
+  /* ─── Accent: the board's Designs red ─── */
+  --rb-brand:        #e05252;
+  --rb-brand-press:  #c04444;
+  --rb-brand-soft:   rgba(224, 82, 82, 0.12);
+  --rb-brand-glow:   rgba(224, 82, 82, 0.35);
+  --rb-brand-faint:  rgba(224, 82, 82, 0.10);
   --rb-brand-ink:    #FFFFFF;
 
   /* ─── Secondary accent: teal #2A8FA8 ─── */
@@ -28,8 +21,8 @@
   --rb-teal-glow:    rgba(42, 143, 168, 0.35);
 
   /* ─── Redesign glow tokens ─── */
-  --rb-accent-glow:        0 0 20px rgba(200, 75, 75, 0.3);
-  --rb-accent-glow-strong: 0 0 32px rgba(200, 75, 75, 0.45);
+  --rb-accent-glow:        0 0 20px rgba(224, 82, 82, 0.3);
+  --rb-accent-glow-strong: 0 0 32px rgba(224, 82, 82, 0.45);
   --rb-teal-glow-soft:     0 0 16px rgba(42, 143, 168, 0.2);
   --rb-teal-glow-strong:   0 0 28px rgba(42, 143, 168, 0.4);
 
@@ -38,10 +31,11 @@
   --rb-surface-2:    #1A2435;
 
   /* ─── Font stack: premium display + body + mono ─── */
-  --rb-font-display: 'Rokkitt', Georgia, serif;
-  --rb-font:         'Lato', system-ui, sans-serif;
-  --rb-serif:        'Rokkitt', Georgia, serif;
-  --rb-mono:         'Droid Sans Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --rb-font-display: 'rokkitt', Georgia, serif;
+  --rb-font:         'lato', system-ui, sans-serif;
+  --rb-font-brand:   'allura', 'rokkitt', cursive; /* the word "Designs" only */
+  --rb-serif:        'rokkitt', Georgia, serif;
+  --rb-mono:         'droid-sans-mono', ui-monospace, 'SF Mono', Consolas, monospace;
 
   /* ─── Glass depths (redesign-tuned) ─── */
   --rb-glass-bd:     rgba(255, 255, 255, 0.06);
@@ -54,19 +48,19 @@
 
 /* ── Redesign tokens — light ── */
 [data-theme="light"] {
-  --rb-brand:        #C84B4B;
-  --rb-brand-press:  #A63A3A;
-  --rb-brand-soft:   rgba(200, 75, 75, 0.10);
-  --rb-brand-glow:   rgba(200, 75, 75, 0.28);
-  --rb-brand-faint:  rgba(200, 75, 75, 0.10);
+  --rb-brand:        #e05252;
+  --rb-brand-press:  #c04444;
+  --rb-brand-soft:   rgba(224, 82, 82, 0.10);
+  --rb-brand-glow:   rgba(224, 82, 82, 0.28);
+  --rb-brand-faint:  rgba(224, 82, 82, 0.10);
   --rb-brand-ink:    #FFFFFF;
 
   --rb-teal:         #2A8FA8;
   --rb-teal-soft:    rgba(42, 143, 168, 0.12);
   --rb-teal-glow:    rgba(42, 143, 168, 0.25);
 
-  --rb-accent-glow:        0 0 16px rgba(200, 75, 75, 0.25);
-  --rb-accent-glow-strong: 0 0 28px rgba(200, 75, 75, 0.38);
+  --rb-accent-glow:        0 0 16px rgba(224, 82, 82, 0.25);
+  --rb-accent-glow-strong: 0 0 28px rgba(224, 82, 82, 0.38);
 }
 
 /* ── Constellation bear mark (inline SVG for use in JS bridge) ── */
@@ -94,3 +88,6 @@
 #status-selection {
   font-family: var(--rb-mono);
 }
+
+/* The product word wears Allura; "RHOBEAR" stays Rokkitt (font contract). */
+.rb-brand__name, .dsob-name > span { font-family: var(--rb-font-brand); text-transform: none; letter-spacing: 0; }

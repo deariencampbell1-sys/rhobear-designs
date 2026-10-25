@@ -60,7 +60,7 @@ const QUICK = [
   { name: 'Footer', html: '<footer style="padding:40px 24px;text-align:center;color:#888">© 2026 Brand · <a href="#">Privacy</a> · <a href="#">Terms</a></footer>' },
   { name: 'Heading', html: '<h2 style="font-size:2rem;margin:0">Heading</h2>' },
   { name: 'Text', html: '<p style="line-height:1.6;color:#444">New paragraph — double-click to edit.</p>' },
-  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#e94560;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
+  { name: 'Button', html: '<a href="#" style="display:inline-block;padding:12px 24px;background:#e05252;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Button</a>' },
   { name: 'Image', html: '' },
 ];
 
