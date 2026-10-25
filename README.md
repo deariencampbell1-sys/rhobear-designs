@@ -88,3 +88,9 @@ Issues and PRs are welcome — new templates, elements, editor UX, and export fi
 ### Looking for more?
 
 An optional **Pro** tier adds voice control, generation styles, and deep-thinking model passes on top of this same editor. The editor here is complete and free on its own; Pro never removes or paywalls anything above — you can always stay on the open-source core.
+
+## UX reference
+
+The only UX reference for Designs is the North Star in rhobear-north-star (the Engines board). This repo is the engine;
+its editor styling is not a reference and is replaced in lane L8d. `samples/` is the template corpus the engine reads,
+not RHOBEAR brand. Icons and marks are the current Designs mark.
