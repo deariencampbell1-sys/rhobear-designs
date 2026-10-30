@@ -42,10 +42,10 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * A minimal in-memory GrapesJS look-alike. Records every setComponents
+ * A minimal in-memory editor look-alike. Records every setComponents
  * / setStyle call, supports the UndoManager surface our handle uses,
- * and lets tests drive `emit(ev, ...)` to simulate GrapesJS events.
- * No DOM, no real GrapesJS, no Backbone.
+ * and lets tests drive `emit(ev, ...)` to simulate editor events.
+ * No DOM, no real editor, no Backbone.
  *
  * @param {{
  *   initialHtml?: string,
@@ -607,7 +607,7 @@ test('mountModeB: rejects in Node (no document)', async () => {
   // shell only ever calls this from a browser, but the error path is
   // part of the API surface and is tested here.
   await assert.rejects(
-    mountModeB('#gjs-host'),
+    mountModeB('#editor-host'),
     /requires a browser environment/,
   );
 });

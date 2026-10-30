@@ -30,20 +30,11 @@ test.describe('RHOBEAR Designs — UX smoke', () => {
     await expect(page.getByTestId('inspector')).toHaveClass(/is-hidden/);
   });
 
-  test('mode switch mounts Build (GrapesJS) and hides onboarding', async ({ page }) => {
+  test('mode switch shows the Build rebuild notice and hides onboarding', async ({ page }) => {
     await page.getByTestId('btn-mode-build').click();
     await expect(page.getByTestId('btn-mode-build')).toHaveClass(/is-active/);
-    await page.waitForSelector('.gjs-cv-canvas iframe', { timeout: 30_000 });
+    await expect(page.locator('#build-canvas')).toContainText('This feature is being rebuilt.');
     await expect(page.getByTestId('empty-state')).not.toBeVisible();
-  });
-
-  test('build mode: add section inserts into canvas', async ({ page }) => {
-    await page.getByTestId('btn-mode-build').click();
-    const frame = page.frameLocator('.gjs-cv-canvas iframe');
-    await page.waitForSelector('.gjs-cv-canvas iframe');
-    const before = await frame.locator('section').count();
-    await page.evaluate(() => window.__RB_EDITOR__.shell.build.addSection());
-    await expect(frame.locator('section')).toHaveCount(before + 1);
   });
 
   test('live mode preserves the page AND runs its scripts (fidelity)', async ({ page }) => {
@@ -332,14 +323,6 @@ test.describe('RHOBEAR Designs — UX smoke', () => {
     await expect(page.getByTestId('settings-modal')).not.toBeVisible();
   });
 
-  test('embed modal opens, inserts into build canvas, closes', async ({ page }) => {
-    await page.getByTestId('btn-mode-build').click();
-    await page.waitForSelector('.gjs-cv-canvas iframe');
-    await page.evaluate(() => window.__RB_EDITOR__.shell.build.embed('<div data-embed-test="1">x</div>'));
-    const frame = page.frameLocator('.gjs-cv-canvas iframe');
-    await expect(frame.locator('[data-embed="true"]')).toHaveCount(1);
-  });
-
   test('preview opens with a full document and closes', async ({ page }) => {
     await page.setInputFiles('[data-testid="input-html"]', SAMPLE);
     await page.frameLocator('[data-testid="live-frame"]').locator('h1').waitFor();
@@ -373,10 +356,10 @@ test.describe('RHOBEAR Designs — UX smoke', () => {
     expect(d.suggestedFilename()).toMatch(/\.zip$/);
   });
 
-  test('new blank page switches to build and resets', async ({ page }) => {
+  test('new blank page switches to build and shows the rebuild notice', async ({ page }) => {
     page.on('dialog', (d) => d.accept());
     await page.getByTestId('btn-new').click();
-    await page.waitForSelector('.gjs-cv-canvas iframe');
     await expect(page.getByTestId('btn-mode-build')).toHaveClass(/is-active/);
+    await expect(page.locator('#build-canvas')).toContainText('This feature is being rebuilt.');
   });
 });

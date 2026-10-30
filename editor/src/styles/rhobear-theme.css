@@ -248,7 +248,7 @@ html, body {
   display: flex; flex-direction: column;
 }
 .rb-canvas { flex: 1; min-height: 0; position: relative; }
-#gjs { height: 100%; }
+#build-canvas { height: 100%; }
 
 /* Live-mode iframe host */
 .rb-live-host { position: absolute; inset: 0; display: none; }
@@ -439,8 +439,7 @@ html, body {
 .rb-preset:hover { color: var(--rb-text); border-color: var(--rb-brand-glow); }
 .rb-preset.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); border-color: var(--rb-brand); }
 
-/* GrapesJS managers mount points (Build mode) live inside inspector body */
-#gjs-styles, #gjs-traits, #gjs-layers, #gjs-blocks { width: 100%; }
+
 
 /* ------------------------------------------------------------------- Status */
 .rb-status {

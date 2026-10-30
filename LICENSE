@@ -24,10 +24,5 @@ SOFTWARE.
 
 Third-party MIT components used in this project:
 
-- GrapesJS (https://github.com/GrapesJS/grapesjs) — MIT
-- grapesjs-preset-webpage — MIT
-- grapesjs-blocks-basic — MIT
-- grapesjs-plugin-forms — MIT
-- grapesjs-custom-code — MIT
 - JSZip (https://github.com/Stuk/jszip) — MIT
 - file-saver (https://github.com/eligrey/FileSaver.js) — MIT

@@ -38,7 +38,7 @@ editor: feature-complete, smoke-tested, and packaged for shipping.
 | Mode                   | What it does                                                                                                   |
 |------------------------|----------------------------------------------------------------------------------------------------------------|
 | **Edit Live Site**     | Open a real page (HTML file, folder, template). Edit on top of the original as an *override layer*. Original scripts and styles are preserved unchanged; your edits live in a separate stylesheet so look + functions survive the loop. |
-| **Build from scratch** | GrapesJS-based free-form canvas with our RHOBEAR chrome on top — drag, drop, undo/redo, preview, export.       |
+| **Build from scratch** | Being rebuilt — the surface shows a plain rebuild notice until the replacement editor ships.                   |
 | **3D Studio**          | Owned Three.js engine — orbit, click an individual mesh, recolor, change metalness/roughness, rotate/scale/move via gizmos, save the scene as a self-contained embed any page can use. Drop in primitives (`box`, `sphere`, `cylinder`, `cone`, `torus`, `plane`) or load your own `.glb`/`.gltf`. |
 
 ### AI assist (bring-your-own key)
@@ -75,9 +75,6 @@ editor: feature-complete, smoke-tested, and packaged for shipping.
 
 - **Application code** — MIT, © 2026 RHOBEAR Designs (see
   [`editor/LICENSE`](./editor/LICENSE)).
-- **Vendored editor engine** — GrapesJS core + 4 plugins, BSD-3-Clause,
-  copyright notices preserved verbatim at
-  `editor/src/vendor/grapesjs/<pkg>/LICENSE`.
 - **Bundled npm deps** — all MIT or BSD-3-Clause or Apache-2.0. The
   one dual-licensed component (`jszip`) is exercised under its MIT
   option only.
@@ -122,8 +119,7 @@ dist/assets/index-CgEaYLlM.js                                     2,899.40 kB �
 Output: `editor/dist/index.html` + 231 hashed asset files in
 `editor/dist/assets/` (~30 MB uncompressed, ~700 KB gzipped main
 bundle). Note the by-design chunk-size warning: the main bundle carries
-the full editor (GrapesJS + 4 vendored plugins + Three.js + the mode
-controllers).
+the full editor (Three.js engine + the mode controllers).
 
 ### `npm run test:e2e`
 
@@ -159,8 +155,7 @@ flagged here so a future lane can pick them up.
   permissive physics engine on top of the existing handle API.)
 - **Canvas zoom-out beyond viewport** — the live-mode canvas wraps
   the rendered page at 1:1 with a fitting zoom; there is no
-  bird's-eye "minimap" zoom-out or infinite-canvas pan. Build-mode
-  (GrapesJS) has its own zoom which is unchanged.
+  bird's-eye "minimap" zoom-out or infinite-canvas pan.
 - **Editing a template's own baked WebGL** — when a user opens a
   template that ships its own Three.js / WebGL canvas (e.g. the
   Bruno-Simon-style portfolio recreation), the editor treats the
@@ -172,9 +167,6 @@ flagged here so a future lane can pick them up.
   ~700 KB gzipped. Manual chunks (one per heavy lazy surface) would
   shave the initial page weight noticeably; defer to a perf-focused
   lane.
-- **Vendor update policy** — vendored GrapesJS is pinned at the
-  versions listed in `THIRD-PARTY-NOTICES.md`. When upstream publishes
-  a security fix, a re-vendor lane will pull, verify, and bump.
 - **More templates** — the gallery ships 62; the catalog schema is
   set up for community contributions (see
   `editor/src/library/templates/README.md`).

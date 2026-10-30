@@ -4,13 +4,6 @@ node_modules/
 # ── Build output ─────────────────────────────────────────────────────────────
 dist/
 
-# Re-include the vendored GrapesJS dist/ folders under src/vendor/.
-# They contain the upstream build artifacts that ship with the
-# vendored engine and must be committed (otherwise the editor has no
-# engine to load).
-!src/vendor/**/dist/
-!src/vendor/**/dist/**
-
 # ── Test output ──────────────────────────────────────────────────────────────
 test-results/
 playwright-report/

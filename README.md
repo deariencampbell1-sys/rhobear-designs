@@ -62,7 +62,6 @@ Your key never leaves your browser's local storage. For OpenAI-compatible endpoi
 ## How it's built
 
 - **Vanilla ES modules + Vite** — no framework runtime; the app is small and static.
-- **[GrapesJS](https://grapesjs.com/)** (vendored, MIT) powers the Build-mode canvas.
 - **[Three.js](https://threejs.org/)** (MIT) powers 3D Studio.
 - **Node test runner** — `npm test` runs the unit/behavior suite; `npm run test:e2e` runs the smoke tests.
 
