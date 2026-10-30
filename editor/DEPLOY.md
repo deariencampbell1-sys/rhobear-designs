@@ -12,8 +12,7 @@ dist/
 ├── index.html               # the app shell — entry point
 └── assets/                  # hashed JS chunks, CSS, fonts, source maps
     ├── index-<hash>.js      # main bundle
-    ├── index-<hash>.css     # RHOBEAR theme + GrapesJS overrides
-    ├── grapes-…             # vendored GrapesJS bundle
+    ├── index-<hash>.css     # RHOBEAR theme
     └── <sample-slug>-…      # one chunk per template (lazy-loaded)
 ```
 
@@ -23,8 +22,8 @@ lazily; only the templates the user actually opens are fetched.
 
 > Note: the build emits a one-time warning that the main bundle is
 > larger than Vite's default 500 kB chunk-size warning limit. This is
-> by design — the main bundle contains the full editor (GrapesJS,
-> vendored plugins, Three.js engine, mode controllers). A future lane
+> by design — the main bundle contains the full editor (Three.js engine,
+> mode controllers). A future lane
 > can introduce `manualChunks` to split it; the current shape ships
 > fine on every modern connection.
 
@@ -86,7 +85,6 @@ that the host must permit:
 | Surface                  | Where the request goes                                        | Required for                                              |
 |--------------------------|---------------------------------------------------------------|-----------------------------------------------------------|
 | **Google Fonts CSS**     | `fonts.googleapis.com`, `fonts.gstatic.com`                   | USER-content fonts (the 52-family picker) — the app chrome itself uses system font stacks, no webfont |
-| **FontAwesome CSS**      | `cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/...`       | GrapesJS built-in icon stylesheet                         |
 | **`three` (3D embed)**   | `https://esm.sh/three@0.161.0`                                | 3D Studio mode (the iframe-mounted embed)                 |
 | **Picsum / Unsplash**    | `https://picsum.photos/...`                                   | Media-bucket placeholder images                           |
 | **BYO-LLM providers**    | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | AI assist — only when the user supplies a key  |

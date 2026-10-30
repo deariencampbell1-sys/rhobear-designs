@@ -1,5 +1,5 @@
 /**
- * HTML/CSS serializer — wraps GrapesJS output with a clean document shell.
+ * HTML/CSS serializer — wraps editor output with a clean document shell.
  * MIT — RHOBEAR Designs (original)
  */
 

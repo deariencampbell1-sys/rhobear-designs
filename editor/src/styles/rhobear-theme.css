@@ -439,7 +439,7 @@ html, body {
 .rb-preset:hover { color: var(--rb-text); border-color: var(--rb-brand-glow); }
 .rb-preset.is-active { color: var(--rb-brand); background: var(--rb-brand-soft); border-color: var(--rb-brand); }
 
-/* GrapesJS managers mount points (Build mode) live inside inspector body */
+/* Build-mode manager mount points live inside inspector body */
 #gjs-styles, #gjs-traits, #gjs-layers, #gjs-blocks { width: 100%; }
 
 /* ------------------------------------------------------------------- Status */

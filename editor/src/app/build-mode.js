@@ -1,13 +1,13 @@
 /**
  * Build mode — "Build from scratch". Thin controller over the proven
- * GrapesJS init (grapes-init.js), which mounts into the existing DOM ids
+ * editor init (build-editor.js), which mounts into the existing DOM ids
  * (#gjs, #gjs-blocks, #gjs-layers, #gjs-styles, #gjs-traits). Lazy-mounted
  * on first entry so the live-first experience loads instantly.
  * MIT — RHOBEAR Designs (original)
  */
 import {
   createEditor, addSection, addTextBlock, addImageBlock, insertEmbed,
-} from '../editor/grapes-init.js';
+} from '../editor/build-editor.js';
 
 export function createBuildMode(refs) {
   const { onStatus, onSelectionChange } = refs;

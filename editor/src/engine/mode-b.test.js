@@ -42,10 +42,10 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * A minimal in-memory GrapesJS look-alike. Records every setComponents
+ * A minimal in-memory editor look-alike. Records every setComponents
  * / setStyle call, supports the UndoManager surface our handle uses,
- * and lets tests drive `emit(ev, ...)` to simulate GrapesJS events.
- * No DOM, no real GrapesJS, no Backbone.
+ * and lets tests drive `emit(ev, ...)` to simulate editor events.
+ * No DOM, no real editor.
  *
  * @param {{
  *   initialHtml?: string,

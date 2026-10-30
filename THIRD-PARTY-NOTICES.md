@@ -13,19 +13,15 @@ component exists (notably `jszip`), this product elects the MIT option
 and the GPL path is not exercised.
 
 This document is the authoritative inventory for the editor's
-release-as-software packaging. It covers four surfaces:
+release-as-software packaging. It covers three surfaces:
 
-1. **Vendored editor engine** — GrapesJS core + 4 plugins (BSD-3-Clause),
-   kept under `editor/src/vendor/grapesjs/`.
-2. **npm runtime dependencies** — what `npm install` pulls in
-   (`three`, `jszip`, `file-saver`, plus the same GrapesJS packages as
-   upstream-of-truth for re-vendoring).
-3. **Bundled font catalog** — the open-license Google Fonts families the
+1. **npm runtime dependencies** — what `npm install` pulls in
+   (`three`, `jszip`, `file-saver`).
+2. **Bundled font catalog** — the open-license Google Fonts families the
    font picker offers at runtime (OFL-1.1 / Apache-2.0).
-4. **Runtime CDN loads** — third-party assets the browser fetches at
-   load time (Google Fonts CSS, FontAwesome CSS from cdnjs,
-   `three` via esm.sh for the 3D embed runtime, Picsum/Unsplash for
-   media references).
+3. **Runtime CDN loads** — third-party assets the browser fetches at
+   load time (Google Fonts CSS, `three` via esm.sh for the 3D embed
+   runtime, Picsum/Unsplash for media references).
 
 Every version below is the version actually shipped with this release
 (verified against `editor/package-lock.json` and the vendored
@@ -35,38 +31,7 @@ repository or distribution page.
 
 ---
 
-## 1. Vendored editor engine — BSD-3-Clause
-
-The GrapesJS core and its four official companion plugins are
-**vendored into the source tree** at
-`editor/src/vendor/grapesjs/<pkg>/`. The vendored copies ship their
-verbatim upstream `LICENSE` next to the distributable build so the
-BSD-3-Clause obligations (copyright notice, license text, non-endorsement
-clause) are satisfied automatically without any runtime check.
-
-`package.json` still lists these packages under `dependencies` so
-`npm ci` always pulls in the upstream-of-truth — that lets a future lane
-re-vendor against a newer upstream release without editing import paths.
-At runtime, however, the editor loads the vendored copies, not the
-`node_modules` builds (see `editor/vite.config.js`'s
-`commonjsOptions.include` and `optimizeDeps.include`).
-
-| Package                        | Version  | SPDX license | Upstream repository                                                |
-|--------------------------------|----------|--------------|--------------------------------------------------------------------|
-| grapesjs                       | 0.22.16  | BSD-3-Clause | https://github.com/GrapesJS/grapesjs.git                           |
-| grapesjs-preset-webpage        | 1.0.3    | BSD-3-Clause | https://github.com/GrapesJS/preset-webpage.git                     |
-| grapesjs-blocks-basic          | 1.0.2    | BSD-3-Clause | https://github.com/GrapesJS/blocks-basic.git                       |
-| grapesjs-plugin-forms          | 2.0.6    | BSD-3-Clause | https://github.com/GrapesJS/components-forms.git                   |
-| grapesjs-custom-code           | 1.0.2    | BSD-3-Clause | https://github.com/GrapesJS/components-custom-code.git             |
-
-Each `editor/src/vendor/grapesjs/<pkg>/LICENSE` is the verbatim upstream
-license text (BSD-3-Clause © Artur Arseniev and the listed contributors).
-Each `editor/src/vendor/grapesjs/<pkg>/package.json` is the verbatim
-upstream package manifest.
-
----
-
-## 2. npm runtime dependencies
+## 1. npm runtime dependencies
 
 These are what `npm ci` installs from the registry. Versions are pinned
 by `package-lock.json`; SPDX identifiers are read from each package's
@@ -80,21 +45,6 @@ upstream `package.json`.
 | jszip        | 3.10.1  | MIT OR GPL-3.0    | **Elected: MIT.** Dual-licensed; this product exercises the MIT option only.      | https://github.com/Stuk/jszip                                                                   |
 | file-saver   | 2.0.5   | MIT               | Browser `<a download>`-style file save for export-HTML and export-ZIP.            | https://github.com/eligrey/FileSaver.js                                                         |
 
-### Direct dependencies (GrapesJS — also vendored, see §1)
-
-The five packages listed in §1 also appear under `dependencies` in
-`editor/package.json` so the npm lockfile is the upstream-of-truth
-for re-vendoring. Their SPDX license, version, and upstream URL are
-the same as in §1.
-
-| Package                  | Version | SPDX license | Upstream                                                |
-|--------------------------|---------|--------------|---------------------------------------------------------|
-| grapesjs                 | 0.22.16 | BSD-3-Clause | https://github.com/GrapesJS/grapesjs.git                |
-| grapesjs-preset-webpage  | 1.0.3   | BSD-3-Clause | https://github.com/GrapesJS/preset-webpage.git          |
-| grapesjs-blocks-basic    | 1.0.2   | BSD-3-Clause | https://github.com/GrapesJS/blocks-basic.git            |
-| grapesjs-plugin-forms    | 2.0.6   | BSD-3-Clause | https://github.com/GrapesJS/components-forms.git        |
-| grapesjs-custom-code     | 1.0.2   | BSD-3-Clause | https://github.com/GrapesJS/components-custom-code.git  |
-
 ### Transitive runtime dependencies
 
 These are pulled in transitively. All are permissive.
@@ -103,7 +53,6 @@ These are pulled in transitively. All are permissive.
 |----------------|--------------------|--------------|------------------------------------------------------|-----------------------------------------------------------|
 | esbuild        | 0.25.x             | MIT          | Vite's transformer (dev + build only).               | https://github.com/evanw/esbuild                         |
 | rollup         | 4.x                | MIT          | Vite's bundler (dev + build only).                   | https://github.com/rollup/rollup                         |
-| @rollup/plugin-commonjs | 28.x      | MIT          | CJS → ESM interop for the vendored GrapesJS bundles. | https://github.com/rollup/plugins/tree/master/packages/commonjs |
 | nanoid         | 5.x                | MIT          | ID generation in Vite's HMR runtime.                | https://github.com/ai/nanoid                             |
 | postcss        | 8.x                | MIT          | Vite's CSS pipeline.                                 | https://github.com/postcss/postcss                       |
 | source-map-js  | 1.x                | BSD-3-Clause | Source map support for the dev prebundle.            | https://github.com/mozilla/source-map                    |
@@ -121,7 +70,7 @@ and tests during development.
 
 ---
 
-## 3. Bundled font catalog — OFL-1.1 / Apache-2.0
+## 2. Bundled font catalog — OFL-1.1 / Apache-2.0
 
 The font picker (`editor/src/library/fonts/catalog.json`) ships **52
 open-license Google Fonts families** — no font binaries are bundled in
@@ -166,7 +115,7 @@ terms of service.
 
 ---
 
-## 4. Runtime CDN loads — assets the browser fetches at load time
+## 3. Runtime CDN loads — assets the browser fetches at load time
 
 These are **not bundled in the repository**, but they ARE loaded by the
 running editor in a normal browser session. Each is permissive and
@@ -176,7 +125,6 @@ public CDN, JS module via esm.sh, image references).
 | Resource                                                                                          | License      | Where it's loaded                                               | Upstream                                                                                      |
 |---------------------------------------------------------------------------------------------------|-------------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
 | `https://fonts.googleapis.com/css2?family=DM+Sans:…&family=JetBrains+Mono:…`                     | OFL-1.1     | `editor/index.html` (app shell chrome fonts)                    | https://fonts.google.com/specimen/DM+Sans , https://fonts.google.com/specimen/JetBrains+Mono   |
-| FontAwesome 4.7.0 CSS (`cdnjs.cloudflare.com/.../font-awesome/4.7.0/...`)                         | SIL OFL 1.1 | GrapesJS icon stylesheet (vendored copy's default `cssIcons`)   | https://fontawesome.com/v4.7.0/                                                              |
 | `https://esm.sh/three@0.161.0`                                                                    | MIT         | 3D Studio mode (in-iframe `three` + `OrbitControls` embed)      | https://github.com/mrdoob/three.js                                                           |
 | `https://picsum.photos/seed/<seed>/<w>/<h>`                                                       | Unsplash*   | Media bucket placeholder images                                 | https://picsum.photos/ (powered by https://unsplash.com/)                                    |
 
@@ -208,12 +156,11 @@ Provider terms of service govern each user's use of those APIs.
 
 ---
 
-## 5. Verdict
+## 4. Verdict
 
 | Surface                         | License posture                                                       |
 |---------------------------------|-----------------------------------------------------------------------|
 | Application code (RHOBEAR)      | MIT (original — see `editor/LICENSE`)                                 |
-| Vendored editor engine          | BSD-3-Clause (redistributable; notices preserved)                      |
 | Bundled npm dependencies        | MIT (jszip elects MIT; others are MIT/BSD/Apache only)                 |
 | Font catalog                    | SIL OFL 1.1 / Apache-2.0 (open-license, commercially usable)          |
 | Runtime CDN assets              | MIT, OFL-1.1, Unsplash license (commercial-use OK)                    |
@@ -221,7 +168,7 @@ Provider terms of service govern each user's use of those APIs.
 | **Copyleft exposure**           | **None** — no GPL, AGPL, LGPL, MPL, or EUPL components bundled or linked |
 
 This product is safe to **sell, sublicense, and ship as part of a
-larger commercial offering** under the MIT terms. If you re-vendor
-GrapesJS or update `three`, re-run this inventory before release.
+larger commercial offering** under the MIT terms. If you update
+`three`, re-run this inventory before release.
 
 — last regenerated for RHOBEAR Designs editor v1.0.0

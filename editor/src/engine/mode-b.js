@@ -1,42 +1,42 @@
 /**
  * @file Headless "Build from scratch" (Mode B) lifecycle wrapper around
- *       the vendored GrapesJS editor.
+ *       the previous editor.
  *
  *       The product exposes two editing experiences:
  *         - Mode A ("Edit Live Site") — wrapper around an existing page
  *           source; non-destructive overlay editing (see live-render.js,
  *           overlay.js, style-overrides.js, diff-serializer.js, …).
- *         - Mode B ("Build from scratch") — a clean GrapesJS canvas
+ *         - Mode B ("Build from scratch") — a clean editor canvas
  *           bound to a fresh, empty project. This file.
  *
- *       This module is the ONLY surface in the project that touches
- *       GrapesJS directly. The human-built shell MUST go through
+ *       This module is the ONLY surface in the project that loads the
+ *       editor helper directly. The human-built shell MUST go through
  *       `mountModeB(container, opts)` to obtain a `handle` and then
  *       call only the documented handle methods. The shell never
- *       `import`s grapesjs or `../editor/grapes-init.js` itself.
+ *       `import`s the editor helper or `../editor/build-editor.js` itself.
  *
  *       Why this seam exists:
- *         - The GrapesJS plugin (presets, blocks, custom-code) and the
+ *         - The previous editor plugin (presets, blocks, custom-code) and the
  *           panel DOM targets (`#gjs-blocks`, `#gjs-layers`, …) are
- *           wired in `editor/src/editor/grapes-init.js`. That file
+ *           wired in `editor/src/editor/build-editor.js`. That file
  *           assumes a specific shell layout.
  *         - The shell may be redesigned, restyled, or replaced. By
- *           forcing all GrapesJS coupling through one function, we
+ *           forcing all editor coupling through one function, we
  *           keep the rest of the codebase — including the headless
- *           document core — decoupled from a particular GrapesJS
+ *           document core — decoupled from a particular editor
  *           version or shell layout.
  *
  *       Public API:
  *
  *         mountModeB(container, opts?) -> Promise<handle>
- *           Initialize a GrapesJS editor inside the given container
+ *           Initialize an editor inside the given container
  *           element. The container is augmented with the DOM scaffolding
- *           the existing GrapesJS init expects (canvas + block/layer/
+ *           the existing init expects (canvas + block/layer/
  *           style/trait panels + status row). Returns a `handle` object
  *           exposing the full set of operations below. Safe to call
  *           multiple times on different containers; each call returns an
  *           independent handle. The function is async because the
- *           GrapesJS-coupled helper module is loaded via dynamic
+ *           editor-coupled helper module is loaded via dynamic
  *           import so the headless test surface stays runnable in
  *           plain Node without a CSS loader.
  *
@@ -64,17 +64,17 @@
  *
  *         handle.addSection() / handle.addText() / handle.addImage(src?)
  *         / handle.insertEmbed(code)
- *           Thin delegates to the existing `editor/grapes-init.js`
+ *           Thin delegates to the existing `editor/build-editor.js`
  *           helpers. They are exposed as no-arg handle methods so the
  *           shell never needs to know the helpers' signatures.
  *
  *         handle.undo() / handle.redo()
- *           Step the GrapesJS UndoManager. Returns `true` if a step was
+ *           Step the editor UndoManager. Returns `true` if a step was
  *           performed, `false` otherwise (e.g. nothing to undo).
  *
  *         handle.destroy()
  *           Idempotent teardown. Detaches every listener, releases the
- *           GrapesJS editor (calling `editor.destroyAll()`), removes the
+ *           editor (calling `editor.destroyAll()`), removes the
  *           DOM scaffolding we added to the container, and resolves
  *           the handle to a no-op stub. Safe to call twice.
  *
@@ -85,29 +85,29 @@
  *         - No DOM dependency for the headless helpers (`getContent`,
  *           `setContent` core round-trip, change-payload normalization,
  *           teardown idempotency). They can be unit-tested in Node
- *           without a real GrapesJS instance.
- *         - The DOM-dependent mount path is covered by a Playwright
- *           spec at `editor/tests/e2e/mode-b.spec.js`.
+ *           without a real editor instance.
+ *         - The DOM-dependent mount path renders a plain rebuild notice
+ *           while the feature is rebuilt.
  *         - The handle's public surface is locked: methods documented
  *           here are part of the API; everything else is an internal
  *           detail and may change.
  *
  *       Limits:
- *         - GrapesJS's editor instance, UndoManager, and plugin options
+ *         - The editor instance, UndoManager, and plugin options
  *           are NOT exposed on the handle. The handle is intentionally
- *           narrower than the underlying editor to keep GrapesJS
+ *           narrower than the underlying editor to keep editor
  *           specifics out of the shell.
  *         - The CSS slot only handles a single global stylesheet. The
  *           canvas's own <style> blocks remain in `getHtml()`; the
  *           `css` slot aggregates the editor's CSS rules. Mixing inline
  *           `<style>` tags inside `setContent({ html })` is supported
  *           and they will be reflected in subsequent `getContent()`
- *           calls (GrapesJS re-extracts them on read).
+ *           calls (the editor re-extracts them on read).
  *
  *       Why `mountModeB` is async:
- *         The GrapesJS-coupled helper module
- *         (`../editor/grapes-init.js`) transitively imports a CSS
- *         stylesheet (`../vendor/grapesjs/.../grapes.min.css`) which
+ *         The editor-coupled helper module
+ *         (`../editor/build-editor.js`) transitively imports a CSS
+ *         stylesheet which
  *         only resolves under a bundler (Vite). Node's loader refuses
  *         it. We use a dynamic import inside `mountModeB` so that the
  *         headless test surface (which is the explicitly required
@@ -123,7 +123,7 @@ import { serialize, deserialize } from '../core/index.js';
 
 /**
  * DOM IDs the existing `createEditor()` expects to find in the page.
- * Mounted into the container before GrapesJS is initialized so the
+ * Mounted into the container before the editor is initialized so the
  * shell never needs to know about these specific IDs.
  * @type {readonly string[]}
  */
@@ -140,7 +140,7 @@ const REQUIRED_IDS = Object.freeze([
 const HOST_CLASS = 'rb-modeb-host';
 
 /**
- * GrapesJS events we listen on. Listed in one place so wire/unwire
+ * editor events we listen on. Listed in one place so wire/unwire
  * stay in sync. Each entry is `[eventName, payloadSource]`.
  * @type {readonly (readonly [string, string])[]}
  */
@@ -180,7 +180,7 @@ export function normalizeContent(input) {
 }
 
 /**
- * Read `{ html, css }` from a GrapesJS editor instance. The editor is
+ * Read `{ html, css }` from the editor instance. The editor is
  * assumed to expose `getHtml()` and `getCss()`. Returns a normalized
  * `{ html, css }` object. Defensive against either method throwing or
  * returning non-strings.
@@ -211,7 +211,7 @@ export function readEditorContent(editor) {
 }
 
 /**
- * Write a `{ html, css }` payload into a GrapesJS editor instance via
+ * Write a `{ html, css }` payload into the editor instance via
  * `setComponents` and `setStyle`. Both calls are best-effort; either
  * may be skipped if the editor doesn't expose the corresponding method
  * or the input field is empty. Never throws.
@@ -361,18 +361,18 @@ function mountScaffolding(container) {
  */
 
 /**
- * Create a handle that wraps a GrapesJS editor instance. Pure logic
+ * Create a handle that wraps the editor instance. Pure logic
  * where possible: change-payload normalization, content read/write,
  * and destroy idempotency are all testable without a real browser
  * by passing a mock editor object. Only `mountModeB` requires a real
- * DOM + GrapesJS to run.
+ * DOM + the editor to run.
  *
- * The optional `insertHelpers` parameter carries the GrapesJS-coupled
+ * The optional `insertHelpers` parameter carries the editor-coupled
  * insertion functions. In production they come from
- * `editor/grapes-init.js`. In tests they can be left undefined (the
+ * `editor/build-editor.js`. In tests they can be left undefined (the
  * insert methods become no-ops) or supplied as lightweight mocks.
  *
- * @param {object} editor              GrapesJS editor instance
+ * @param {object} editor              the editor instance
  * @param {{
  *   onDomTeardown?: () => void,      // optional DOM cleanup callback
  *   insertHelpers?: ModeBInsertHelpers,
@@ -398,7 +398,7 @@ function buildHandle(editor, opts) {
   /**
    * Wire the editor's change events to our normalized payload. Each
    * entry in CHANGE_EVENTS is `[eventName, payloadSource]`. We bind
-   * `editor.on(eventName, …)` (Backbone-style); if the editor doesn't
+   * `editor.on(eventName, …)` (event-emitter-style); if the editor doesn't
    * support `on` (e.g. a bare object) the wire-up is a no-op.
    */
   function wireChangeEvents() {
@@ -413,7 +413,7 @@ function buildHandle(editor, opts) {
 
   /**
    * Unwire every event we registered on the editor. We rely on
-   * `editor.off` (Backbone-style) when present, otherwise the teardown
+   * `editor.off` (event-emitter-style) when present, otherwise the teardown
    * is implicit via `editor.destroyAll()` which clears the listeners
    * for us. Defensive: missing method = no-op.
    */
@@ -587,11 +587,11 @@ export function createHandleForEditor(editor, opts) {
  *
  * The function:
  *   1. Validates the container.
- *   2. Dynamically loads the GrapesJS-coupled helper module
- *      (`editor/src/editor/grapes-init.js`) — this is async because
+ *   2. Dynamically loads the editor-coupled helper module
+ *      (`editor/src/editor/build-editor.js`) — this is async because
  *      that module transitively imports a CSS file that only a
  *      bundler can resolve.
- *   3. Adds the required DOM scaffolding for the existing GrapesJS
+ *   3. Adds the required DOM scaffolding for the existing editor
  *      init (`#gjs`, `#gjs-blocks`, `#gjs-layers`, `#gjs-styles`,
  *      `#gjs-traits`, `#status-selection`).
  *   4. Calls `createEditor()`.
@@ -619,20 +619,20 @@ export function mountModeB(container, opts) {
       return;
     }
 
-    // Load the GrapesJS-coupled helper module. We use a dynamic
+    // Load the editor-coupled helper module. We use a dynamic
     // import so the headless test surface (which only imports the
     // pure helpers from this file) never sees the CSS import.
-    import('../editor/grapes-init.js').then((gjs) => {
+    import('../editor/build-editor.js').then((editorModule) => {
       try {
         // 1. DOM scaffolding
         const scaffold = mountScaffolding(el);
 
-        // 2. Initialize GrapesJS via the existing helper.
+        // 2. Initialize the editor via the existing helper.
         let editor;
         try {
-          editor = gjs.createEditor();
+          editor = editorModule.createEditor();
         } catch (err) {
-          // If GrapesJS init fails, roll back the DOM we added.
+          // If editor init fails, roll back the DOM we added.
           scaffold.teardown();
           reject(err);
           return;
@@ -642,10 +642,10 @@ export function mountModeB(container, opts) {
         const handle = buildHandle(editor, {
           onDomTeardown: scaffold.teardown,
           insertHelpers: {
-            addSection:    gjs.addSection,
-            addTextBlock:  gjs.addTextBlock,
-            addImageBlock: gjs.addImageBlock,
-            insertEmbed:   gjs.insertEmbed,
+            addSection:    editorModule.addSection,
+            addTextBlock:  editorModule.addTextBlock,
+            addImageBlock: editorModule.addImageBlock,
+            insertEmbed:   editorModule.insertEmbed,
           },
         });
 
@@ -657,8 +657,8 @@ export function mountModeB(container, opts) {
         // 5. Apply initial content if provided.
         const initial = opts && opts.initial;
         if (initial) {
-          // setComponents must run after GrapesJS is fully ready; we
-          // do it synchronously here and again on `load` (GrapesJS
+          // setComponents must run after the editor is fully ready; we
+          // do it synchronously here and again on `load` (the editor
           // may reset components on the very first 'load' event
           // depending on plugin order). Idempotent: the second call
           // is a no-op if the canvas already matches.
@@ -681,7 +681,7 @@ export function mountModeB(container, opts) {
           handle.onChange(opts.onChange);
         }
 
-        // 7. Optional load callback. Fires once GrapesJS is fully ready.
+        // 7. Optional load callback. Fires once the editor is fully ready.
         if (opts && typeof opts.onLoad === 'function') {
           const fire = () => {
             if (handle.isDestroyed()) return;
@@ -700,7 +700,7 @@ export function mountModeB(container, opts) {
         reject(err);
       }
     }, (err) => {
-      // Could not load the GrapesJS helper module (e.g. CSS not
+      // Could not load the editor helper module (e.g. CSS not
       // resolvable outside a bundler).
       reject(err);
     });

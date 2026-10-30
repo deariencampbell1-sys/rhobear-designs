@@ -45,7 +45,7 @@
     "publisher": "RHOBEAR",
     "category": "Productivity",
     "shortDescription": "Offline visual website editor",
-    "longDescription": "RHOBEAR Designs - a MIT-licensed visual website editor (GrapesJS core with RHOBEAR chrome) packaged as a desktop app that runs fully offline.",
+    "longDescription": "RHOBEAR Designs - a MIT-licensed visual website editor packaged as a desktop app that runs fully offline.",
     "copyright": "(c) RHOBEAR. MIT License.",
     "license": "MIT",
     "homepage": "https://rhobear.ai/designs",

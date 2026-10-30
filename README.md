@@ -14,7 +14,7 @@ Design a page on a canvas, edit any live site in place, drop in real 3D, and exp
 
 - **Three ways to work**
   - **Edit Live Site** — open any HTML page (a template, a file, or markup a chatbot gave you) and edit it *in place*; it keeps its look and its behavior.
-  - **Build from scratch** — a blank canvas with a block/element library.
+  - **Build from scratch** — currently being rebuilt; the mode shows a plain rebuild notice.
   - **3D Studio** — a real [Three.js](https://threejs.org/) scene: insert primitives/models, orbit, recolor, transform, and drop the result into a page as a self-contained embed.
 - **62 templates** — full-page designs recreated from award-winning sites, opened as editable pages.
 - **350+ elements** — navs, heroes, pricing, FAQs, galleries, footers, and more, as a drag-in library.
@@ -62,7 +62,6 @@ Your key never leaves your browser's local storage. For OpenAI-compatible endpoi
 ## How it's built
 
 - **Vanilla ES modules + Vite** — no framework runtime; the app is small and static.
-- **[GrapesJS](https://grapesjs.com/)** (vendored, MIT) powers the Build-mode canvas.
 - **[Three.js](https://threejs.org/)** (MIT) powers 3D Studio.
 - **Node test runner** — `npm test` runs the unit/behavior suite; `npm run test:e2e` runs the smoke tests.
 
