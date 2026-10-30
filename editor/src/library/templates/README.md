@@ -6,7 +6,7 @@ that ship with RHOBEAR Designs as starting points for the visual editor.
 
 This directory is **data + loader + docs only**. The gallery UX (the
 sidebar, the filter chips, the preview cards) is built by the owner
-inside `editor/src/app/`. Nothing here imports React, GrapesJS, or any
+inside `editor/src/app/`. Nothing here imports a framework, the previous editor, or any
 DOM library — the loader is plain JS and works in Node, the browser,
 and the build step.
 

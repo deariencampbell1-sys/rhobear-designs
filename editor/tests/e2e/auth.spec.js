@@ -132,8 +132,8 @@ test.describe('Auth + prefs integration', () => {
     await expect(page.getByTestId('btn-projects')).toBeVisible();
     // Switch to build mode
     await page.getByTestId('btn-mode-build').click();
-    await page.waitForSelector('.gjs-cv-canvas iframe');
     await expect(page.getByTestId('btn-mode-build')).toHaveClass(/is-active/);
+    await expect(page.locator('#gjs')).toContainText('This feature is being rebuilt.');
   });
 
   test('rb-designs-api falls back gracefully when absent from prefs', async ({ page }) => {

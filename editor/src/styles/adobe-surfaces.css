@@ -86,7 +86,7 @@
   background-image: radial-gradient(circle at 1px 1px, rgba(24, 42, 52, 0.10) 1px, transparent 0);
 }
 /* The empty state covers the canvas, so it needs the grid painted ON it — it
-   must KEEP an opaque floor. It is stacked over the GrapesJS editor iframe,
+   must KEEP an opaque floor. It is stacked over the build-mode editor canvas,
    which is white: make this transparent and that white sheet shows through,
    putting near-white hero text on white. Opaque floor + its own dots. */
 .rb-empty {

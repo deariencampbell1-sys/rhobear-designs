@@ -3,7 +3,7 @@
  * MIT — RHOBEAR Designs (original)
  */
 
-import { addSection, addTextBlock, addImageBlock, insertEmbed } from './grapes-init.js';
+import { addSection, addTextBlock, addImageBlock, insertEmbed } from './build-editor.js';
 import { wrapExportedHtml } from '../lib/serializer.js';
 
 const PANEL_MAP = {

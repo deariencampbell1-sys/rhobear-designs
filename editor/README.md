@@ -24,9 +24,8 @@ Three editor modes cover the way real websites get built:
   pick a template) and edit it **on top** of the original. Your edits
   are stored as an *override layer*; the original markup, scripts, and
   styles are preserved unchanged. Scripts keep running while you edit.
-- **Build from scratch** — the proven **GrapesJS** canvas (with our
-  RHOBEAR chrome on top) for free-form layout. Drag, drop, undo, redo,
-  preview, export.
+- **Build from scratch** — currently being rebuilt; the mode shows a plain
+  rebuild notice.
 - **3D Studio** — an **owned Three.js engine** for inserting 3D scenes
   you can actually *manipulate*: orbit the camera, click an individual
   mesh, recolor it, change its metalness, rotate / scale / move it via
@@ -130,7 +129,7 @@ editor makes), see [`DEPLOY.md`](./DEPLOY.md).
 editor/
 ├── index.html                 # Vite entry — the app shell, toolbar, modes, modals
 ├── package.json               # npm metadata, scripts, deps (MIT, no copyleft)
-├── vite.config.js             # Vite config (incl. vendor CJS→ESM shim for GrapesJS)
+├── vite.config.js             # Vite config
 ├── playwright.config.js       # Playwright config (chromium, port 5180)
 ├── LICENSE                    # MIT — © 2026 RHOBEAR Designs
 ├── DEPLOY.md                  # how to ship dist/ to a static host
@@ -138,8 +137,8 @@ editor/
 ├── src/
 │   ├── main.js                # one-liner: boot the shell
 │   ├── app/                   # editor shell, mode controllers, modals (UI)
-│   ├── styles/                # RHOBEAR theme + GrapesJS overrides (UI)
-│   ├── editor/                # GrapesJS bootstrap + toolbar glue (engine glue)
+│   ├── styles/                # RHOBEAR theme (UI)
+│   ├── editor/                # Build-mode stand-in + toolbar glue (engine glue)
 │   ├── engine/                # live-render, overlay, style-overrides, mode-b, IO, fidelity
 │   ├── core/                  # headless document model + serializer
 │   ├── 3d/                    # owned Three.js engine (scene, handle, registry, serialize)
@@ -151,9 +150,8 @@ editor/
 │   │   ├── media/             # 46 Picsum/Unsplash images + 12 gradients + BYO gif
 │   │   ├── templates/         # manifest for 62 templates + thumbs/
 │   │   └── patterns/          # analyzer that scanned the 62 templates for techniques
-│   └── vendor/grapesjs/       # vendored GrapesJS core + 4 plugins (BSD-3-Clause)
 └── tests/
-    ├── e2e/                   # Playwright specs (smoke, mode-b, overlay, three)
+    ├── e2e/                   # Playwright specs (smoke, overlay, three)
     ├── fidelity/              # node --test fidelity suite (scripts survive the loop)
     └── fixtures/              # HTML pages the e2e suite imports
 ```
@@ -165,7 +163,7 @@ The build is only "shippable" if the smoke + feature tests pass.
 ```bash
 cd editor
 npx playwright install --with-deps chromium   # one-time
-npm run test:e2e                              # 51 tests, ~90s
+npm run test:e2e                              # 46 tests, ~90s
 ```
 
 Plus per-module headless suites that run under Node's built-in test
